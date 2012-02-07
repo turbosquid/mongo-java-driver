@@ -33,7 +33,7 @@ import javax.management.DynamicMBean;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
 
-public abstract class SimplePool<T> implements DynamicMBean {
+public abstract class SimplePool<T> implements DynamicMBean, ObjectPool<T> {
 
     static final boolean TRACK_LEAKS = Boolean.getBoolean( "MONGO-TRACKLEAKS" );
     static final long _sleepTime = 2;
@@ -73,12 +73,12 @@ public abstract class SimplePool<T> implements DynamicMBean {
      */
     protected abstract T createNew();
 
-    /** 
+    /**
      * callback to determine if an object is ok to be added back to the pool or used
      * will be called when something is put back into the queue and when it comes out
      * @return true if the object is ok to be added back to pool
      */
-    public boolean ok( T t ){
+    public boolean validate( T t ){
         return true;
     }
 
@@ -100,7 +100,7 @@ public abstract class SimplePool<T> implements DynamicMBean {
      * @param t Object to add
      */
     public void done( T t ){
-        done( t , ok( t ) );
+        done( t , validate( t ) );
     }
 
     void done( T t , boolean ok ){
@@ -183,7 +183,7 @@ public abstract class SimplePool<T> implements DynamicMBean {
                     toTake = pick( toTake, couldCreate );
                     if ( toTake >= 0 ){
                         T t = _avail.remove( toTake );
-                        if ( ok( t ) ){
+                        if ( validate( t ) ){
                             _debug( "got an old one" );
                             return t;
                         }

@@ -40,7 +40,7 @@ public class StringBuilderPool extends SimplePool<StringBuilder> {
      * @param buf the builder to check
      * @return if it is not too big
      */
-    public boolean ok( StringBuilder buf ){
+    public boolean validate( StringBuilder buf ){
         if ( buf.length() > _maxSize )
             return false;
         buf.setLength( 0 );
