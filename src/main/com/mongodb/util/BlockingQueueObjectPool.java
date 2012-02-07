@@ -111,7 +111,7 @@ public abstract class BlockingQueueObjectPool<T> implements ObjectPool<T> {
         T obj = null;
         // For thread safety / no racing increment total size, create an item but DO NOT put it in the queue at all.
         // TODO - Is this joint operation properly atomic?
-        if (queue.size() == 0 && totalSize.get() < _maxSize) {
+        if (queue.size() == 0 && (_maxSize <= 0 ||  totalSize.get() < _maxSize)) {
             obj = createNew();
             totalSize.incrementAndGet();
         } else {
@@ -154,7 +154,9 @@ public abstract class BlockingQueueObjectPool<T> implements ObjectPool<T> {
      * will be called when something is put back into the queue and when it comes out
      * @return true if the object is validate to be added back to pool
      */
-    public abstract boolean validate( T t );
+    public boolean validate( T t ){
+        return true;
+    }
 
     /**
      * override this if you need to do any cleanup
