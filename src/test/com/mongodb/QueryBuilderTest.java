@@ -291,7 +291,7 @@ public class QueryBuilderTest extends TestCase {
         
         assertEquals( 2 , c.find( q ).itcount() );
     }
-    
+
     @AfterClass
     public static void tearDown() {
         _testDB.cleanup();
