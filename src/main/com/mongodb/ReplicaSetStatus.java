@@ -251,11 +251,11 @@ public class ReplicaSetStatus {
 
         synchronized void update(Set<Node> seenNodes){
             try {
-                long start = System.currentTimeMillis();
+                long start = System.nanoTime();
                 CommandResult res = _port.runCommand( _mongo.getDB("admin") , _isMasterCmd );
                 boolean first = (_lastCheck == 0);
-                _lastCheck = System.currentTimeMillis();
-                float newPing = _lastCheck - start;
+                _lastCheck = System.nanoTime();
+                float newPing = (_lastCheck - start) / 1000000F;
                 if (first)
                     _pingTime = newPing;
                 else
