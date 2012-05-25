@@ -56,7 +56,7 @@ public class GridFSInputFile extends GridFSFile {
      * @param closeStreamOnPersist
                   indicate the passed in input stream should be closed once the data chunk persisted
      */
-    GridFSInputFile( GridFS fs , InputStream in , String filename, boolean closeStreamOnPersist ) {
+    protected GridFSInputFile( GridFS fs , InputStream in , String filename, boolean closeStreamOnPersist ) {
         _fs = fs;
         _in = in;
         _filename = filename;
@@ -81,7 +81,7 @@ public class GridFSInputFile extends GridFSFile {
      * @param filename
      *            Name of the file to be created.
      */
-    GridFSInputFile( GridFS fs , InputStream in , String filename ) {
+    protected GridFSInputFile( GridFS fs , InputStream in , String filename ) {
         this( fs, in, filename, false);
     }
 
@@ -96,7 +96,7 @@ public class GridFSInputFile extends GridFSFile {
      * @param filename
      *            Name of the file to be created.
      */
-    GridFSInputFile( GridFS fs , String filename ) {
+    protected GridFSInputFile( GridFS fs , String filename ) {
         this( fs , null , filename );
     }
 
@@ -108,7 +108,7 @@ public class GridFSInputFile extends GridFSFile {
      * @param fs
      *            The GridFS connection handle.
      */
-    GridFSInputFile( GridFS fs ) {
+    protected GridFSInputFile( GridFS fs ) {
         this( fs , null , null );
     }
 
@@ -138,12 +138,13 @@ public class GridFSInputFile extends GridFSFile {
 
     /**
      * Set the chunk size. This must be called before saving any data.
-     * @param _chunkSize
+     * @param chunkSize The size in bytes.
      */
-    public void setChunkSize(long _chunkSize) {
+    public void setChunkSize(long chunkSize) {
         if (_outputStream != null || _savedChunks)
             return;
-        this._chunkSize = _chunkSize;
+        _chunkSize = chunkSize;
+        _buffer = new byte[(int) _chunkSize];
     }
 
     /**
@@ -151,7 +152,7 @@ public class GridFSInputFile extends GridFSFile {
      */
     @Override
     public void save() {
-        save( _chunkSize);
+        save( _chunkSize );
     }
 
     /**
@@ -270,10 +271,7 @@ public class GridFSInputFile extends GridFSFile {
             System.arraycopy( _buffer, 0, writeBuffer, 0, _currentBufferPosition );
         }
 
-        DBObject chunk = BasicDBObjectBuilder.start()
-                .add( "files_id", _id )
-                .add( "n", _currentChunkNumber )
-                .add( "data", writeBuffer ).get();
+        DBObject chunk = createChunk(_id, _currentChunkNumber, writeBuffer);
 
         _fs._chunkCollection.save( chunk );
 
@@ -281,6 +279,13 @@ public class GridFSInputFile extends GridFSFile {
         _totalBytes += writeBuffer.length;
         _messageDigester.update( writeBuffer );
         _currentBufferPosition = 0;
+    }
+    
+    protected DBObject createChunk(Object id, int currentChunkNumber, byte[] writeBuffer) {
+         return BasicDBObjectBuilder.start()
+         .add("files_id", id)
+         .add("n", currentChunkNumber)
+         .add("data", writeBuffer).get();
     }
 
     /**
