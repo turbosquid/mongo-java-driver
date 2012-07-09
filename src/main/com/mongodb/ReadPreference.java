@@ -15,6 +15,7 @@ package com.mongodb;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import com.mongodb.ReplicaSetStatus.Node;
@@ -213,6 +214,16 @@ public class ReadPreference {
 
     @Deprecated
     public static class TaggedReadPreference extends SecondaryPreferredReadPreference {
+        
+        public TaggedReadPreference( Map<String, String> tags ) {
+            List<Tag> tagList = new ArrayList<Tag>();
+            
+            for(Map.Entry<String, String> entry : tags.entrySet()) 
+                tagList.add(new Tag(entry.getKey(), entry.getValue()));
+            
+            getTags().addAll(tagList);
+        }
+        
         public TaggedReadPreference( DBObject tags ) {
             super(splitMapIntoMulitpleMaps(tags));
         }
