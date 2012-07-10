@@ -345,6 +345,7 @@ public class DBCursor implements Iterator<DBObject> , Iterable<DBObject>, Closea
 							.addExplain(_explain)
 							.addSnapshot(_snapshot)
 							.addSpecialFields(_specialFields)
+							.addReadPreference(_readPref.toDBObject())
 							.get();
 		
 		_it = _collection.__find(queryOp, _keysWanted, _skip, _batchSize, _limit,
@@ -720,7 +721,7 @@ public class DBCursor implements Iterator<DBObject> , Iterable<DBObject>, Closea
     private int _skip = 0;
     private boolean _snapshot = false;
     private int _options = 0;
-    private ReadPreference _readPref;
+    private ReadPreference _readPref = null;
     private DBDecoderFactory _decoderFact;
 
     private DBObject _specialFields;
