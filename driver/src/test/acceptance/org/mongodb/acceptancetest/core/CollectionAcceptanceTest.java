@@ -37,7 +37,7 @@ public class CollectionAcceptanceTest extends DatabaseTestCase {
         initialiseCollectionWithDocuments(numberOfDocuments);
 
         int countOfDocumentsInIterator = 0;
-        for (final Document document : collection) {
+        for (final Document document : collection.find()) {
             assertThat(document, is(notNullValue()));
             countOfDocumentsInIterator++;
         }
@@ -49,7 +49,7 @@ public class CollectionAcceptanceTest extends DatabaseTestCase {
         final int numberOfDocuments = 10;
         initialiseCollectionWithDocuments(numberOfDocuments);
 
-        final MongoCursor<Document> cursor = collection.all();
+        final MongoCursor<Document> cursor = collection.find().get();
         int countOfDocumentsInIterator = 0;
         try {
             while (cursor.hasNext()) {
@@ -64,11 +64,11 @@ public class CollectionAcceptanceTest extends DatabaseTestCase {
 
     @Test
     public void shouldCountNumberOfDocumentsInCollection() {
-        assertThat(collection.count(), is(0L));
+        assertThat(collection.find().count(), is(0L));
 
         collection.insert(new Document("myField", "myValue"));
 
-        assertThat(collection.count(), is(1L));
+        assertThat(collection.find().count(), is(1L));
     }
 
     @Test
@@ -108,7 +108,7 @@ public class CollectionAcceptanceTest extends DatabaseTestCase {
 
     private void initialiseCollectionWithDocuments(final int numberOfDocuments) {
         for (int i = 0; i < numberOfDocuments; i++) {
-            collection.writeConcern(WriteConcern.ACKNOWLEDGED).insert(new Document("_id", i));
+            collection.withWriteConcern(WriteConcern.ACKNOWLEDGED).insert(new Document("_id", i));
         }
     }
 
