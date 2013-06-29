@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package org.mongodb.operation;
@@ -56,16 +55,13 @@ public class QueryTest {
     @Test
     public void testOptions() {
         Query query = new Find();
-        assertEquals(EnumSet.noneOf(QueryOption.class), query.getOptions());
+        assertEquals(EnumSet.noneOf(QueryFlag.class), query.getOptions().getFlags());
 
-        query.addOptions(EnumSet.of(QueryOption.Tailable));
-        assertEquals(EnumSet.of(QueryOption.Tailable), query.getOptions());
+        query.addFlags(EnumSet.of(QueryFlag.Tailable));
+        assertEquals(EnumSet.of(QueryFlag.Tailable), query.getOptions().getFlags());
 
-        query.addOptions(EnumSet.of(QueryOption.SlaveOk));
-        assertEquals(EnumSet.of(QueryOption.Tailable, QueryOption.SlaveOk), query.getOptions());
-
-        query.options(EnumSet.of(QueryOption.Exhaust));
-        assertEquals(EnumSet.of(QueryOption.Exhaust), query.getOptions());
+        query.addFlags(EnumSet.of(QueryFlag.SlaveOk));
+        assertEquals(EnumSet.of(QueryFlag.Tailable, QueryFlag.SlaveOk), query.getOptions().getFlags());
 
         try {
             query.options(null);
@@ -75,7 +71,7 @@ public class QueryTest {
         }
 
         try {
-            query.addOptions(null);
+            query.addFlags(null);
             fail();
         } catch (IllegalArgumentException e) { // NOPMD
             // all good
@@ -85,9 +81,9 @@ public class QueryTest {
     @Test
     public void testCopyConstructor() {
         Find query = new Find();
-        query.addOptions(EnumSet.allOf(QueryOption.class)).readPreference(ReadPreference.primary()).batchSize(2).limit(5).skip(1);
+        query.addFlags(EnumSet.allOf(QueryFlag.class)).readPreference(ReadPreference.primary()).batchSize(2).limit(5).skip(1);
         Query copy = new Find(query);
-        assertEquals(EnumSet.allOf(QueryOption.class), copy.getOptions());
+        assertEquals(EnumSet.allOf(QueryFlag.class), copy.getOptions().getFlags());
         assertEquals(ReadPreference.primary(), copy.getReadPreference());
         assertEquals(2, copy.getBatchSize());
         assertEquals(5, copy.getLimit());
