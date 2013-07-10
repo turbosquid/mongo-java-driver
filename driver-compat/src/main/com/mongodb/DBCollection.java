@@ -28,6 +28,7 @@ import org.mongodb.Encoder;
 import org.mongodb.Index;
 import org.mongodb.MongoNamespace;
 import org.mongodb.OrderBy;
+import org.mongodb.ServerSelectingOperation;
 import org.mongodb.annotations.ThreadSafe;
 import org.mongodb.codecs.ObjectIdGenerator;
 import org.mongodb.codecs.PrimitiveCodecs;
@@ -895,7 +896,7 @@ public class DBCollection implements IDBCollection {
         // TODO: investigate case of int to long for skip
         Find find = new Find(toDocument(query)).limit((int) limit).skip((int) skip).readPreference(readPreference.toNew());
 
-        return getSession().execute(new CountOperation(find, getNamespace(), getDocumentCodec(), getBufferPool()));
+        return executeOperation(new CountOperation(find, getNamespace(), getDocumentCodec(), getBufferPool()));
     }
 
     /**
@@ -1801,5 +1802,13 @@ public class DBCollection implements IDBCollection {
 
     BufferProvider getBufferPool() {
         return getDB().getBufferPool();
+    }
+
+    private <T> T executeOperation(final ServerSelectingOperation<T> operation) {
+        try {
+            return getSession().execute(operation);
+        } catch (org.mongodb.MongoException e) {
+            throw mapException(e);
+        }
     }
 }
