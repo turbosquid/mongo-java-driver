@@ -96,12 +96,12 @@ class CodecsSpecification extends Specification {
 
     def 'should be able to encode map'() {
         expect:
-        codecs.canEncode(['myObj': new Object()]) == true;
+        codecs.canEncode(['myObj': new Object()])
     }
 
     def 'should be able to encode array'() {
         expect:
-        codecs.canEncode(['some string'] as String[]) == true;
+        codecs.canEncode(['some string'] as String[])
     }
 
     def 'should be able to encode list'() {

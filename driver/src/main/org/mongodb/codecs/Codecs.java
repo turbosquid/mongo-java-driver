@@ -71,18 +71,9 @@ public class Codecs implements Codec<Object> {
             arrayCodec.encode(bsonWriter, object);
         } else if (object instanceof Map) {
             encode(bsonWriter, (Map) object);
-        } else if (object instanceof Iterable) {
-            //urgh?
-            final Encoder<Iterable> codec = encoderRegistry.get(Iterable.class);
-            codec.encode(bsonWriter, (Iterable) object);
-        } else if (object instanceof CodeWithScope) {
-            final Encoder<Object> codec = (Codec<Object>) encoderRegistry.get(object.getClass());
-            codec.encode(bsonWriter, object);
-        } else if (object instanceof DBRef) {
-            encode(bsonWriter, (DBRef) object);
         } else {
-            final Encoder<Object> codec = (Codec<Object>) encoderRegistry.get(object.getClass());
-            codec.encode(bsonWriter, object);
+            final Encoder<Object> encoder = (Encoder<Object>) encoderRegistry.get(object.getClass());
+            encoder.encode(bsonWriter, object);
         }
     }
 
@@ -97,14 +88,6 @@ public class Codecs implements Codec<Object> {
 
     public void encode(final BSONWriter bsonWriter, final Map<String, Object> value) {
         mapCodec.encode(bsonWriter, value);
-    }
-
-    public void encode(final BSONWriter bsonWriter, final DBRef value) {
-        dbRefEncoder.encode(bsonWriter, value);
-    }
-
-    public void encode(final BSONWriter bsonWriter, final CodeWithScope value) {
-        codeWithScopeCodec.encode(bsonWriter, value);
     }
 
     public static Builder builder() {
@@ -143,6 +126,7 @@ public class Codecs implements Codec<Object> {
                || object instanceof DBRef;
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public boolean canDecode(final Class<?> theClass) {
         return theClass.getClass().isArray()
                || primitiveCodecs.canDecode(theClass)

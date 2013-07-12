@@ -17,13 +17,15 @@
 package org.mongodb.codecs;
 
 import org.bson.BSONWriter;
+import org.mongodb.Encoder;
 import org.mongodb.codecs.validators.Validator;
 
 import java.util.Map;
 
-public class MapCodec implements ComplexTypeEncoder<Map<String, ?>> {
-    private Codecs codecs;
-    private Validator<String> validator;
+@SuppressWarnings({"unchecked", "rawtypes"})
+public class MapCodec implements Encoder<Map<String, ?>> {
+    private final Codecs codecs;
+    private final Validator<String> validator;
 
     public MapCodec(final Codecs codecs, final Validator<String> validator) {
         this.codecs = codecs;
@@ -34,7 +36,7 @@ public class MapCodec implements ComplexTypeEncoder<Map<String, ?>> {
     public void encode(final BSONWriter bsonWriter, final Map<String, ?> value) {
         bsonWriter.writeStartDocument();
 
-        for (Map.Entry<String, ?> entry : value.entrySet()) {
+        for (final Map.Entry<String, ?> entry : value.entrySet()) {
             final String fieldName = entry.getKey();
             validateFieldName(fieldName);
 
@@ -44,7 +46,7 @@ public class MapCodec implements ComplexTypeEncoder<Map<String, ?>> {
         bsonWriter.writeEndDocument();
     }
 
-    public Class<Map> getEncoderClass() {
+    public Class getEncoderClass() {
         return Map.class;
     }
 

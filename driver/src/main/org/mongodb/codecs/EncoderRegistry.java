@@ -18,7 +18,9 @@ package org.mongodb.codecs;
 
 import org.bson.types.CodeWithScope;
 import org.mongodb.DBRef;
+import org.mongodb.Document;
 import org.mongodb.Encoder;
+import org.mongodb.codecs.validators.FieldNameValidator;
 import org.mongodb.codecs.validators.QueryFieldNameValidator;
 
 import java.util.HashMap;
@@ -41,8 +43,9 @@ public class EncoderRegistry {
         classToEncoderMap.put(CodeWithScope.class, new CodeWithScopeCodec(codecs));
         classToEncoderMap.put(Iterable.class, new IterableCodec(codecs));
         classToEncoderMap.put(DBRef.class, new DBRefEncoder(codecs));
-        //default to Document
-        classToEncoderMap.put(Object.class, new DocumentCodec(primitiveCodecs, defaultValidator, this));
+        classToEncoderMap.put(Map.class, new MapCodec(codecs, defaultValidator));
+//        classToEncoderMap.put(Document.class, new DocumentCodec(primitiveCodecs, defaultValidator));
+        classToEncoderMap.put(Document.class, new DocumentCodec(primitiveCodecs, new FieldNameValidator(), this));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"}) //not cool

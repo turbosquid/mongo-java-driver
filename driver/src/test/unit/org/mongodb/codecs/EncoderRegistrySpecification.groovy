@@ -37,10 +37,9 @@ class EncoderRegistrySpecification extends Specification {
         encoder instanceof ArrayCodec;
     }
 
-    @Ignore('map codec is not actually a codec yet...')
     def 'should return MapCodec as default for class that is a Map'() {
         when:
-        Encoder encoder = encoderRegistry.get([:].getClass());
+        Encoder encoder = encoderRegistry.get(Map);
 
         then:
         encoder instanceof MapCodec;
@@ -70,6 +69,7 @@ class EncoderRegistrySpecification extends Specification {
         encoder instanceof DBRefEncoder;
     }
 
+    @Ignore
     def 'should return DocumentCodec by default for all Objects'() {
         when:
         Encoder encoder = encoderRegistry.get(SomeObject);
