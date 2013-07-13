@@ -22,7 +22,6 @@ import org.bson.BSONWriter;
 import org.mongodb.Codec;
 import org.mongodb.Decoder;
 import org.mongodb.Document;
-import org.mongodb.Encoder;
 import org.mongodb.codecs.validators.QueryFieldNameValidator;
 import org.mongodb.codecs.validators.Validator;
 
@@ -73,19 +72,9 @@ public class DocumentCodec implements Codec<Document> {
                 continue;
             }
             bsonWriter.writeName(entry.getKey());
-            writeValue(bsonWriter, entry.getValue());
+            CodecUtils.encode(encoderRegistry, bsonWriter, entry.getValue());
         }
         bsonWriter.writeEndDocument();
-    }
-
-    protected void writeValue(final BSONWriter bsonWriter, final Object value) {
-        // TODO Trish there must be a better way of doing this
-        if (value == null) {
-            primitiveCodecs.encode(bsonWriter, value);
-        } else {
-            final Encoder<Object> encoder = (Encoder<Object>) encoderRegistry.get(value.getClass());
-            encoder.encode(bsonWriter, value);
-        }
     }
 
     protected void beforeFields(final BSONWriter bsonWriter, final Document document) {

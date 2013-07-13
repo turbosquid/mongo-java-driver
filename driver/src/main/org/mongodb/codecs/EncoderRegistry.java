@@ -37,7 +37,10 @@ public class EncoderRegistry {
 
     @SuppressWarnings("rawtypes") // going to have some unchecked warnings because of all the casting from Object
     private final Map<Class, Encoder> classToEncoderMap = new HashMap<Class, Encoder>();
+
+    //TODO: need to be able to override these
     private final ArrayCodec arrayCodec = new ArrayCodec();
+    private final Encoder<Object> nullEncoder = new NullCodec();
 
     public EncoderRegistry() {
         codecs = new Codecs(primitiveCodecs, defaultValidator, this);
@@ -69,7 +72,15 @@ public class EncoderRegistry {
         }
     }
 
-    public <T> Encoder<T> getEncoderForCollection(final Class<T> aClass) {
+    public <T> Encoder get(final T value) {
+        if (value == null) {
+            return nullEncoder;
+        } else {
+            return get(value.getClass());
+        }
+    }
+
+    private <T> Encoder<T> getEncoderForCollection(final Class<T> aClass) {
         if (Iterable.class.isAssignableFrom(aClass)) {
             return classToEncoderMap.get(Iterable.class);
         } else if (Map.class.isAssignableFrom(aClass)) {

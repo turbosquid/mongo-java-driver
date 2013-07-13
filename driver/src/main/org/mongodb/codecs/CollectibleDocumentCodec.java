@@ -29,7 +29,6 @@ import org.mongodb.codecs.validators.FieldNameValidator;
 public class CollectibleDocumentCodec extends DocumentCodec implements CollectibleCodec<Document> {
     public static final String ID_FIELD_NAME = "_id";
     private final IdGenerator idGenerator;
-    private final EncoderRegistry encoderRegistry = new EncoderRegistry();
 
     public CollectibleDocumentCodec(final PrimitiveCodecs primitiveCodecs,
                                     final IdGenerator idGenerator) {
@@ -47,7 +46,7 @@ public class CollectibleDocumentCodec extends DocumentCodec implements Collectib
             document.put(ID_FIELD_NAME, idGenerator.generate());
         }
         bsonWriter.writeName(ID_FIELD_NAME);
-        writeValue(bsonWriter, document.get(ID_FIELD_NAME));
+        CodecUtils.encode(getEncoderRegistry(), bsonWriter, document.get(ID_FIELD_NAME));
     }
 
     @Override
