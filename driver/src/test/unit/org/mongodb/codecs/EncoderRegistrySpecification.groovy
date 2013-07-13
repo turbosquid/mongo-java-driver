@@ -79,6 +79,8 @@ class EncoderRegistrySpecification extends Specification {
         encoder instanceof DocumentCodec;
     }
 
+    //TODO: trish
+//    @Ignore("FIX ME")
     def 'should be able to override the default codec for Objects'() {
         when:
         encoderRegistry.register(Object, new PojoCodec<Object>(Codecs.createDefault(), SomeObject))

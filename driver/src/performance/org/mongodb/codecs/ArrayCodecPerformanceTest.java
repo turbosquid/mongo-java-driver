@@ -104,7 +104,7 @@ public class ArrayCodecPerformanceTest {
         //80,639,243 ops per second
         final int[] intArrayToEncode = {1, 2, 3};
         final StubBSONWriter bsonWriter = new StubBSONWriter();
-        final ArrayCodec codec = new ArrayCodec(null);
+        final ArrayCodec codec = new ArrayCodec();
 
         for (int i2 = NUMBER_OF_TIMES_FOR_WARMUP; i2 != 0; i2--) {
             codec.encode(bsonWriter, intArrayToEncode);
@@ -134,7 +134,7 @@ public class ArrayCodecPerformanceTest {
         //even if the instanceof is the last one in the chain
         final Object intArrayToEncode = new int[]{1, 2, 3};
         final StubBSONWriter bsonWriter = new StubBSONWriter();
-        final ArrayCodec codec = new ArrayCodec(null);
+        final ArrayCodec codec = new ArrayCodec();
 
         for (int i2 = NUMBER_OF_TIMES_FOR_WARMUP; i2 != 0; i2--) {
             codec.encode(bsonWriter, intArrayToEncode);

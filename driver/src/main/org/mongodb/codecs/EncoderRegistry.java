@@ -37,6 +37,7 @@ public class EncoderRegistry {
 
     @SuppressWarnings("rawtypes") // going to have some unchecked warnings because of all the casting from Object
     private final Map<Class, Encoder> classToEncoderMap = new HashMap<Class, Encoder>();
+    private final ArrayCodec arrayCodec = new ArrayCodec();
 
     public EncoderRegistry() {
         codecs = new Codecs(primitiveCodecs, defaultValidator, this);
@@ -44,22 +45,37 @@ public class EncoderRegistry {
         classToEncoderMap.put(Iterable.class, new IterableCodec(codecs));
         classToEncoderMap.put(DBRef.class, new DBRefEncoder(codecs, this));
         classToEncoderMap.put(Document.class, new DocumentCodec(primitiveCodecs, new FieldNameValidator(), this));
+        classToEncoderMap.put(Map.class, new MapCodec(codecs, defaultValidator));
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"}) //not cool
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> Encoder<T> get(final Class<T> aClass) {
+        Encoder encoder;
         if (primitiveCodecs.canEncode(aClass)) {
-            return (Encoder<T>) primitiveCodecs;
-        } else if (Iterable.class.isAssignableFrom(aClass)) {
-            return classToEncoderMap.get(Iterable.class);
+            encoder = primitiveCodecs;
+        } else if (aClass.isArray()) {
+            encoder = arrayCodec;
         } else {
-            final Encoder encoder = classToEncoderMap.get(aClass);
+            encoder = classToEncoderMap.get(aClass);
             if (encoder == null) {
-                return classToEncoderMap.get(Object.class);
-            } else {
-                return encoder;
+                encoder = getEncoderForCollection(aClass);
             }
         }
+        if (encoder == null) {
+            //TODO: when the refactoring is finished this should not be needed.  Register all specific encoders with this class
+            return classToEncoderMap.get(Object.class);
+        } else {
+            return encoder;
+        }
+    }
+
+    public <T> Encoder<T> getEncoderForCollection(final Class<T> aClass) {
+        if (Iterable.class.isAssignableFrom(aClass)) {
+            return classToEncoderMap.get(Iterable.class);
+        } else if (Map.class.isAssignableFrom(aClass)) {
+            return classToEncoderMap.get(Map.class);
+        }
+        return null;
     }
 
     /**

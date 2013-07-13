@@ -17,8 +17,9 @@
 package org.mongodb.codecs;
 
 import org.bson.BSONWriter;
+import org.mongodb.Encoder;
 
-public class ArrayCodec implements ComplexTypeEncoder<Object> {
+public class ArrayCodec implements Encoder<Object> {
     private final IntegerArrayCodec integerArrayCodec;
     private final LongArrayCodec longArrayCodec;
     private final BooleanArrayCodec booleanArrayCodec;
@@ -27,10 +28,8 @@ public class ArrayCodec implements ComplexTypeEncoder<Object> {
     private final FloatArrayCodec floatArrayCodec;
     private final ShortArrayCodec shortArrayCodec;
     private final StringArrayCodec stringArrayCodec;
-    private final Codecs codecs;
 
-    public ArrayCodec(final Codecs codecs) {
-        this.codecs = codecs;
+    public ArrayCodec() {
         integerArrayCodec = new IntegerArrayCodec();
         longArrayCodec = new LongArrayCodec();
         booleanArrayCodec = new BooleanArrayCodec();
@@ -59,20 +58,23 @@ public class ArrayCodec implements ComplexTypeEncoder<Object> {
             encode(bsonWriter, (boolean[]) object);
         } else if (object instanceof String[]) {
             encode(bsonWriter, (String[]) object);
-        } else if (object instanceof Object[]) {
-            encode(bsonWriter, (Object[]) object);
         } else {
-            System.out.println("AARRGGHH");
+            throw new EncodingException(String.format("Cannot encode class %s with value %s", object.getClass(), object));
         }
     }
 
-    public void encode(final BSONWriter bsonWriter, final Object[] array) {
-        bsonWriter.writeStartArray();
-        for (final Object value : array) {
-            codecs.encode(bsonWriter, value);
-        }
-        bsonWriter.writeEndArray();
+    @Override
+    public Class<Object> getEncoderClass() {
+        throw new UnsupportedOperationException("Not implemented yet!");
     }
+
+//    public void encode(final BSONWriter bsonWriter, final Object[] array) {
+//        bsonWriter.writeStartArray();
+//        for (final Object value : array) {
+//            codecs.encode(bsonWriter, value);
+//        }
+//        bsonWriter.writeEndArray();
+//    }
 
     public void encode(final BSONWriter bsonWriter, final int[] array) {
         integerArrayCodec.encode(bsonWriter, array);

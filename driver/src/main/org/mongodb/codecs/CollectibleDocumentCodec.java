@@ -29,6 +29,7 @@ import org.mongodb.codecs.validators.FieldNameValidator;
 public class CollectibleDocumentCodec extends DocumentCodec implements CollectibleCodec<Document> {
     public static final String ID_FIELD_NAME = "_id";
     private final IdGenerator idGenerator;
+    private final EncoderRegistry encoderRegistry = new EncoderRegistry();
 
     public CollectibleDocumentCodec(final PrimitiveCodecs primitiveCodecs,
                                     final IdGenerator idGenerator) {
@@ -37,6 +38,7 @@ public class CollectibleDocumentCodec extends DocumentCodec implements Collectib
             throw new IllegalArgumentException("idGenerator is null");
         }
         this.idGenerator = idGenerator;
+        getEncoderRegistry().register(Document.class, this);
     }
 
     @Override

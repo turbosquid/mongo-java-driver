@@ -50,7 +50,7 @@ public class Codecs implements Codec<Object> {
                   final EncoderRegistry encoderRegistry) {
         this.primitiveCodecs = primitiveCodecs;
         this.encoderRegistry = encoderRegistry;
-        arrayCodec = new ArrayCodec(this);
+        arrayCodec = new ArrayCodec();
         iterableCodec = new IterableCodec(this);
         mapCodec = new MapCodec(this, fieldNameValidator);
         codeWithScopeCodec = new CodeWithScopeCodec(this);

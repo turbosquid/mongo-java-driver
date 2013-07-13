@@ -49,7 +49,7 @@ import static org.junit.Assert.fail;
 import static org.mongodb.codecs.CodecTestUtil.prepareReaderWithObjectToBeDecoded;
 
 public class PojoDecoderTest {
-
+//TODO: should be a Spock test?
     private final Codecs codecs = Codecs.createDefault();
     private PojoDecoder pojoDecoder;
 

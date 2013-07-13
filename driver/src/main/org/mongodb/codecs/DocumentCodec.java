@@ -33,6 +33,7 @@ public class DocumentCodec implements Codec<Document> {
     private final PrimitiveCodecs primitiveCodecs;
     private final Validator<String> fieldNameValidator;
     private final Codecs codecs;
+
     private final EncoderRegistry encoderRegistry;
 
     public DocumentCodec() {
@@ -52,10 +53,11 @@ public class DocumentCodec implements Codec<Document> {
         if (primitiveCodecs == null) {
             throw new IllegalArgumentException("primitiveCodecs is null");
         }
-        this.encoderRegistry = encoderRegistry;
         this.fieldNameValidator = fieldNameValidator;
         this.primitiveCodecs = primitiveCodecs;
         codecs = new Codecs(primitiveCodecs, fieldNameValidator, encoderRegistry);
+        this.encoderRegistry = encoderRegistry;
+        encoderRegistry.register(Document.class, this);
     }
 
     @Override
@@ -76,10 +78,15 @@ public class DocumentCodec implements Codec<Document> {
         bsonWriter.writeEndDocument();
     }
 
-//    protected void writeValue(final BSONWriter bsonWriter, final Object value) {
-//        final Encoder<Object> encoder = (Encoder<Object>) encoderRegistry.get(value.getClass());
-//        encoder.encode(bsonWriter, value);
-//    }
+    protected void writeValue(final BSONWriter bsonWriter, final Object value) {
+        // TODO Trish there must be a better way of doing this
+        if (value == null) {
+            primitiveCodecs.encode(bsonWriter, value);
+        } else {
+            final Encoder<Object> encoder = (Encoder<Object>) encoderRegistry.get(value.getClass());
+            encoder.encode(bsonWriter, value);
+        }
+    }
 
     protected void beforeFields(final BSONWriter bsonWriter, final Document document) {
     }
@@ -88,9 +95,8 @@ public class DocumentCodec implements Codec<Document> {
         return false;
     }
 
-    @SuppressWarnings("unchecked")
-    protected void writeValue(final BSONWriter bsonWriter, final Object value) {
-        codecs.encode(bsonWriter, value);
+    protected EncoderRegistry getEncoderRegistry() {
+        return encoderRegistry;
     }
 
     @Override

@@ -25,7 +25,7 @@ class ArrayCodecSpecification extends Specification {
     private final BSONWriter bsonWriter = Mock();
 
     @Subject
-    private final ArrayCodec arrayCodec  = new ArrayCodec(null);
+    private final ArrayCodec arrayCodec  = new ArrayCodec();
 
     def 'should encode array of ints'() {
         given:
