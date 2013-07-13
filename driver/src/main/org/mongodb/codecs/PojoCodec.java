@@ -29,7 +29,7 @@ public class PojoCodec<T> implements CollectibleCodec<T> {
         this.theClass = theClass;
         codecs.setDefaultObjectCodec(this);
         pojoDecoder = new PojoDecoder(codecs);
-        pojoEncoder = new PojoEncoder<T>(codecs);
+        pojoEncoder = new PojoEncoder<T>();
     }
 
     @Override

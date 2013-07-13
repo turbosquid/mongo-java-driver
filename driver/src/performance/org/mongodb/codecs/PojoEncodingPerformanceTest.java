@@ -48,7 +48,7 @@ public class PojoEncodingPerformanceTest {
 
     @Test
     public void outputBaselinePerformanceForPojoWithNoFields() throws Exception {
-        final PojoEncoder<EmptyPojo> pojoCodec = new PojoEncoder<EmptyPojo>(Codecs.createDefault());
+        final PojoEncoder<EmptyPojo> pojoCodec = new PojoEncoder<EmptyPojo>();
 
         //  1,858,098 ops per second - 2 orders of magnitude slower than an empty Document
         // 93,130,421 ops per second when you add the Fields cache
@@ -69,7 +69,7 @@ public class PojoEncodingPerformanceTest {
     @Test
     public void outputPerformanceForAPojoWithASingleIntField() throws Exception {
         //33,437,167 for a document
-        final PojoEncoder<IntWrapper> pojoCodec = new PojoEncoder<IntWrapper>(Codecs.createDefault());
+        final PojoEncoder<IntWrapper> pojoCodec = new PojoEncoder<IntWrapper>();
         //  1,099,716 ops per second
         //  1,129,327 ops per second after caching Fields.  This must not be the cost here
         //  2,932,047 ops per second when you use a Pattern to validate the field name
@@ -90,7 +90,7 @@ public class PojoEncodingPerformanceTest {
 
     @Test
     public void outputPerformanceForAPojoWithASingleStringField() throws Exception {
-        final PojoEncoder<StringWrapper> pojoCodec = new PojoEncoder<StringWrapper>(Codecs.createDefault());
+        final PojoEncoder<StringWrapper> pojoCodec = new PojoEncoder<StringWrapper>();
         //  1,063,513 ops per second
         //  1,043,330 ops per second with caching
         // 13,932,946 ops per second using simple ClassModel
@@ -109,7 +109,7 @@ public class PojoEncodingPerformanceTest {
 
     @Test
     public void outputPerformanceForAPojoContainingAnotherPojo() throws Exception {
-        final PojoEncoder<PojoWrapper> pojoCodec = new PojoEncoder<PojoWrapper>(Codecs.createDefault());
+        final PojoEncoder<PojoWrapper> pojoCodec = new PojoEncoder<PojoWrapper>();
         //   492,846 ops per second, approx half the speed of a Pojo with a primitive
         //   526,708 ops per second with caching
         // 5,880,696 ops per second with simple ClassModel
@@ -128,7 +128,7 @@ public class PojoEncodingPerformanceTest {
 
     @Test
     public void outputPerformanceForAPojoContainingTwoPojos() throws Exception {
-        final PojoEncoder<TwoPojoWrapper> pojoCodec = new PojoEncoder<TwoPojoWrapper>(Codecs.createDefault());
+        final PojoEncoder<TwoPojoWrapper> pojoCodec = new PojoEncoder<TwoPojoWrapper>();
         //   275,176 ops per second
         //   292,063 ops per second with cache
         // 3,251,243 ops per second with simple ClassModel
@@ -147,7 +147,7 @@ public class PojoEncodingPerformanceTest {
 
     @Test
     public void outputPerformanceForIntArray() throws Exception {
-        final PojoEncoder<ArrayWrapper> pojoCodec = new PojoEncoder<ArrayWrapper>(Codecs.createDefault());
+        final PojoEncoder<ArrayWrapper> pojoCodec = new PojoEncoder<ArrayWrapper>();
         //  1,056,227 ops per second
         //  1,223,540 ops per second with cache
         // 12,318,029 ops per second with simple ClassModel
@@ -167,7 +167,7 @@ public class PojoEncodingPerformanceTest {
 
     @Test
     public void outputPerformanceForListOfPrimitives() throws Exception {
-        final PojoEncoder<ListWrapper> pojoCodec = new PojoEncoder<ListWrapper>(Codecs.createDefault());
+        final PojoEncoder<ListWrapper> pojoCodec = new PojoEncoder<ListWrapper>();
         //  890,847 ops per second
         //  945,522 ops per second with cache
         //5,058,040 ops per second with ClassModel
@@ -187,7 +187,7 @@ public class PojoEncodingPerformanceTest {
 
     @Test
     public void outputPerformanceForSimpleMap() throws Exception {
-        final PojoEncoder<MapWrapper> pojoCodec = new PojoEncoder<MapWrapper>(Codecs.createDefault());
+        final PojoEncoder<MapWrapper> pojoCodec = new PojoEncoder<MapWrapper>();
         //  934,809 ops per second
         //7,813,960 ops per second ith simple CLassModel
         final MapWrapper pojo = new MapWrapper();

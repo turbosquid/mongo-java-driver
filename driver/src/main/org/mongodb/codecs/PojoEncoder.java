@@ -24,14 +24,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PojoEncoder<T> implements Encoder<T> {
-    private final Codecs codecs;
+    private final EncoderRegistry encoderRegistry = new EncoderRegistry();
 
     //at this time, this seems to be the only way to
     @SuppressWarnings("rawtypes")
     private final Map<Class<?>, ClassModel> classModelForClass = new HashMap<Class<?>, ClassModel>();
 
-    public PojoEncoder(final Codecs codecs) {
-        this.codecs = codecs;
+    public PojoEncoder() {
+        encoderRegistry.register(Object.class, this);
     }
 
     @Override
@@ -60,19 +60,11 @@ public class PojoEncoder<T> implements Encoder<T> {
             field.setAccessible(true);
             final T fieldValue = (T) field.get(value);
             bsonWriter.writeName(fieldName);
-            encodeValue(bsonWriter, fieldValue);
+            CodecUtils.encode(encoderRegistry, bsonWriter, fieldValue);
             field.setAccessible(false);
         } catch (IllegalAccessException e) {
             //TODO: this is really going to bugger up the writer if it throws an exception halfway through writing
             throw new EncodingException("Could not encode field '" + fieldName + "' from " + value, e);
-        }
-    }
-
-    private void encodeValue(final BSONWriter bsonWriter, final T fieldValue) {
-        if (codecs.canEncode(fieldValue)) {
-            codecs.encode(bsonWriter, fieldValue);
-        } else {
-            encode(bsonWriter, fieldValue);
         }
     }
 

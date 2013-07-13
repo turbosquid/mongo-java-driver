@@ -96,7 +96,7 @@ public class EncoderRegistry {
      * @param encoder the Encoder that can serialise this class
      * @param <T>     the Type that will be encoded
      */
-    public <T> boolean register(final Class<T> aClass, final Encoder<T> encoder) {
+    public <T, S extends T> boolean register(final Class<T> aClass, final Encoder<S> encoder) {
         return classToEncoderMap.put(aClass, encoder) != null;
     }
 
