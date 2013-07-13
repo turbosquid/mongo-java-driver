@@ -22,9 +22,11 @@ import org.mongodb.Encoder;
 
 public class DBRefEncoder implements Encoder<DBRef> {
     private final Codecs codecs;
+    private final EncoderRegistry encoderRegistry;
 
-    public DBRefEncoder(final Codecs codecs) {
+    public DBRefEncoder(final Codecs codecs, final EncoderRegistry encoderRegistry) {
         this.codecs = codecs;
+        this.encoderRegistry = encoderRegistry;
     }
 
     @Override
@@ -33,7 +35,9 @@ public class DBRefEncoder implements Encoder<DBRef> {
 
         bsonWriter.writeString("$ref", dbRef.getRef());
         bsonWriter.writeName("$id");
-        codecs.encode(bsonWriter, dbRef.getId());
+        final Object value = dbRef.getId();
+        final Encoder<Object> encoder = (Encoder<Object>) encoderRegistry.get(value.getClass());
+        encoder.encode(bsonWriter, value);
 
         bsonWriter.writeEndDocument();
     }

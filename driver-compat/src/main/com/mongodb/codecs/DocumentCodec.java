@@ -16,28 +16,11 @@
 
 package com.mongodb.codecs;
 
-import com.mongodb.DBRef;
-import org.bson.BSONWriter;
-import org.mongodb.MongoException;
 import org.mongodb.codecs.PrimitiveCodecs;
-
-import static com.mongodb.MongoExceptions.mapException;
 
 public class DocumentCodec extends org.mongodb.codecs.DocumentCodec {
     public DocumentCodec(final PrimitiveCodecs primitiveCodecs) {
         super(primitiveCodecs);
     }
 
-    protected void writeValue(final BSONWriter bsonWriter, Object value) {
-        if (value instanceof DBRef) {
-            final DBRef dbRef = (DBRef) value;
-            value = new org.mongodb.DBRef(dbRef.getId(), dbRef.getRef());
-        }
-        try {
-            super.writeValue(bsonWriter, value);
-        } catch (MongoException e) {
-            //TODO: test this
-            throw mapException(e);
-        }
-    }
 }

@@ -22,6 +22,7 @@ import org.bson.BSONWriter;
 import org.mongodb.Codec;
 import org.mongodb.Decoder;
 import org.mongodb.Document;
+import org.mongodb.Encoder;
 import org.mongodb.codecs.validators.QueryFieldNameValidator;
 import org.mongodb.codecs.validators.Validator;
 
@@ -32,6 +33,7 @@ public class DocumentCodec implements Codec<Document> {
     private final PrimitiveCodecs primitiveCodecs;
     private final Validator<String> fieldNameValidator;
     private final Codecs codecs;
+    private final EncoderRegistry encoderRegistry;
 
     public DocumentCodec() {
         this(PrimitiveCodecs.createDefault());
@@ -42,12 +44,7 @@ public class DocumentCodec implements Codec<Document> {
     }
 
     protected DocumentCodec(final PrimitiveCodecs primitiveCodecs, final Validator<String> fieldNameValidator) {
-        if (primitiveCodecs == null) {
-            throw new IllegalArgumentException("primitiveCodecs is null");
-        }
-        this.fieldNameValidator = fieldNameValidator;
-        this.primitiveCodecs = primitiveCodecs;
-        codecs = new Codecs(primitiveCodecs, fieldNameValidator, new EncoderRegistry());
+        this(primitiveCodecs, fieldNameValidator, new EncoderRegistry());
     }
 
     protected DocumentCodec(final PrimitiveCodecs primitiveCodecs, final Validator<String> fieldNameValidator,
@@ -55,6 +52,7 @@ public class DocumentCodec implements Codec<Document> {
         if (primitiveCodecs == null) {
             throw new IllegalArgumentException("primitiveCodecs is null");
         }
+        this.encoderRegistry = encoderRegistry;
         this.fieldNameValidator = fieldNameValidator;
         this.primitiveCodecs = primitiveCodecs;
         codecs = new Codecs(primitiveCodecs, fieldNameValidator, encoderRegistry);
@@ -77,6 +75,11 @@ public class DocumentCodec implements Codec<Document> {
         }
         bsonWriter.writeEndDocument();
     }
+
+//    protected void writeValue(final BSONWriter bsonWriter, final Object value) {
+//        final Encoder<Object> encoder = (Encoder<Object>) encoderRegistry.get(value.getClass());
+//        encoder.encode(bsonWriter, value);
+//    }
 
     protected void beforeFields(final BSONWriter bsonWriter, final Document document) {
     }

@@ -37,6 +37,7 @@ class EncoderRegistrySpecification extends Specification {
         encoder instanceof ArrayCodec;
     }
 
+    @Ignore('not implementing Maps yet')
     def 'should return MapCodec as default for class that is a Map'() {
         when:
         Encoder encoder = encoderRegistry.get(Map);

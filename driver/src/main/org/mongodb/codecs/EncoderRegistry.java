@@ -42,15 +42,15 @@ public class EncoderRegistry {
         codecs = new Codecs(primitiveCodecs, defaultValidator, this);
         classToEncoderMap.put(CodeWithScope.class, new CodeWithScopeCodec(codecs));
         classToEncoderMap.put(Iterable.class, new IterableCodec(codecs));
-        classToEncoderMap.put(DBRef.class, new DBRefEncoder(codecs));
-        classToEncoderMap.put(Map.class, new MapCodec(codecs, defaultValidator));
-//        classToEncoderMap.put(Document.class, new DocumentCodec(primitiveCodecs, defaultValidator));
+        classToEncoderMap.put(DBRef.class, new DBRefEncoder(codecs, this));
         classToEncoderMap.put(Document.class, new DocumentCodec(primitiveCodecs, new FieldNameValidator(), this));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"}) //not cool
     public <T> Encoder<T> get(final Class<T> aClass) {
-        if (Iterable.class.isAssignableFrom(aClass)) {
+        if (primitiveCodecs.canEncode(aClass)) {
+            return (Encoder<T>) primitiveCodecs;
+        } else if (Iterable.class.isAssignableFrom(aClass)) {
             return classToEncoderMap.get(Iterable.class);
         } else {
             final Encoder encoder = classToEncoderMap.get(aClass);
@@ -73,4 +73,5 @@ public class EncoderRegistry {
         return classToEncoderMap.put(aClass, encoder) != null;
     }
 
+    //TODO: manage creation
 }

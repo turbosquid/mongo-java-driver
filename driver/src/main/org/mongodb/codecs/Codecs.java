@@ -36,7 +36,6 @@ public class Codecs implements Codec<Object> {
     private final IterableCodec iterableCodec;
     private final ArrayCodec arrayCodec;
     private final MapCodec mapCodec;
-    private final DBRefEncoder dbRefEncoder;
     private final CodeWithScopeCodec codeWithScopeCodec;
     private final SimpleDocumentCodec simpleDocumentCodec;
     private final Codec<Object> defaultObjectCodec = new NoCodec();
@@ -54,7 +53,6 @@ public class Codecs implements Codec<Object> {
         arrayCodec = new ArrayCodec(this);
         iterableCodec = new IterableCodec(this);
         mapCodec = new MapCodec(this, fieldNameValidator);
-        dbRefEncoder = new DBRefEncoder(this);
         codeWithScopeCodec = new CodeWithScopeCodec(this);
         simpleDocumentCodec = new SimpleDocumentCodec(this);
     }
@@ -132,7 +130,6 @@ public class Codecs implements Codec<Object> {
                || primitiveCodecs.canDecode(theClass)
                || iterableCodec.getEncoderClass().isInstance(theClass)
                || mapCodec.getEncoderClass().isAssignableFrom(theClass)
-               || dbRefEncoder.getEncoderClass().isInstance(theClass)
                || codeWithScopeCodec.getEncoderClass().isInstance(theClass)
                || simpleDocumentCodec.getEncoderClass().isInstance(theClass);
     }
