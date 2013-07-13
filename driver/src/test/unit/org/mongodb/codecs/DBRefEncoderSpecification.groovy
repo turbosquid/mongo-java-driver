@@ -30,11 +30,9 @@ class DBRefEncoderSpecification extends Specification {
     private final Codecs codecs = Mock();
 
     @Subject
-    private final DBRefEncoder dbRefCodec = new DBRefEncoder(codecs, encoderRegistry);
+    private final DBRefEncoder dbRefCodec = new DBRefEncoder(codecs, new EncoderRegistry());
 
-    //TODO: Trish
-    @Ignore('fix me')
-    def 'should encode db ref as string namespace and delegate encoding of id to codecs'() {
+    def 'should encode db ref as string namespace and encode ID as String'() {
         given:
         String namespace = 'theNamespace';
         String theId = 'TheId';
@@ -50,7 +48,7 @@ class DBRefEncoderSpecification extends Specification {
         then:
         1 * bsonWriter.writeName('$id');
         then:
-        1 * codecs.encode(bsonWriter, theId);
+        1 * bsonWriter.writeString(theId);
         then:
         1 * bsonWriter.writeEndDocument();
     }
