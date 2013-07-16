@@ -29,7 +29,7 @@ class IterableCodecSpecification extends Specification {
     private final BSONWriter bsonWriter = Mock();
 
     @Subject
-    private final IterableCodec iterableCodec = new IterableCodec(Codecs.createDefault());
+    private final IterableCodec iterableCodec = new IterableCodec(Codecs.createDefault(), new EncoderRegistry());
 
     def 'should encode list of strings'() {
         given:
@@ -69,22 +69,24 @@ class IterableCodecSpecification extends Specification {
         1 * bsonWriter.writeEndArray();
     }
 
-    def 'should delegate encoding of complex types to codecs'() {
+    def 'should encode complex types'() {
         given:
-        // different setup means this should be in a different test class
-        Codecs mockCodecs = Mock(Codecs);
-        IterableCodec iterableCodecWithMock = new IterableCodec(mockCodecs);
-
         Object document = new Document('field', 'value');
         List<Object> documentList = [document];
 
         when:
-        iterableCodecWithMock.encode(bsonWriter, documentList);
+        iterableCodec.encode(bsonWriter, documentList);
 
         then:
         1 * bsonWriter.writeStartArray();
         then:
-        1 * mockCodecs.encode(bsonWriter, document);
+        1 * bsonWriter.writeStartDocument();
+        then:
+        1 * bsonWriter.writeName('field');
+        then:
+        1 * bsonWriter.writeString('value');
+        then:
+        1 * bsonWriter.writeEndDocument();
         then:
         1 * bsonWriter.writeEndArray();
     }
@@ -129,7 +131,8 @@ class IterableCodecSpecification extends Specification {
 
     def 'should be able to decode into set'() {
         given:
-        IterableCodec iterableCodecForSet = new IterableCodec(Codecs.createDefault(), new HashSetFactory(), Codecs.createDefault());
+        IterableCodec iterableCodecForSet = new IterableCodec(new HashSetFactory(),
+                                                              Codecs.createDefault(), new EncoderRegistry());
 
         Iterable<Integer> expectedSet = new HashSet<Integer>([1, 2, 3]);
         BSONReader reader = prepareReaderWithObjectToBeDecoded(expectedSet);
@@ -151,7 +154,8 @@ class IterableCodecSpecification extends Specification {
         Decoder decoder = Mock();
         //this magic incantation is the stubbing
         decoder.decode(reader) >> { reader.readInt32(); timesDecodeCalled++; }
-        IterableCodec iterableCodecForSet = new IterableCodec(Codecs.createDefault(), new HashSetFactory(), decoder);
+        IterableCodec iterableCodecForSet = new IterableCodec(new HashSetFactory(),
+                                                              decoder, new EncoderRegistry());
 
         when:
         iterableCodecForSet.decode(reader);

@@ -27,10 +27,9 @@ import static org.mongodb.codecs.CodecTestUtil.prepareReaderWithObjectToBeDecode
 
 class DBRefEncoderSpecification extends Specification {
     private final BSONWriter bsonWriter = Mock();
-    private final Codecs codecs = Mock();
 
     @Subject
-    private final DBRefEncoder dbRefCodec = new DBRefEncoder(codecs, new EncoderRegistry());
+    private final DBRefEncoder dbRefCodec = new DBRefEncoder(new EncoderRegistry());
 
     def 'should encode db ref as string namespace and encode ID as String'() {
         given:

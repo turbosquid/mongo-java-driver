@@ -24,12 +24,12 @@ import java.util.Map;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class MapCodec implements Encoder<Map<String, ?>> {
-    private final Codecs codecs;
     private final Validator<String> validator;
+    private final EncoderRegistry encoderRegistry;
 
-    public MapCodec(final Codecs codecs, final Validator<String> validator) {
-        this.codecs = codecs;
+    public MapCodec(final Validator<String> validator, final EncoderRegistry encoderRegistry) {
         this.validator = validator;
+        this.encoderRegistry = encoderRegistry;
     }
 
     @Override
@@ -41,7 +41,7 @@ public class MapCodec implements Encoder<Map<String, ?>> {
             validateFieldName(fieldName);
 
             bsonWriter.writeName(fieldName);
-            codecs.encode(bsonWriter, entry.getValue());
+            CodecUtils.encode(encoderRegistry, bsonWriter, entry.getValue());
         }
         bsonWriter.writeEndDocument();
     }

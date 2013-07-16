@@ -21,11 +21,9 @@ import org.mongodb.DBRef;
 import org.mongodb.Encoder;
 
 public class DBRefEncoder implements Encoder<DBRef> {
-    private final Codecs codecs;
     private final EncoderRegistry encoderRegistry;
 
-    public DBRefEncoder(final Codecs codecs, final EncoderRegistry encoderRegistry) {
-        this.codecs = codecs;
+    public DBRefEncoder(final EncoderRegistry encoderRegistry) {
         this.encoderRegistry = encoderRegistry;
     }
 

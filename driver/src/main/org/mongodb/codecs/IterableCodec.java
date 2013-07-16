@@ -28,24 +28,25 @@ import java.util.Collection;
 @SuppressWarnings("rawtypes")
 public class IterableCodec implements Codec<Iterable> {
     private final CollectionFactory collectionFactory;
-    private final Codecs codecs;
     private final Decoder<?> decoder;
+    private final EncoderRegistry encoderRegistry;
 
-    public IterableCodec(final Codecs codecs) {
-        this(codecs, new ArrayListFactory(), codecs);
+    public IterableCodec(final Codecs codecs, final EncoderRegistry encoderRegistry) {
+        this(new ArrayListFactory(), codecs, encoderRegistry);
     }
 
-    public IterableCodec(final Codecs codecs, final CollectionFactory collectionFactory, final Decoder<?> decoder) {
-        this.codecs = codecs;
+    public IterableCodec(final CollectionFactory collectionFactory, final Decoder<?> decoder,
+                         final EncoderRegistry encoderRegistry) {
         this.collectionFactory = collectionFactory;
         this.decoder = decoder;
+        this.encoderRegistry = encoderRegistry;
     }
 
     @Override
     public void encode(final BSONWriter bsonWriter, final Iterable iterable) {
         bsonWriter.writeStartArray();
         for (final Object value : iterable) {
-            codecs.encode(bsonWriter, value);
+            CodecUtils.encode(encoderRegistry, bsonWriter, value);
         }
         bsonWriter.writeEndArray();
     }

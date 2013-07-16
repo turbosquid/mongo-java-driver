@@ -29,7 +29,7 @@ class ArrayCodecWithObjectArraySpecification extends Specification {
     private final ArrayCodec arrayCodec = new ArrayCodec();
 
     //TODO: trish
-    @Ignore("FIX ME")
+    @Ignore('FIX ME')
     def 'should write start and end for array of objects and delegate encoding of object'() {
         given:
         Object object1 = new Object();
@@ -50,7 +50,7 @@ class ArrayCodecWithObjectArraySpecification extends Specification {
     }
 
     //TODO: trish
-    @Ignore("FIX ME")
+    @Ignore('FIX ME')
     def 'should write start & end for array of objects & delegate encoding of object when array disguised as object'() {
         given:
         Object object1 = new Object();

@@ -27,7 +27,7 @@ class MapCodecSpecification extends Specification {
     private final BSONWriter bsonWriter = Mock();
 
     @Subject
-    private MapCodec mapCodec = new MapCodec(Codecs.createDefault(), new FieldNameValidator());
+    private MapCodec mapCodec = new MapCodec(new FieldNameValidator(), new EncoderRegistry());
 
     def 'should encode string to document map'() {
         given:
@@ -69,7 +69,7 @@ class MapCodecSpecification extends Specification {
 
     def 'should not allow dots in keys when validator is collectible document validator'() {
         given:
-        mapCodec = new MapCodec(Codecs.createDefault(), new FieldNameValidator());
+        mapCodec = new MapCodec(new FieldNameValidator(), new EncoderRegistry());
 
         Map<String, Integer> mapWithInvalidFieldName = ['a.b': 1];
 
@@ -82,7 +82,7 @@ class MapCodecSpecification extends Specification {
 
     def 'should allow dots in keys in nested maps when validator is query document validator'() {
         given:
-        mapCodec = new MapCodec(Codecs.createDefault(), new QueryFieldNameValidator());
+        mapCodec = new MapCodec(new QueryFieldNameValidator(), new EncoderRegistry());
         Map<String, Object> map = ['a.b': 'The Field'];
 
         when:

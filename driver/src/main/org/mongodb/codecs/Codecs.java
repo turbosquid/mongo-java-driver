@@ -51,9 +51,9 @@ public class Codecs implements Codec<Object> {
         this.primitiveCodecs = primitiveCodecs;
         this.encoderRegistry = encoderRegistry;
         arrayCodec = new ArrayCodec();
-        iterableCodec = new IterableCodec(this);
-        mapCodec = new MapCodec(this, fieldNameValidator);
-        codeWithScopeCodec = new CodeWithScopeCodec(this);
+        iterableCodec = new IterableCodec(this, encoderRegistry);
+        mapCodec = new MapCodec(fieldNameValidator, encoderRegistry);
+        codeWithScopeCodec = new CodeWithScopeCodec(this, encoderRegistry);
         simpleDocumentCodec = new SimpleDocumentCodec(this);
     }
 

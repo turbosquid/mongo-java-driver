@@ -137,7 +137,7 @@ class PojoCodecEncodingSpecification extends Specification {
     }
 
     //TODO: trish
-    @Ignore("FIX ME")
+    @Ignore('FIX ME')
     def 'should encode maps of objects'() {
         given:
         String simpleObjectValue = 'theValue';

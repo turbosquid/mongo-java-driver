@@ -44,11 +44,11 @@ public class EncoderRegistry {
 
     public EncoderRegistry() {
         codecs = new Codecs(primitiveCodecs, defaultValidator, this);
-        classToEncoderMap.put(CodeWithScope.class, new CodeWithScopeCodec(codecs));
-        classToEncoderMap.put(Iterable.class, new IterableCodec(codecs));
-        classToEncoderMap.put(DBRef.class, new DBRefEncoder(codecs, this));
+        classToEncoderMap.put(CodeWithScope.class, new CodeWithScopeCodec(codecs, this));
+        classToEncoderMap.put(Iterable.class, new IterableCodec(codecs, this));
+        classToEncoderMap.put(DBRef.class, new DBRefEncoder(this));
         classToEncoderMap.put(Document.class, new DocumentCodec(primitiveCodecs, new FieldNameValidator(), this));
-        classToEncoderMap.put(Map.class, new MapCodec(codecs, defaultValidator));
+        classToEncoderMap.put(Map.class, new MapCodec(defaultValidator, this));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
