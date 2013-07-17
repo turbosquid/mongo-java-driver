@@ -39,7 +39,7 @@ import org.mongodb.connection.impl.DefaultServerSettings;
 import org.mongodb.connection.impl.PowerOfTwoBufferPool;
 import org.mongodb.session.ClusterSession;
 import org.mongodb.session.PinnedSession;
-import org.mongodb.session.ServerSelectingSession;
+import org.mongodb.session.Session;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -75,7 +75,7 @@ public class Mongo {
     private final Cluster cluster;
     private final BufferProvider bufferProvider = new PowerOfTwoBufferPool();
 
-    private final ThreadLocal<ServerSelectingSession> pinnedSession = new ThreadLocal<ServerSelectingSession>();
+    private final ThreadLocal<Session> pinnedSession = new ThreadLocal<Session>();
 
     Mongo(final List<ServerAddress> seedList, final MongoClientOptions mongoOptions) {
         this(new DefaultClusterFactory().create(
@@ -507,7 +507,7 @@ public class Mongo {
         return bufferProvider;
     }
 
-    ServerSelectingSession getSession() {
+    Session getSession() {
         if (pinnedSession.get() != null) {
             return pinnedSession.get();
         }
@@ -529,7 +529,7 @@ public class Mongo {
 
     void unpinSession() {
         isTrue("request started", pinnedSession.get() != null);
-        final ServerSelectingSession sessionToUnpin = this.pinnedSession.get();
+        final Session sessionToUnpin = this.pinnedSession.get();
         this.pinnedSession.remove();
         sessionToUnpin.close();
     }
