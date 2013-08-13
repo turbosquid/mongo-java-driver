@@ -21,15 +21,13 @@ import org.mongodb.async.MongoAsyncQueryCursor;
 import org.mongodb.command.AggregateCommand;
 import org.mongodb.command.AsyncCountOperation;
 import org.mongodb.command.CountOperation;
-import org.mongodb.command.FindAndModifyCommandResult;
-import org.mongodb.command.FindAndModifyCommandResultCodec;
 import org.mongodb.command.MapReduceCommand;
 import org.mongodb.connection.SingleResultCallback;
 import org.mongodb.operation.AsyncQueryOperation;
 import org.mongodb.operation.AsyncReplaceOperation;
-import org.mongodb.operation.CommandOperation;
 import org.mongodb.operation.Find;
 import org.mongodb.operation.FindAndRemove;
+import org.mongodb.operation.FindAndRemoveOperation;
 import org.mongodb.operation.FindAndReplace;
 import org.mongodb.operation.FindAndReplaceOperation;
 import org.mongodb.operation.FindAndUpdate;
@@ -416,21 +414,16 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                   getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 
-        //CHECKSTYLE:OFF
-        //TODO: absolute disaster area
         @Override
         public T getOneAndRemove() {
-            final FindAndRemove<T> findAndRemove = new FindAndRemove<T>().where(findOp.getFilter()).select(findOp.getFields())
-                    .sortBy(findOp.getOrder());
+            final FindAndRemove<T> findAndRemove = new FindAndRemove<T>().where(findOp.getFilter())
+                                                                         .select(findOp.getFields())
+                                                                         .sortBy(findOp.getOrder());
 
-            final FindAndModifyCommandResultCodec<T> codec
-                    = new FindAndModifyCommandResultCodec<T>(getOptions().getPrimitiveCodecs(),
-                    getCodec());
-            return new FindAndModifyCommandResult<T>(new CommandOperation(getDatabase().getName(),
-                    new org.mongodb.command.FindAndRemove(findAndRemove, getName()), codec, client.getCluster().getDescription(),
-                    client.getBufferProvider(), client.getSession(), false).execute()).getValue();
+            return new FindAndRemoveOperation<T>(client.getBufferProvider(), client.getSession(), false,
+                                                 client.getCluster().getDescription(), getNamespace(), findAndRemove,
+                                                 getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
-        //CHECKSTYLE:OFF
 
         @Override
         public MongoFuture<WriteResult> asyncReplace(final T replacement) {

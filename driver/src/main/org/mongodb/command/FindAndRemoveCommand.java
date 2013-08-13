@@ -21,9 +21,9 @@ import org.mongodb.operation.FindAndModify;
 
 import static org.mongodb.command.CommandDocumentTemplates.getFindAndModify;
 
-public final class FindAndRemove extends Command {
+public final class FindAndRemoveCommand extends Command {
 
-    public FindAndRemove(final FindAndModify findAndModify, final String collectionName) {
+    public FindAndRemoveCommand(final FindAndModify findAndModify, final String collectionName) {
         super(asDocument(findAndModify, collectionName));
     }
 
