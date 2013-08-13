@@ -18,12 +18,10 @@
 package com.mongodb;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
+import com.mongodb.codecs.CollectibleDBObjectCodec;
 import com.mongodb.codecs.CompoundDBObjectCodec;
+import com.mongodb.codecs.DBDecoderAdapter;
+import com.mongodb.codecs.DBEncoderAdapter;
 import com.mongodb.codecs.DBEncoderFactoryAdapter;
 import com.mongodb.codecs.DocumentCodec;
 import org.bson.types.ObjectId;
@@ -62,6 +60,7 @@ import org.mongodb.operation.Find;
 import org.mongodb.operation.FindAndRemove;
 import org.mongodb.operation.FindAndReplace;
 import org.mongodb.operation.FindAndUpdate;
+import org.mongodb.operation.GetIndexesOperation;
 import org.mongodb.operation.Insert;
 import org.mongodb.operation.InsertOperation;
 import org.mongodb.operation.QueryOperation;
@@ -73,9 +72,11 @@ import org.mongodb.operation.Update;
 import org.mongodb.operation.UpdateOperation;
 import org.mongodb.session.Session;
 import org.mongodb.util.FieldHelpers;
-import com.mongodb.codecs.CollectibleDBObjectCodec;
-import com.mongodb.codecs.DBDecoderAdapter;
-import com.mongodb.codecs.DBEncoderAdapter;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static com.mongodb.DBObjects.toDBList;
 import static com.mongodb.DBObjects.toDBObject;
@@ -1626,7 +1627,6 @@ public class DBCollection implements IDBCollection {
         this.objectCodec = new CompoundDBObjectCodec(encoder, objectCodec.getDecoder());
     }
 
-
     /**
      * Return a list of the indexes for this collection.  Each object in the list is the "info document" from MongoDB
      *
@@ -1635,21 +1635,9 @@ public class DBCollection implements IDBCollection {
      */
     @Override
     public List<DBObject> getIndexInfo() {
-        final ArrayList<DBObject> res = new ArrayList<DBObject>();
-
-        final Find queryForCollectionNamespace = new Find(
-                new Document(NAMESPACE_KEY_NAME, getNamespace().getFullName()))
-                .readPreference(org.mongodb.ReadPreference.primary());
-
         try {
-            MongoCursor<Document> cursor =
-                    new QueryOperation<Document>(new MongoNamespace(database.getName(), "system.indexes"), queryForCollectionNamespace,
-                            documentCodec, documentCodec, getBufferPool(), getSession(), false).execute();
-
-            while (cursor.hasNext()) {
-                res.add(DBObjects.toDBObject(cursor.next()));
-            }
-            return res;
+            return new GetIndexesOperation<DBObject>(getBufferPool(), getSession(), false,
+                                                     getNamespace(), documentCodec, objectCodec).execute();
         } catch (org.mongodb.MongoException e) {
             throw mapException(e);
         }

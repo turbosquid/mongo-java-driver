@@ -23,19 +23,19 @@ import org.mongodb.command.Drop;
 import org.mongodb.command.DropIndex;
 import org.mongodb.command.MongoCommandFailureException;
 import org.mongodb.operation.Find;
+import org.mongodb.operation.GetIndexesOperation;
 import org.mongodb.operation.Insert;
 import org.mongodb.operation.InsertOperation;
-import org.mongodb.operation.QueryOperation;
 import org.mongodb.util.FieldHelpers;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import static org.mongodb.ReadPreference.primary;
 import static org.mongodb.WriteConcern.ACKNOWLEDGED;
 
 /**
- * Encapsulates functionality that is not part of the day-to-day use of a Collection.  For example, via this admin class
- * you can create indexes and drop the collection.
+ * Encapsulates functionality that is not part of the day-to-day use of a Collection.  For example, via this admin class you can create
+ * indexes and drop the collection.
  */
 class CollectionAdministrationImpl implements CollectionAdministration {
     private static final String NAMESPACE_KEY_NAME = "ns";
@@ -61,10 +61,9 @@ class CollectionAdministrationImpl implements CollectionAdministration {
         indexesNamespace = new MongoNamespace(database.getName(), "system.indexes");
         this.collectionNamespace = collectionNamespace;
         collStatsCommand = new CollStats(collectionNamespace.getCollectionName());
-        queryForCollectionNamespace = new Find(
-                new Document(NAMESPACE_KEY_NAME, this.collectionNamespace.getFullName()))
-                .readPreference(ReadPreference.primary());
-        dropCollectionCommand = new Drop(this.collectionNamespace.getCollectionName());
+        queryForCollectionNamespace = new Find(new Document(NAMESPACE_KEY_NAME, collectionNamespace.getFullName()))
+                                      .readPreference(primary());
+        dropCollectionCommand = new Drop(collectionNamespace.getCollectionName());
     }
 
     @Override
@@ -75,18 +74,13 @@ class CollectionAdministrationImpl implements CollectionAdministration {
         final Insert<Document> insertIndexOperation = new Insert<Document>(ACKNOWLEDGED, indexDetails);
 
         new InsertOperation<Document>(indexesNamespace, insertIndexOperation, documentCodec, client.getBufferProvider(),
-                client.getSession(), false).execute();
+                                      client.getSession(), false).execute();
     }
 
     @Override
     public List<Document> getIndexes() {
-        List<Document> retVal = new ArrayList<Document>();
-        MongoCursor<Document> cursor = new QueryOperation<Document>(indexesNamespace, queryForCollectionNamespace, documentCodec,
-                documentCodec, client.getBufferProvider(), client.getSession(), false).execute();
-        while (cursor.hasNext()) {
-            retVal.add(cursor.next());
-        }
-        return retVal;
+        return new GetIndexesOperation<Document>(client.getBufferProvider(), client.getSession(),
+                                       false, collectionNamespace, documentCodec, documentCodec).execute();
     }
 
     @Override

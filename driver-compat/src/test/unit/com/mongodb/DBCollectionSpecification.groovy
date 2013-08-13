@@ -14,18 +14,6 @@
  * limitations under the License.
  */
 
-
-
-
-
-
-
-
-
-
-
-
-
 package com.mongodb
 
 import org.mongodb.Document
@@ -44,7 +32,6 @@ import static com.mongodb.WriteConcern.ACKNOWLEDGED
 import static org.mongodb.Fixture.getBufferProvider
 
 class DBCollectionSpecification extends Specification {
-//    private final Mongo mongo = Mock()
     private final DB database = Mock()
     private final Session session = Mock()
     private final Cluster cluster = Mock()
