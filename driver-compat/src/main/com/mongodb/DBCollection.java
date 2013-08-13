@@ -48,6 +48,7 @@ import org.mongodb.command.Drop;
 import org.mongodb.command.DropIndex;
 import org.mongodb.command.FindAndModifyCommandResult;
 import org.mongodb.command.FindAndModifyCommandResultCodec;
+import org.mongodb.command.FindAndUpdateCommand;
 import org.mongodb.command.GroupCommandResult;
 import org.mongodb.command.MapReduceCommandResult;
 import org.mongodb.command.MapReduceCommandResultCodec;
@@ -1462,7 +1463,7 @@ public class DBCollection implements IDBCollection {
                         .select(toFieldSelectorDocument(fields))
                         .updateWith(toUpdateOperationsDocument(update))
                         .upsert(upsert);
-                mongoCommand = new org.mongodb.command.FindAndUpdate<DBObject>(mongoFindAndUpdate, getName());
+                mongoCommand = new FindAndUpdateCommand<DBObject>(mongoFindAndUpdate, getName());
             }
             else {
                 final FindAndReplace<DBObject> mongoFindAndReplace
@@ -1636,8 +1637,8 @@ public class DBCollection implements IDBCollection {
     @Override
     public List<DBObject> getIndexInfo() {
         try {
-            return new GetIndexesOperation<DBObject>(getBufferPool(), getSession(), false,
-                                                     getNamespace(), documentCodec, objectCodec).execute();
+            return new GetIndexesOperation<DBObject>(getBufferPool(), getSession(), false, getNamespace(), documentCodec, objectCodec)
+                   .execute();
         } catch (org.mongodb.MongoException e) {
             throw mapException(e);
         }

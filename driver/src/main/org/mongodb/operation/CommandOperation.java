@@ -27,6 +27,8 @@ import org.mongodb.operation.protocol.CommandProtocol;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
+import static org.mongodb.operation.CommandReadPreferenceHelper.isQuery;
+
 public class CommandOperation extends OperationBase<CommandResult> {
     private final Command command;
     private final Codec<Document> codec;
@@ -47,12 +49,14 @@ public class CommandOperation extends OperationBase<CommandResult> {
         return command;
     }
 
+    @Override
     public CommandResult execute() {
         try {
-            ServerConnectionProvider provider = getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(isQuery(),
-                    getServerSelector()));
+            final ServerConnectionProvider provider = getSession()
+                                                .createServerConnectionProvider(new ServerConnectionProviderOptions(isQuery(command),
+                                                                                                                    getServerSelector()));
             return new CommandProtocol(database, command, codec, getBufferProvider(), provider.getServerDescription(),
-                    provider.getConnection(), true).execute();
+                                       provider.getConnection(), true).execute();
         } finally {
             if (isCloseSession()) {
                 getSession().close();
@@ -62,9 +66,5 @@ public class CommandOperation extends OperationBase<CommandResult> {
 
     private ServerSelector getServerSelector() {
         return new ReadPreferenceServerSelector(CommandReadPreferenceHelper.getCommandReadPreference(command, clusterDescription));
-    }
-
-    private boolean isQuery() {
-        return CommandReadPreferenceHelper.isQuery(command);
     }
 }

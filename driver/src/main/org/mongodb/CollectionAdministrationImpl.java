@@ -22,7 +22,6 @@ import org.mongodb.command.CollStats;
 import org.mongodb.command.Drop;
 import org.mongodb.command.DropIndex;
 import org.mongodb.command.MongoCommandFailureException;
-import org.mongodb.operation.Find;
 import org.mongodb.operation.GetIndexesOperation;
 import org.mongodb.operation.Insert;
 import org.mongodb.operation.InsertOperation;
@@ -30,7 +29,6 @@ import org.mongodb.util.FieldHelpers;
 
 import java.util.List;
 
-import static org.mongodb.ReadPreference.primary;
 import static org.mongodb.WriteConcern.ACKNOWLEDGED;
 
 /**
@@ -46,7 +44,6 @@ class CollectionAdministrationImpl implements CollectionAdministration {
     private final DocumentCodec documentCodec;
     private final MongoNamespace indexesNamespace;
     private final MongoNamespace collectionNamespace;
-    private final Find queryForCollectionNamespace;
 
     private final CollStats collStatsCommand;
     private final Drop dropCollectionCommand;
@@ -61,8 +58,6 @@ class CollectionAdministrationImpl implements CollectionAdministration {
         indexesNamespace = new MongoNamespace(database.getName(), "system.indexes");
         this.collectionNamespace = collectionNamespace;
         collStatsCommand = new CollStats(collectionNamespace.getCollectionName());
-        queryForCollectionNamespace = new Find(new Document(NAMESPACE_KEY_NAME, collectionNamespace.getFullName()))
-                                      .readPreference(primary());
         dropCollectionCommand = new Drop(collectionNamespace.getCollectionName());
     }
 

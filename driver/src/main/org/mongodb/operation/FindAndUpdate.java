@@ -21,12 +21,10 @@ import org.mongodb.Document;
 public class FindAndUpdate<T> extends FindAndModify {
     private Document updateOperations;
 
-    //CHECKSTYLE:OFF
-    public FindAndUpdate<T> updateWith(final Document updateOperations) {
-        this.updateOperations = updateOperations;
+    public FindAndUpdate<T> updateWith(final Document anUpdateOperations) {
+        this.updateOperations = anUpdateOperations;
         return this;
     }
-    //CHECKSTYLE:ON
 
     public Document getUpdateOperations() {
         return updateOperations;

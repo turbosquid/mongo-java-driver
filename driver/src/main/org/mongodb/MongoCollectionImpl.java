@@ -32,6 +32,7 @@ import org.mongodb.operation.Find;
 import org.mongodb.operation.FindAndRemove;
 import org.mongodb.operation.FindAndReplace;
 import org.mongodb.operation.FindAndUpdate;
+import org.mongodb.operation.FindAndUpdateOperation;
 import org.mongodb.operation.Insert;
 import org.mongodb.operation.InsertOperation;
 import org.mongodb.operation.QueryOperation;
@@ -233,7 +234,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
         @Override
         public T getOne() {
-            MongoCursor<T> cursor = new QueryOperation<T>(getNamespace(), findOp.batchSize(-1), getDocumentCodec(), getCodec(),
+            final MongoCursor<T> cursor = new QueryOperation<T>(getNamespace(), findOp.batchSize(-1), getDocumentCodec(), getCodec(),
                     client.getBufferProvider(), client.getSession(), false).execute();
 
             return cursor.hasNext() ? cursor.next() : null;
@@ -390,23 +391,21 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
             return replaceOneAndGet(replacement, Get.BeforeChangeApplied);
         }
 
-        //CHECKSTYLE:OFF
-        //TODO: absolute disaster area
         public T updateOneAndGet(final Document updateOperations, final Get beforeOrAfter) {
-            final FindAndUpdate<T> findAndUpdate = new FindAndUpdate<T>()
-                    .where(findOp.getFilter()).updateWith(updateOperations).returnNew(asBoolean(beforeOrAfter)).select(findOp.getFields())
-                    .sortBy(findOp.getOrder()).upsert(upsert);
+            final FindAndUpdate<T> findAndUpdate = new FindAndUpdate<T>().where(findOp.getFilter())
+                                                                         .updateWith(updateOperations)
+                                                                         .returnNew(asBoolean(beforeOrAfter))
+                                                                         .select(findOp.getFields())
+                                                                         .sortBy(findOp.getOrder())
+                                                                         .upsert(upsert);
 
-            //TODO: Still need to tidy up some of this command stuff, especially around return values
-            final org.mongodb.command.FindAndUpdate<T> findAndUpdateCommand =
-                    new org.mongodb.command.FindAndUpdate<T>(findAndUpdate, getName());
-            final FindAndModifyCommandResultCodec<T> codec = new FindAndModifyCommandResultCodec<T>(getOptions().getPrimitiveCodecs(),
-                    getCodec());
-            return new FindAndModifyCommandResult<T>(new CommandOperation(getDatabase().getName(), findAndUpdateCommand, codec,
-                    client.getCluster().getDescription(), client.getBufferProvider(), client.getSession(), false).execute()).getValue();
-
+            return new FindAndUpdateOperation<T>(client.getBufferProvider(), client.getSession(), false,
+                                                 client.getCluster().getDescription(), getNamespace(), findAndUpdate,
+                                                 getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 
+        //CHECKSTYLE:OFF
+        //TODO: absolute disaster area
         public T replaceOneAndGet(final T replacement, final Get beforeOrAfter) {
             final FindAndReplace<T> findAndReplace = new FindAndReplace<T>(replacement).where(findOp.getFilter())
                     .returnNew(asBoolean(beforeOrAfter)).select(findOp.getFields()).sortBy(findOp.getOrder()).upsert(upsert);
@@ -468,7 +467,8 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
         @Override
         public MongoFuture<Long> asyncCount() {
-            return client.getAsyncSession().execute(new AsyncCountOperation(findOp, getNamespace(), getDocumentCodec(), client.getBufferProvider()
+            return client.getAsyncSession().execute(new AsyncCountOperation(findOp, getNamespace(), getDocumentCodec(),
+                                                                            client.getBufferProvider()
             ));
         }
 
@@ -532,49 +532,49 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
         @Override
         public MongoPipeline<T> find(final Document criteria) {
-            MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
+            final MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
             newPipeline.pipeline.add(new Document("$match", criteria));
             return newPipeline;
         }
 
         @Override
         public MongoPipeline<T> sort(final Document sortCriteria) {
-            MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
+            final MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
             newPipeline.pipeline.add(new Document("$sort", sortCriteria));
             return newPipeline;
         }
 
         @Override
         public MongoPipeline<T> skip(final long skip) {
-            MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
+            final MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
             newPipeline.pipeline.add(new Document("$skip", skip));
             return newPipeline;
         }
 
         @Override
         public MongoPipeline<T> limit(final long limit) {
-            MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
+            final MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
             newPipeline.pipeline.add(new Document("$limit", limit));
             return newPipeline;
         }
 
         @Override
         public MongoPipeline<T> project(final Document projection) {
-            MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
+            final MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
             newPipeline.pipeline.add(new Document("$project", projection));
             return newPipeline;
         }
 
         @Override
         public MongoPipeline<T> group(final Document group) {
-            MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
+            final MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
             newPipeline.pipeline.add(new Document("$group", group));
             return newPipeline;
         }
 
         @Override
         public MongoPipeline<T> unwind(final String field) {
-            MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
+            final MongoCollectionPipeline newPipeline = new MongoCollectionPipeline(this);
             newPipeline.pipeline.add(new Document("$unwind", field));
             return newPipeline;
         }
@@ -603,7 +603,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
         @Override
         public void forEach(final Block<? super T> block) {
-            MongoCursor<T> cursor = iterator();
+            final MongoCursor<T> cursor = iterator();
             try {
                 while (cursor.hasNext()) {
                     if (!block.run(cursor.next())) {

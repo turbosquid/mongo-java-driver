@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mongodb.ReadPreference.primary;
+import static org.mongodb.assertions.Assertions.notNull;
 
 public class GetIndexesOperation<T> extends OperationBase<List<T>> {
     private static final String NAMESPACE_KEY_NAME = "ns";
@@ -25,8 +26,9 @@ public class GetIndexesOperation<T> extends OperationBase<List<T>> {
                                final MongoNamespace collectionNamespace, final Encoder<Document> queryEncoder,
                                final Decoder<T> resultDecoder) {
         super(bufferProvider, session, closeSession);
-        this.queryEncoder = queryEncoder;
-        this.resultDecoder = resultDecoder;
+        notNull("collectionNamespace", resultDecoder);
+        this.queryEncoder = notNull("queryEncoder", queryEncoder);
+        this.resultDecoder = notNull("resultDecoder", resultDecoder);
         indexesNamespace = new MongoNamespace(collectionNamespace.getDatabaseName(), "system.indexes");
         queryForCollectionNamespace = new Find(new Document(NAMESPACE_KEY_NAME, collectionNamespace.getFullName()))
                                       .readPreference(primary());
@@ -36,8 +38,8 @@ public class GetIndexesOperation<T> extends OperationBase<List<T>> {
     public List<T> execute() {
         final List<T> retVal = new ArrayList<T>();
         final MongoCursor<T> cursor = new QueryOperation<T>(indexesNamespace, queryForCollectionNamespace, queryEncoder,
-                                                                          resultDecoder, getBufferProvider(), getSession(),
-                                                                          false).execute();
+                                                            resultDecoder, getBufferProvider(), getSession(),
+                                                            isCloseSession()).execute();
         while (cursor.hasNext()) {
             retVal.add(cursor.next());
         }

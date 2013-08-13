@@ -20,9 +20,9 @@ import org.mongodb.Document;
 
 import static org.mongodb.command.CommandDocumentTemplates.getFindAndModify;
 
-public final class FindAndUpdate<T> extends Command {
+public final class FindAndUpdateCommand<T> extends Command {
 
-    public FindAndUpdate(final org.mongodb.operation.FindAndUpdate<T> findAndUpdate, final String collectionName) {
+    public FindAndUpdateCommand(final org.mongodb.operation.FindAndUpdate<T> findAndUpdate, final String collectionName) {
         super(asDocument(findAndUpdate, collectionName));
     }
 
