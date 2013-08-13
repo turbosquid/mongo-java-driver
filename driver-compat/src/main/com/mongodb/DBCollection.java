@@ -46,11 +46,6 @@ import org.mongodb.command.Distinct;
 import org.mongodb.command.DistinctCommandResult;
 import org.mongodb.command.Drop;
 import org.mongodb.command.DropIndex;
-import org.mongodb.command.FindAndModifyCommandResult;
-import org.mongodb.command.FindAndModifyCommandResultCodec;
-import org.mongodb.command.FindAndRemoveCommand;
-import org.mongodb.command.FindAndReplaceCommand;
-import org.mongodb.command.FindAndUpdateCommand;
 import org.mongodb.command.GroupCommandResult;
 import org.mongodb.command.MapReduceCommandResult;
 import org.mongodb.command.MapReduceCommandResultCodec;
@@ -61,8 +56,11 @@ import org.mongodb.connection.BufferProvider;
 import org.mongodb.operation.CommandOperation;
 import org.mongodb.operation.Find;
 import org.mongodb.operation.FindAndRemove;
+import org.mongodb.operation.FindAndRemoveOperation;
 import org.mongodb.operation.FindAndReplace;
+import org.mongodb.operation.FindAndReplaceOperation;
 import org.mongodb.operation.FindAndUpdate;
+import org.mongodb.operation.FindAndUpdateOperation;
 import org.mongodb.operation.GetIndexesOperation;
 import org.mongodb.operation.Insert;
 import org.mongodb.operation.InsertOperation;
@@ -1443,55 +1441,68 @@ public class DBCollection implements IDBCollection {
     public DBObject findAndModify(final DBObject query, final DBObject fields, final DBObject sort,
                                   final boolean remove, final DBObject update,
                                   final boolean returnNew, final boolean upsert) {
-        final Command mongoCommand;
+        final Decoder<DBObject> resultDecoder = getDBDecoderFactory() != null
+                                                ? new DBDecoderAdapter(getDBDecoderFactory().create(), this, getBufferPool())
+                                                : getObjectCodec();
 
+        final Operation<DBObject> operation;
         if (remove) {
-            final FindAndRemove<DBObject> mongoFindAndRemove = new FindAndRemove<DBObject>()
-                    .where(toNullableDocument(query))
-                    .sortBy(toNullableDocument(sort))
-                    .returnNew(returnNew);
-            mongoCommand = new FindAndRemoveCommand(mongoFindAndRemove, getName());
-        }
-        else {
+            final FindAndRemove<DBObject> findAndRemove = new FindAndRemove<DBObject>().where(toNullableDocument(query))
+                                                                                       .sortBy(toNullableDocument(sort))
+                                                                                       .returnNew(returnNew);
+            operation = new FindAndRemoveOperation<DBObject>(getBufferPool(),
+                                                             getSession(),
+                                                             false,
+                                                             getDB().getClusterDescription(),
+                                                             getNamespace(),
+                                                             findAndRemove,
+                                                             getPrimitiveCodecs(),
+                                                             resultDecoder);
+        } else {
             if (update == null) {
                 throw new IllegalArgumentException("Update document can't be null");
             }
             if (!update.keySet().isEmpty() && update.keySet().iterator().next().charAt(0) == '$') {
 
-                final FindAndUpdate<DBObject> mongoFindAndUpdate = new FindAndUpdate<DBObject>()
-                        .where(toNullableDocument(query))
-                        .sortBy(toNullableDocument(sort))
-                        .returnNew(returnNew)
-                        .select(toFieldSelectorDocument(fields))
-                        .updateWith(toUpdateOperationsDocument(update))
-                        .upsert(upsert);
-                mongoCommand = new FindAndUpdateCommand<DBObject>(mongoFindAndUpdate, getName());
-            }
-            else {
-                final FindAndReplace<DBObject> mongoFindAndReplace
-                        = new FindAndReplace<DBObject>(update)
-                        .where(toNullableDocument(query))
-                        .sortBy(toNullableDocument(sort))
-                        .select(toFieldSelectorDocument(fields))
-                        .returnNew(returnNew)
-                        .upsert(upsert);
-                mongoCommand = new FindAndReplaceCommand<DBObject>(mongoFindAndReplace, getName());
+                final FindAndUpdate<DBObject> findAndUpdate = new FindAndUpdate<DBObject>().where(toNullableDocument(query))
+                                                                                           .sortBy(toNullableDocument(sort))
+                                                                                           .returnNew(returnNew)
+                                                                                           .select(toFieldSelectorDocument(fields))
+                                                                                           .updateWith(toUpdateOperationsDocument(update))
+                                                                                           .upsert(upsert);
+                operation = new FindAndUpdateOperation<DBObject>(getBufferPool(),
+                                                                 getSession(),
+                                                                 false,
+                                                                 getDB()
+                                                                 .getClusterDescription(),
+                                                                 getNamespace(),
+                                                                 findAndUpdate,
+                                                                 getPrimitiveCodecs(),
+                                                                 resultDecoder);
+            } else {
+                final FindAndReplace<DBObject> findAndReplace = new FindAndReplace<DBObject>(update)
+                                                                .where(toNullableDocument(query))
+                                                                .sortBy(toNullableDocument(sort))
+                                                                .select(toFieldSelectorDocument(fields))
+                                                                .returnNew(returnNew)
+                                                                .upsert(upsert);
+                operation = new FindAndReplaceOperation<DBObject>(getBufferPool(),
+                                                                  getSession(),
+                                                                  false,
+                                                                  getDB()
+                                                                  .getClusterDescription(),
+                                                                  getNamespace(),
+                                                                  findAndReplace,
+                                                                  getPrimitiveCodecs(),
+                                                                  resultDecoder);
             }
         }
 
-        final FindAndModifyCommandResultCodec<DBObject> findAndModifyCommandResultCodec =
-                new FindAndModifyCommandResultCodec<DBObject>(getPrimitiveCodecs(), objectCodec);
-
-        final FindAndModifyCommandResult<DBObject> commandResult;
         try {
-            final org.mongodb.CommandResult executionResult = new CommandOperation(getDB().getName(), mongoCommand,
-                    findAndModifyCommandResultCodec, getDB().getClusterDescription(), getBufferPool(), getSession(), false).execute();
-            commandResult = new FindAndModifyCommandResult<DBObject>(executionResult);
+            return operation.execute();
         } catch (org.mongodb.MongoException e) {
             throw mapException(e);
         }
-
-        return commandResult.getValue();
     }
 
     /**
