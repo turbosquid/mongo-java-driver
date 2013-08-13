@@ -48,6 +48,7 @@ import org.mongodb.command.Drop;
 import org.mongodb.command.DropIndex;
 import org.mongodb.command.FindAndModifyCommandResult;
 import org.mongodb.command.FindAndModifyCommandResultCodec;
+import org.mongodb.command.FindAndReplaceCommand;
 import org.mongodb.command.FindAndUpdateCommand;
 import org.mongodb.command.GroupCommandResult;
 import org.mongodb.command.MapReduceCommandResult;
@@ -1473,7 +1474,7 @@ public class DBCollection implements IDBCollection {
                         .select(toFieldSelectorDocument(fields))
                         .returnNew(returnNew)
                         .upsert(upsert);
-                mongoCommand = new org.mongodb.command.FindAndReplace<DBObject>(mongoFindAndReplace, getName());
+                mongoCommand = new FindAndReplaceCommand<DBObject>(mongoFindAndReplace, getName());
             }
         }
 

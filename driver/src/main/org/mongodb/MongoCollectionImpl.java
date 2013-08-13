@@ -31,6 +31,7 @@ import org.mongodb.operation.CommandOperation;
 import org.mongodb.operation.Find;
 import org.mongodb.operation.FindAndRemove;
 import org.mongodb.operation.FindAndReplace;
+import org.mongodb.operation.FindAndReplaceOperation;
 import org.mongodb.operation.FindAndUpdate;
 import org.mongodb.operation.FindAndUpdateOperation;
 import org.mongodb.operation.Insert;
@@ -404,17 +405,19 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                  getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 
-        //CHECKSTYLE:OFF
-        //TODO: absolute disaster area
         public T replaceOneAndGet(final T replacement, final Get beforeOrAfter) {
             final FindAndReplace<T> findAndReplace = new FindAndReplace<T>(replacement).where(findOp.getFilter())
-                    .returnNew(asBoolean(beforeOrAfter)).select(findOp.getFields()).sortBy(findOp.getOrder()).upsert(upsert);
-            return new FindAndModifyCommandResult<T>(new CommandOperation(getDatabase().getName(),
-                    new org.mongodb.command.FindAndReplace<T>(findAndReplace, getName()), new FindAndModifyCommandResultCodec<T>
-                    (getOptions().getPrimitiveCodecs(), getCodec()), client.getCluster().getDescription(), client.getBufferProvider(),
-                    client.getSession(), false).execute()).getValue();
+                                                                                       .returnNew(asBoolean(beforeOrAfter))
+                                                                                       .select(findOp.getFields())
+                                                                                       .sortBy(findOp.getOrder())
+                                                                                       .upsert(upsert);
+            return new FindAndReplaceOperation<T>(client.getBufferProvider(), client.getSession(), false,
+                                                  client.getCluster().getDescription(), getNamespace(), findAndReplace,
+                                                  getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 
+        //CHECKSTYLE:OFF
+        //TODO: absolute disaster area
         @Override
         public T getOneAndRemove() {
             final FindAndRemove<T> findAndRemove = new FindAndRemove<T>().where(findOp.getFilter()).select(findOp.getFields())
