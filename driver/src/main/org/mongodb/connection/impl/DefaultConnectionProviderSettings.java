@@ -16,6 +16,8 @@
 
 package org.mongodb.connection.impl;
 
+import org.mongodb.MongoClientOptions;
+
 import java.util.concurrent.TimeUnit;
 
 import static org.mongodb.assertions.Assertions.isTrue;
@@ -81,6 +83,16 @@ public class DefaultConnectionProviderSettings {
             return this;
         }
         // CHECKSTYLE:ON
+
+        public Builder options(final MongoClientOptions options) {
+            this.minSize(options.getMinConnectionPoolSize())
+                .maxSize(options.getMaxConnectionPoolSize())
+                .maxWaitQueueSize(options.getMaxConnectionPoolSize() * options.getThreadsAllowedToBlockForConnectionMultiplier())
+                .maxWaitTime(options.getMaxWaitTime(), TimeUnit.MILLISECONDS)
+                .maxConnectionIdleTime(options.getMaxConnectionIdleTime(), TimeUnit.MILLISECONDS)
+                .maxConnectionLifeTime(options.getMaxConnectionLifeTime(), TimeUnit.MILLISECONDS);
+            return this;
+        }
 
         public DefaultConnectionProviderSettings build() {
             return new DefaultConnectionProviderSettings(this);
@@ -166,14 +178,14 @@ public class DefaultConnectionProviderSettings {
     @Override
     public String toString() {
         return "DefaultConnectionProviderSettings{"
-                + "maxSize=" + maxSize
-                + ", minSize=" + minSize
-                + ", maxWaitQueueSize=" + maxWaitQueueSize
-                + ", maxWaitTimeMS=" + maxWaitTimeMS
-                + ", maxConnectionLifeTimeMS=" + maxConnectionLifeTimeMS
-                + ", maxConnectionIdleTimeMS=" + maxConnectionIdleTimeMS
-                + ", maintenanceFrequencyMS=" + maintenanceFrequencyMS
-                + '}';
+               + "maxSize=" + maxSize
+               + ", minSize=" + minSize
+               + ", maxWaitQueueSize=" + maxWaitQueueSize
+               + ", maxWaitTimeMS=" + maxWaitTimeMS
+               + ", maxConnectionLifeTimeMS=" + maxConnectionLifeTimeMS
+               + ", maxConnectionIdleTimeMS=" + maxConnectionIdleTimeMS
+               + ", maintenanceFrequencyMS=" + maintenanceFrequencyMS
+               + '}';
     }
 
     DefaultConnectionProviderSettings(final Builder builder) {
