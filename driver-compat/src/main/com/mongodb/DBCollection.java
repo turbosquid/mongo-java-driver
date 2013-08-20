@@ -1498,11 +1498,7 @@ public class DBCollection implements IDBCollection {
             }
         }
 
-        try {
-            return operation.execute();
-        } catch (org.mongodb.MongoException e) {
-            throw mapException(e);
-        }
+        return executeOperation(operation);
     }
 
     /**
