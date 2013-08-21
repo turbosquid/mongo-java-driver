@@ -18,9 +18,13 @@ package org.mongodb;
 
 import org.mongodb.annotations.Immutable;
 import org.mongodb.codecs.PrimitiveCodecs;
+import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
+import org.mongodb.connection.impl.DefaultConnectionSettings;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
- * Various settings to control the behavior of a <code>MongoClient</code>.
+ * Various settings to control the behavior of a {@code MongoClient}.
  *
  * @see MongoClient
  * @since 3.0.0
@@ -49,11 +53,13 @@ public final class MongoClientOptions {
     //CHECKSTYLE:OFF
     private final boolean SSLEnabled;
     //CHECKSTYLE:ON
-    private boolean alwaysUseMBeans;
+    private final boolean alwaysUseMBeans;
     private final int heartbeatFrequency;
     private final int heartbeatConnectRetryFrequency;
     private final int heartbeatConnectTimeout;
     private final int heartbeatSocketTimeout;
+    private final DefaultConnectionSettings connectionSettings;
+    private final DefaultConnectionProviderSettings connectionProviderSettings;
 
     /**
      * Convenience method to create a Builder.
@@ -116,7 +122,7 @@ public final class MongoClientOptions {
          *
          * @param aMinConnectionPoolSize minimum number of connections
          * @return {@code this}
-         * @throws IllegalArgumentException if <code>minConnectionPoolSize < 0</code>
+         * @throws IllegalArgumentException if {@code minConnectionPoolSize < 0}
          * @see MongoClientOptions#getMinConnectionPoolSize()
          */
         public Builder minConnectionPoolSize(final int aMinConnectionPoolSize) {
@@ -132,7 +138,7 @@ public final class MongoClientOptions {
          *
          * @param aMaxConnectionPoolSize maximum number of connections
          * @return {@code this}
-         * @throws IllegalArgumentException if <code>maxConnectionPoolSize < 1</code>
+         * @throws IllegalArgumentException if {@code maxConnectionPoolSize < 1}
          * @see MongoClientOptions#getMaxConnectionPoolSize()
          */
         public Builder maxConnectionPoolSize(final int aMaxConnectionPoolSize) {
@@ -149,7 +155,7 @@ public final class MongoClientOptions {
          * @param aThreadsAllowedToBlockForConnectionMultiplier
          *         the multiplier
          * @return {@code this}
-         * @throws IllegalArgumentException if <code>aThreadsAllowedToBlockForConnectionMultiplier < 1</code>
+         * @throws IllegalArgumentException if {@code aThreadsAllowedToBlockForConnectionMultiplier < 1}
          * @see MongoClientOptions#getThreadsAllowedToBlockForConnectionMultiplier()
          */
         public Builder threadsAllowedToBlockForConnectionMultiplier(
@@ -167,7 +173,7 @@ public final class MongoClientOptions {
          *
          * @param aMaxWaitTime the maximum wait time
          * @return {@code this}
-         * @throws IllegalArgumentException if <code>aMaxWaitTime < 0</code>
+         * @throws IllegalArgumentException if {@code aMaxWaitTime < 0}
          * @see MongoClientOptions#getMaxWaitTime()
          */
         public Builder maxWaitTime(final int aMaxWaitTime) {
@@ -183,8 +189,8 @@ public final class MongoClientOptions {
          *
          * @param aMaxConnectionIdleTime the maximum idle time
          * @return {@code this}
-         * @throws IllegalArgumentException if <code>aMaxConnectionIdleTime < 0</code>
-         * @see org.mongodb.MongoClientOptions#getMaxConnectionIdleTime() ()
+         * @throws IllegalArgumentException if {@code aMaxConnectionIdleTime < 0}
+         * @see MongoClientOptions#getMaxConnectionIdleTime() ()
          */
         public Builder maxConnectionIdleTime(final int aMaxConnectionIdleTime) {
             if (aMaxConnectionIdleTime < 0) {
@@ -199,8 +205,8 @@ public final class MongoClientOptions {
          *
          * @param aMaxConnectionLifeTime the maximum life time
          * @return {@code this}
-         * @throws IllegalArgumentException if <code>aMaxConnectionIdleTime < 0</code>
-         * @see org.mongodb.MongoClientOptions#getMaxConnectionIdleTime() ()
+         * @throws IllegalArgumentException if {@code aMaxConnectionIdleTime < 0}
+         * @see MongoClientOptions#getMaxConnectionIdleTime() ()
          */
         public Builder maxConnectionLifeTime(final int aMaxConnectionLifeTime) {
             if (aMaxConnectionLifeTime < 0) {
@@ -692,6 +698,30 @@ public final class MongoClientOptions {
         return heartbeatSocketTimeout;
     }
 
+    /**
+     * Gets the connection-specific settings wrapped in a settings object.   This settings object contains the values for connectTimeout,
+     * socketTimeout and socketKeepAlive.
+     *
+     * @see DefaultConnectionSettings
+     * @return a DefaultConnectionSettings object populated with the connection settings from this MongoClientOptions instance.
+     */
+    public DefaultConnectionSettings getConnectionSettings() {
+        return connectionSettings;
+    }
+
+    /**
+     * Gets the settings for the connection provider in a settings object.  This settings object wraps the values for
+     * minConnectionPoolSize, maxConnectionPoolSize, maxWaitTime, maxConnectionIdleTime and maxConnectionLifeTime,
+     * and uses maxConnectionPoolSize and threadsAllowedToBlockForConnectionMultiplier to calculate maxWaitQueueSize.
+     *
+     * @see DefaultConnectionProviderSettings
+     * @return a DefaultConnectionProviderSettings populated with the settings from this options instance that relate to the connection
+     * provider.
+     */
+    public DefaultConnectionProviderSettings getConnectionProviderSettings() {
+        return connectionProviderSettings;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -851,5 +881,20 @@ public final class MongoClientOptions {
         heartbeatConnectRetryFrequency = builder.heartbeatConnectRetryFrequency;
         heartbeatConnectTimeout = builder.heartbeatConnectTimeout;
         heartbeatSocketTimeout = builder.heartbeatSocketTimeout;
+
+        connectionSettings = DefaultConnectionSettings.builder()
+                                                      .connectTimeoutMS(connectTimeout)
+                                                      .readTimeoutMS(socketTimeout)
+                                                      .keepAlive(socketKeepAlive)
+                                                      .build();
+        connectionProviderSettings = DefaultConnectionProviderSettings.builder()
+                                                                      .minSize(minConnectionPoolSize)
+                                                                      .maxSize(maxConnectionPoolSize)
+                                                                      .maxWaitQueueSize(maxConnectionPoolSize
+                                                                                        * threadsAllowedToBlockForConnectionMultiplier)
+                                                                      .maxWaitTime(maxWaitTime, MILLISECONDS)
+                                                                      .maxConnectionIdleTime(maxConnectionIdleTime, MILLISECONDS)
+                                                                      .maxConnectionLifeTime(maxConnectionLifeTime, MILLISECONDS)
+                                                                      .build();
     }
 }

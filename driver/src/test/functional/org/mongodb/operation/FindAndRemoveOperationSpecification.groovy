@@ -5,50 +5,38 @@ import org.mongodb.FunctionalSpecification
 import org.mongodb.MongoClientOptions
 import org.mongodb.codecs.DocumentCodec
 import org.mongodb.codecs.PrimitiveCodecs
-import org.mongodb.connection.BufferProvider
 import org.mongodb.connection.Cluster
 import org.mongodb.connection.ClusterableServerFactory
 import org.mongodb.connection.ConnectionFactory
-import org.mongodb.connection.SSLSettings
 import org.mongodb.connection.ServerAddress
 import org.mongodb.connection.impl.DefaultClusterFactory
 import org.mongodb.connection.impl.DefaultClusterableServerFactory
 import org.mongodb.connection.impl.DefaultConnectionFactory
 import org.mongodb.connection.impl.DefaultConnectionProviderFactory
-import org.mongodb.connection.impl.DefaultConnectionProviderSettings
-import org.mongodb.connection.impl.DefaultConnectionSettings
 import org.mongodb.connection.impl.DefaultServerSettings
-import org.mongodb.connection.impl.PowerOfTwoBufferPool
 import org.mongodb.session.ClusterSession
 import org.mongodb.session.Session
 import spock.lang.Ignore
 
 import static java.util.concurrent.Executors.newScheduledThreadPool
+import static org.mongodb.Fixture.getBufferProvider
+import static org.mongodb.Fixture.getSSLSettings
 
 class FindAndRemoveOperationSpecification extends FunctionalSpecification {
     private final DocumentCodec documentDecoder = new DocumentCodec()
     private final PrimitiveCodecs primitiveCodecs = PrimitiveCodecs.createDefault()
-    private final BufferProvider bufferProvider = new PowerOfTwoBufferPool()
-    private final MongoClientOptions options = new MongoClientOptions.Builder().build();
 
-    private final DefaultConnectionProviderSettings connectionProviderSettings = DefaultConnectionProviderSettings.builder()
-                                                                                                                  .options(options).build();
-
-    private final SSLSettings sslSettings = SSLSettings.builder().build();
-    private final DefaultConnectionSettings connectionSettings = DefaultConnectionSettings.builder().build();
-    private final ConnectionFactory connectionFactory = new DefaultConnectionFactory(connectionSettings, sslSettings,
-                                                                                     bufferProvider, Collections.emptyList());
+    private final MongoClientOptions options = MongoClientOptions.builder().build();
+    private final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.getConnectionSettings(),
+                                                                                     getSSLSettings(), getBufferProvider(), [])
 
     private final ClusterableServerFactory clusterableServerFactory = new DefaultClusterableServerFactory(
             DefaultServerSettings.builder().build(),
-            new DefaultConnectionProviderFactory(connectionProviderSettings, connectionFactory),
-            null,
-            new DefaultConnectionFactory(connectionSettings, sslSettings, bufferProvider, Collections.emptyList()),
-            newScheduledThreadPool(3),
-            bufferProvider)
+            new DefaultConnectionProviderFactory(options.getConnectionProviderSettings(), connectionFactory),
+            null, connectionFactory, newScheduledThreadPool(3), getBufferProvider())
 
     private final Cluster cluster = new DefaultClusterFactory().create(new ServerAddress(), clusterableServerFactory)
-    private final Session session = new ClusterSession(cluster);
+    private final Session session = new ClusterSession(cluster)
 
     @Ignore('This test is failing and I think it might actually indicate a bug in the code not the test')
     def 'should remove single document'() {
@@ -62,7 +50,7 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
         when:
         FindAndRemove findAndRemove = new FindAndRemove().select(new Document('name', 'Pete'));
 
-        FindAndRemoveOperation<Document> operation = new FindAndRemoveOperation<Document>(bufferProvider, session, false,
+        FindAndRemoveOperation<Document> operation = new FindAndRemoveOperation<Document>(getBufferProvider(), session, false,
                                                                                           cluster.getDescription(),
                                                                                           collection.getNamespace(), findAndRemove,
                                                                                           primitiveCodecs, documentDecoder)

@@ -39,7 +39,7 @@ class UserOperationsSpecification extends FunctionalSpecification {
 
     def setup() {
         connectionFactory = new DefaultConnectionFactory(DefaultConnectionSettings.builder().build(), getSSLSettings(),
-                getBufferProvider(), Arrays.asList(MongoCredential.createMongoCRCredential(userName, getDatabaseName(), password)))
+                getBufferProvider(), [MongoCredential.createMongoCRCredential(userName, getDatabaseName(), password)])
     }
 
     def 'an added user should be found'() {
