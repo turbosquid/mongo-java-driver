@@ -29,6 +29,7 @@ import org.mongodb.connection.ResponseBuffers;
 import org.mongodb.connection.ServerDescription;
 import org.mongodb.operation.BaseWrite;
 
+import static org.mongodb.MongoNamespace.COMMAND_COLLECTION_NAME;
 import static org.mongodb.command.GetLastError.parseGetLastErrorResponse;
 import static org.mongodb.operation.OperationHelpers.createCommandResult;
 import static org.mongodb.operation.OperationHelpers.getMessageSettings;
@@ -70,7 +71,7 @@ public abstract class WriteProtocol implements Protocol<CommandResult> {
     }
 
     private CommandMessage sendMessage() {
-        PooledByteBufferOutputBuffer buffer = new PooledByteBufferOutputBuffer(bufferProvider);
+        final PooledByteBufferOutputBuffer buffer = new PooledByteBufferOutputBuffer(bufferProvider);
         try {
             RequestMessage nextMessage = createRequestMessage(getMessageSettings(serverDescription)).encode(buffer);
             while (nextMessage != null) {
@@ -79,8 +80,10 @@ public abstract class WriteProtocol implements Protocol<CommandResult> {
             CommandMessage getLastErrorMessage = null;
             if (getLastErrorCommand != null) {
                 getLastErrorMessage = new CommandMessage(new MongoNamespace(getNamespace().getDatabaseName(),
-                        MongoNamespace.COMMAND_COLLECTION_NAME).getFullName(), getLastErrorCommand,
-                        new DocumentCodec(), getMessageSettings(serverDescription));
+                                                                            COMMAND_COLLECTION_NAME).getFullName(),
+                                                         getLastErrorCommand.toDocument(), new DocumentCodec(),
+                                                         getMessageSettings(serverDescription)
+                );
                 getLastErrorMessage.encode(buffer);
             }
             connection.sendMessage(buffer.getByteBuffers());
@@ -94,11 +97,14 @@ public abstract class WriteProtocol implements Protocol<CommandResult> {
         if (requestMessage == null) {
             return null;
         }
-        ResponseBuffers responseBuffers = connection.receiveMessage(
+        final ResponseBuffers responseBuffers = connection.receiveMessage(
                 getResponseSettings(serverDescription, requestMessage.getId()));
         try {
-            return parseGetLastErrorResponse(createCommandResult(getLastErrorCommand,
-                    new ReplyMessage<Document>(responseBuffers, new DocumentCodec(), requestMessage.getId()), connection));
+            return parseGetLastErrorResponse(createCommandResult(getLastErrorCommand.toDocument(),
+                                                                 new ReplyMessage<Document>(responseBuffers,
+                                                                                            new DocumentCodec(),
+                                                                                            requestMessage.getId()),
+                                                                 connection));
         } finally {
             responseBuffers.close();
         }

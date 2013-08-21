@@ -54,7 +54,7 @@ public class FindAndRemoveOperation<T> extends OperationBase<T> {
         final FindAndRemoveCommand command = new FindAndRemoveCommand(findAndRemove, namespace.getCollectionName());
 
         final ServerConnectionProvider provider = getServerConnectionProvider(command);
-        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), command,
+        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), command.toDocument(),
                                                                 findAndModifyCommandResultCodec, getBufferProvider(),
                                                                 provider.getServerDescription(), provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");

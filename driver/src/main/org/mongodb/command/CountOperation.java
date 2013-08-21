@@ -42,10 +42,11 @@ public class CountOperation extends BaseCountOperation implements Operation<Long
 
     public Long execute() {
         try {
-            ServerConnectionProvider serverConnectionProvider = session.createServerConnectionProvider(
+            final ServerConnectionProvider serverConnectionProvider = session.createServerConnectionProvider(
                     new ServerConnectionProviderOptions(true, new ReadPreferenceServerSelector(getCount().getReadPreference())));
-            return getCount(new CommandProtocol(getCount().getNamespace().getDatabaseName(), getCount(), getCodec(),
-                    getBufferProvider(), serverConnectionProvider.getServerDescription(), serverConnectionProvider.getConnection(), true)
+            return getCount(new CommandProtocol(getCount().getNamespace().getDatabaseName(), getCount().toDocument(), getCodec(),
+                    getBufferProvider(), serverConnectionProvider.getServerDescription(), serverConnectionProvider.getConnection(), true
+            )
                     .execute());
         } finally {
             if (closeSession) {

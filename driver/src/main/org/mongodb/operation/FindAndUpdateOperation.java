@@ -53,7 +53,8 @@ public class FindAndUpdateOperation<T> extends OperationBase<T> {
     public T execute() {
         final FindAndUpdateCommand<T> command = new FindAndUpdateCommand<T>(findAndUpdate, namespace.getCollectionName());
         final ServerConnectionProvider provider = getServerConnectionProvider(command);
-        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), command, findAndModifyCommandResultCodec,
+        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), command.toDocument(),
+                                                                findAndModifyCommandResultCodec,
                                                                 getBufferProvider(), provider.getServerDescription(),
                                                                 provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");

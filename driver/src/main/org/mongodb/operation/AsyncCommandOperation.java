@@ -59,7 +59,7 @@ public class AsyncCommandOperation implements AsyncServerSelectingOperation<Comm
         final SingleResultFuture<CommandResult> retVal = new SingleResultFuture<CommandResult>();
 
         final PooledByteBufferOutputBuffer buffer = new PooledByteBufferOutputBuffer(bufferProvider);
-        final CommandMessage message = new CommandMessage(namespace.getFullName(), command, codec,
+        final CommandMessage message = new CommandMessage(namespace.getFullName(), command.toDocument(), codec,
                 getMessageSettings(connection.getDescription()));
         encodeMessageToBuffer(message, buffer);
         connection.sendMessage(buffer.getByteBuffers(),

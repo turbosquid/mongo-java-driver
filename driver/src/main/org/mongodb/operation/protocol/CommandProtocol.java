@@ -20,7 +20,6 @@ import org.mongodb.Codec;
 import org.mongodb.CommandResult;
 import org.mongodb.Document;
 import org.mongodb.MongoNamespace;
-import org.mongodb.command.Command;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.connection.Connection;
 import org.mongodb.connection.PooledByteBufferOutputBuffer;
@@ -32,15 +31,15 @@ import static org.mongodb.operation.OperationHelpers.getMessageSettings;
 import static org.mongodb.operation.OperationHelpers.getResponseSettings;
 
 public class CommandProtocol implements Protocol<CommandResult> {
-    private final Command command;
     private final Codec<Document> codec;
     private final MongoNamespace namespace;
     private final BufferProvider bufferProvider;
     private final ServerDescription serverDescription;
     private final Connection connection;
     private final boolean closeConnection;
+    private final Document command;
 
-    public CommandProtocol(final String database, final Command command, final Codec<Document> codec,
+    public CommandProtocol(final String database, final Document command, final Codec<Document> codec,
                            final BufferProvider bufferProvider, final ServerDescription serverDescription,
                            final Connection connection, final boolean closeConnection) {
         this.serverDescription = serverDescription;
@@ -48,12 +47,8 @@ public class CommandProtocol implements Protocol<CommandResult> {
         this.closeConnection = closeConnection;
         this.namespace = new MongoNamespace(database, MongoNamespace.COMMAND_COLLECTION_NAME);
         this.bufferProvider = bufferProvider;
-        this.command = command;
         this.codec = codec;
-    }
-
-    public Command getCommand() {
-        return command;
+        this.command = command;
     }
 
     public CommandResult execute() {
@@ -83,7 +78,7 @@ public class CommandProtocol implements Protocol<CommandResult> {
         final ResponseBuffers responseBuffers = connection.receiveMessage(
                 getResponseSettings(serverDescription, message.getId()));
         try {
-            ReplyMessage<Document> replyMessage = new ReplyMessage<Document>(responseBuffers, codec, message.getId());
+            final ReplyMessage<Document> replyMessage = new ReplyMessage<Document>(responseBuffers, codec, message.getId());
             return createCommandResult(command, replyMessage, connection);
         } finally {
             responseBuffers.close();

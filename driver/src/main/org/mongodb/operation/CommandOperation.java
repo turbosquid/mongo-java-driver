@@ -55,7 +55,7 @@ public class CommandOperation extends OperationBase<CommandResult> {
             final ServerConnectionProvider provider = getSession()
                                                 .createServerConnectionProvider(new ServerConnectionProviderOptions(isQuery(command),
                                                                                                                     getServerSelector()));
-            return new CommandProtocol(database, command, codec, getBufferProvider(), provider.getServerDescription(),
+            return new CommandProtocol(database, command.toDocument(), codec, getBufferProvider(), provider.getServerDescription(),
                                        provider.getConnection(), true).execute();
         } finally {
             if (isCloseSession()) {
