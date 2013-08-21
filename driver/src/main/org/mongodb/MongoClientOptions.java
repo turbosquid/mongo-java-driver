@@ -18,8 +18,10 @@ package org.mongodb;
 
 import org.mongodb.annotations.Immutable;
 import org.mongodb.codecs.PrimitiveCodecs;
+import org.mongodb.connection.SSLSettings;
 import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
 import org.mongodb.connection.impl.DefaultConnectionSettings;
+import org.mongodb.connection.impl.DefaultServerSettings;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -59,7 +61,10 @@ public final class MongoClientOptions {
     private final int heartbeatConnectTimeout;
     private final int heartbeatSocketTimeout;
     private final DefaultConnectionSettings connectionSettings;
+    private final DefaultConnectionSettings heartbeatConnectionSettings;
     private final DefaultConnectionProviderSettings connectionProviderSettings;
+    private final DefaultServerSettings serverSettings;
+    private final SSLSettings sslSettings;
 
     /**
      * Convenience method to create a Builder.
@@ -699,14 +704,25 @@ public final class MongoClientOptions {
     }
 
     /**
-     * Gets the connection-specific settings wrapped in a settings object.   This settings object contains the values for connectTimeout,
+     * Gets the connection-specific settings wrapped in a settings object.   This settings object uses the values for connectTimeout,
      * socketTimeout and socketKeepAlive.
      *
      * @see DefaultConnectionSettings
      * @return a DefaultConnectionSettings object populated with the connection settings from this MongoClientOptions instance.
      */
-    public DefaultConnectionSettings getConnectionSettings() {
+    DefaultConnectionSettings getConnectionSettings() {
         return connectionSettings;
+    }
+
+    /**
+     * Gets the connection settings for the heartbeat thread (the background task that checks the state of the cluster) wrapped in a
+     * settings object. This settings object uses the values for heartbeatConnectTimeout, heartbeatSocketTimeout and socketKeepAlive.
+     *
+     * @see DefaultConnectionSettings
+     * @return a DefaultConnectionSettings object populated with the heartbeat connection settings from this MongoClientOptions instance.
+     */
+    DefaultConnectionSettings getHeartbeatConnectionSettings() {
+        return heartbeatConnectionSettings;
     }
 
     /**
@@ -718,8 +734,29 @@ public final class MongoClientOptions {
      * @return a DefaultConnectionProviderSettings populated with the settings from this options instance that relate to the connection
      * provider.
      */
-    public DefaultConnectionProviderSettings getConnectionProviderSettings() {
+    DefaultConnectionProviderSettings getConnectionProviderSettings() {
         return connectionProviderSettings;
+    }
+
+    /**
+     * Gets the server-specific settings wrapped in a settings object.  This settings object uses the heartbeatFrequency and
+     * heartbeatConnectRetryFrequency values from this MongoClientOptions instance.
+     *
+     * @see DefaultServerSettings
+     * @return a DefaultServerSettings object populated with settings from this MongoClientOptions instance
+     */
+    DefaultServerSettings getServerSettings() {
+        return serverSettings;
+    }
+
+    /**
+     * Gets an SSLSettings instance populated with the SSLEnabled value from this MongoClientOptions instance.
+     *
+     * @see SSLSettings
+     * @return an SSLSettings wrapping the SSL settings from this MongoClientOptions.
+     */
+    SSLSettings getSslSettings() {
+        return sslSettings;
     }
 
     @Override
@@ -887,6 +924,12 @@ public final class MongoClientOptions {
                                                       .readTimeoutMS(socketTimeout)
                                                       .keepAlive(socketKeepAlive)
                                                       .build();
+        heartbeatConnectionSettings = DefaultConnectionSettings.builder()
+                                                               .connectTimeoutMS(heartbeatConnectTimeout)
+                                                               .readTimeoutMS(heartbeatSocketTimeout)
+                                                               .keepAlive(socketKeepAlive)
+                                                               .build();
+
         connectionProviderSettings = DefaultConnectionProviderSettings.builder()
                                                                       .minSize(minConnectionPoolSize)
                                                                       .maxSize(maxConnectionPoolSize)
@@ -896,5 +939,11 @@ public final class MongoClientOptions {
                                                                       .maxConnectionIdleTime(maxConnectionIdleTime, MILLISECONDS)
                                                                       .maxConnectionLifeTime(maxConnectionLifeTime, MILLISECONDS)
                                                                       .build();
+        serverSettings = DefaultServerSettings.builder()
+                                              .heartbeatFrequency(heartbeatFrequency, MILLISECONDS)
+                                              .connectRetryFrequency(heartbeatConnectRetryFrequency, MILLISECONDS)
+                                              .build();
+        sslSettings = SSLSettings.builder().enabled(SSLEnabled).build();
+
     }
 }

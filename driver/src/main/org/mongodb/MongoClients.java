@@ -19,7 +19,6 @@ package org.mongodb;
 import org.mongodb.annotations.ThreadSafe;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.connection.ConnectionFactory;
-import org.mongodb.connection.SSLSettings;
 import org.mongodb.connection.ServerAddress;
 import org.mongodb.connection.impl.DefaultAsyncConnectionFactory;
 import org.mongodb.connection.impl.DefaultAsyncConnectionProviderFactory;
@@ -27,9 +26,6 @@ import org.mongodb.connection.impl.DefaultClusterFactory;
 import org.mongodb.connection.impl.DefaultClusterableServerFactory;
 import org.mongodb.connection.impl.DefaultConnectionFactory;
 import org.mongodb.connection.impl.DefaultConnectionProviderFactory;
-import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
-import org.mongodb.connection.impl.DefaultConnectionSettings;
-import org.mongodb.connection.impl.DefaultServerSettings;
 import org.mongodb.connection.impl.PowerOfTwoBufferPool;
 
 import java.net.UnknownHostException;
@@ -37,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 @ThreadSafe
 public final class MongoClients {
@@ -78,8 +73,8 @@ public final class MongoClients {
                     getClusterableServerFactory(mongoURI.getCredentialList(), options)));
         }
         else {
-            List<ServerAddress> seedList = new ArrayList<ServerAddress>();
-            for (String cur : mongoURI.getHosts()) {
+            final List<ServerAddress> seedList = new ArrayList<ServerAddress>();
+            for (final String cur : mongoURI.getHosts()) {
                 seedList.add(new ServerAddress(cur));
             }
             return new MongoClientImpl(options, new DefaultClusterFactory().create(seedList,
@@ -92,42 +87,25 @@ public final class MongoClients {
 
     private static DefaultClusterableServerFactory getClusterableServerFactory(final List<MongoCredential> credentialList,
                                                                                final MongoClientOptions options) {
-        BufferProvider bufferProvider = new PowerOfTwoBufferPool();
-        SSLSettings sslSettings = SSLSettings.builder().enabled(options.isSSLEnabled()).build();
+        final BufferProvider bufferProvider = new PowerOfTwoBufferPool();
 
-        DefaultConnectionProviderSettings connectionProviderSettings = DefaultConnectionProviderSettings.builder()
-                .minSize(options.getMinConnectionPoolSize())
-                .maxSize(options.getMaxConnectionPoolSize())
-                .maxWaitQueueSize(options.getMaxConnectionPoolSize() * options.getThreadsAllowedToBlockForConnectionMultiplier())
-                .maxWaitTime(options.getMaxWaitTime(), TimeUnit.MILLISECONDS)
-                .maxConnectionIdleTime(options.getMaxConnectionIdleTime(), TimeUnit.MILLISECONDS)
-                .maxConnectionLifeTime(options.getMaxConnectionLifeTime(), TimeUnit.MILLISECONDS)
-                .build();
-        DefaultConnectionSettings connectionSettings = DefaultConnectionSettings.builder()
-                .connectTimeoutMS(options.getConnectTimeout())
-                .readTimeoutMS(options.getSocketTimeout())
-                .keepAlive(options.isSocketKeepAlive())
-                .build();
-        ConnectionFactory connectionFactory = new DefaultConnectionFactory(connectionSettings, sslSettings, bufferProvider, credentialList);
+        final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.getConnectionSettings(), options.getSslSettings(),
+                                                                           bufferProvider, credentialList);
 
-        DefaultAsyncConnectionProviderFactory asyncConnectionProviderFactory =
+        final DefaultAsyncConnectionProviderFactory asyncConnectionProviderFactory =
                 options.isAsyncEnabled()
-                        ? new DefaultAsyncConnectionProviderFactory(connectionProviderSettings,
+                        ? new DefaultAsyncConnectionProviderFactory(options.getConnectionProviderSettings(),
                         new DefaultAsyncConnectionFactory(bufferProvider, credentialList))
                         : null;
-        return new DefaultClusterableServerFactory(
-                DefaultServerSettings.builder().heartbeatFrequency(options.getHeartbeatFrequency(), TimeUnit.MILLISECONDS).
-                        connectRetryFrequency(options.getHeartbeatConnectRetryFrequency(), TimeUnit.MILLISECONDS).build(),
-                new DefaultConnectionProviderFactory(connectionProviderSettings, connectionFactory),
-                asyncConnectionProviderFactory,
-                new DefaultConnectionFactory(
-                        DefaultConnectionSettings.builder()
-                                .connectTimeoutMS(options.getHeartbeatConnectTimeout())
-                                .readTimeoutMS(options.getHeartbeatSocketTimeout())
-                                .keepAlive(options.isSocketKeepAlive())
-                                .build(),
-                        sslSettings, bufferProvider, Collections.<org.mongodb.MongoCredential>emptyList()),
-                Executors.newScheduledThreadPool(3),  // TODO: allow configuration
-                bufferProvider);
+        return new DefaultClusterableServerFactory(options.getServerSettings(),
+                                                   new DefaultConnectionProviderFactory(options.getConnectionProviderSettings(),
+                                                                                        connectionFactory),
+                                                   asyncConnectionProviderFactory,
+                                                   new DefaultConnectionFactory(options.getHeartbeatConnectionSettings(),
+                                                                                options.getSslSettings(),
+                                                                                bufferProvider,
+                                                                                Collections.<org.mongodb.MongoCredential>emptyList()),
+                                                   Executors.newScheduledThreadPool(3),  // TODO: allow configuration
+                                                   bufferProvider);
     }
 }

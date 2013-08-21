@@ -13,7 +13,6 @@ import org.mongodb.connection.impl.DefaultClusterFactory
 import org.mongodb.connection.impl.DefaultClusterableServerFactory
 import org.mongodb.connection.impl.DefaultConnectionFactory
 import org.mongodb.connection.impl.DefaultConnectionProviderFactory
-import org.mongodb.connection.impl.DefaultServerSettings
 import org.mongodb.session.ClusterSession
 import org.mongodb.session.Session
 import spock.lang.Ignore
@@ -27,12 +26,11 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
     private final PrimitiveCodecs primitiveCodecs = PrimitiveCodecs.createDefault()
 
     private final MongoClientOptions options = MongoClientOptions.builder().build();
-    private final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.getConnectionSettings(),
+    private final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.connectionSettings,
                                                                                      getSSLSettings(), getBufferProvider(), [])
 
     private final ClusterableServerFactory clusterableServerFactory = new DefaultClusterableServerFactory(
-            DefaultServerSettings.builder().build(),
-            new DefaultConnectionProviderFactory(options.getConnectionProviderSettings(), connectionFactory),
+            options.serverSettings, new DefaultConnectionProviderFactory(options.connectionProviderSettings, connectionFactory),
             null, connectionFactory, newScheduledThreadPool(3), getBufferProvider())
 
     private final Cluster cluster = new DefaultClusterFactory().create(new ServerAddress(), clusterableServerFactory)
@@ -51,8 +49,8 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
         FindAndRemove findAndRemove = new FindAndRemove().select(new Document('name', 'Pete'));
 
         FindAndRemoveOperation<Document> operation = new FindAndRemoveOperation<Document>(getBufferProvider(), session, false,
-                                                                                          cluster.getDescription(),
-                                                                                          collection.getNamespace(), findAndRemove,
+                                                                                          cluster.description,
+                                                                                          collection.namespace, findAndRemove,
                                                                                           primitiveCodecs, documentDecoder)
         Document returnedDocument = operation.execute()
 
