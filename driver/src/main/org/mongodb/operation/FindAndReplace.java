@@ -16,17 +16,18 @@
 
 package org.mongodb.operation;
 
+import org.mongodb.ConvertibleToDocument;
 import org.mongodb.Document;
 
-public class FindAndReplace<T> extends FindAndModify {
+import static org.mongodb.operation.CommandDocumentTemplates.findAndModifyDocument;
+
+public class FindAndReplace<T> extends FindAndModify implements ConvertibleToDocument {
     private final T replacement;
+    private final String collectionName;
 
-    public FindAndReplace(final T replacement) {
+    public FindAndReplace(final T replacement, final String collectionName) {
         this.replacement = replacement;
-    }
-
-    public T getReplacement() {
-        return replacement;
+        this.collectionName = collectionName;
     }
 
     @Override
@@ -59,4 +60,11 @@ public class FindAndReplace<T> extends FindAndModify {
         return this;
     }
 
+    @Override
+    public Document toDocument() {
+        final Document cmd = findAndModifyDocument(this, collectionName);
+        // TODO: I don't think this will work, as we don't have a Class<T> to make sure that serialization works properly
+        cmd.put("update", replacement);
+        return cmd;
+    }
 }

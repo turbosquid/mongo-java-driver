@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package org.mongodb.command;
+package org.mongodb.operation;
 
 import org.mongodb.Document;
-import org.mongodb.operation.FindAndModify;
 
 final class CommandDocumentTemplates {
 
-    private CommandDocumentTemplates() {
-    }
+    private CommandDocumentTemplates() { }
 
-    static Document getFindAndModify(final FindAndModify findAndModify, final String collectionName) {
+    static Document findAndModifyDocument(final FindAndModify findAndModify, final String collectionName) {
         final Document cmd = new Document("findandmodify", collectionName);
         if (findAndModify.getFilter() != null) {
             cmd.put("query", findAndModify.getFilter());

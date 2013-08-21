@@ -16,9 +16,18 @@
 
 package org.mongodb.operation;
 
+import org.mongodb.ConvertibleToDocument;
 import org.mongodb.Document;
 
-public class FindAndRemove<T> extends FindAndModify {
+import static org.mongodb.operation.CommandDocumentTemplates.findAndModifyDocument;
+
+public class FindAndRemove<T> extends FindAndModify implements ConvertibleToDocument {
+    private final String collectionName;
+
+    public FindAndRemove(final String collectionName) {
+        this.collectionName = collectionName;
+    }
+
     public boolean isRemove() {
         return true;
     }
@@ -52,4 +61,10 @@ public class FindAndRemove<T> extends FindAndModify {
         throw new UnsupportedOperationException("Can't upsert a remove");
     }
 
+    @Override
+    public Document toDocument() {
+        final Document cmd = findAndModifyDocument(this, collectionName);
+        cmd.put("remove", true);
+        return cmd;
+    }
 }

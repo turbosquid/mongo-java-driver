@@ -1444,12 +1444,11 @@ public class DBCollection implements IDBCollection {
 
         final Operation<DBObject> operation;
         if (remove) {
-            final FindAndRemove<DBObject> findAndRemove = new FindAndRemove<DBObject>().where(toNullableDocument(query))
+            final FindAndRemove<DBObject> findAndRemove = new FindAndRemove<DBObject>(getName()).where(toNullableDocument(query))
                                                                                        .sortBy(toNullableDocument(sort))
                                                                                        .returnNew(returnNew);
             operation = new FindAndRemoveOperation<DBObject>(getBufferPool(),
                                                              getSession(),
-                                                             getDB().getClusterDescription(),
                                                              getNamespace(),
                                                              findAndRemove,
                                                              getPrimitiveCodecs(),
@@ -1460,22 +1459,21 @@ public class DBCollection implements IDBCollection {
             }
             if (!update.keySet().isEmpty() && update.keySet().iterator().next().charAt(0) == '$') {
 
-                final FindAndUpdate<DBObject> findAndUpdate = new FindAndUpdate<DBObject>().where(toNullableDocument(query))
-                                                                                           .sortBy(toNullableDocument(sort))
-                                                                                           .returnNew(returnNew)
-                                                                                           .select(toFieldSelectorDocument(fields))
-                                                                                           .updateWith(toUpdateOperationsDocument(update))
-                                                                                           .upsert(upsert);
+                final FindAndUpdate<DBObject> findAndUpdate = new FindAndUpdate<DBObject>(getName())
+                                                              .where(toNullableDocument(query))
+                                                              .sortBy(toNullableDocument(sort))
+                                                              .returnNew(returnNew)
+                                                              .select(toFieldSelectorDocument(fields))
+                                                              .updateWith(toUpdateOperationsDocument(update))
+                                                              .upsert(upsert);
                 operation = new FindAndUpdateOperation<DBObject>(getBufferPool(),
                                                                  getSession(),
-                                                                 getDB()
-                                                                 .getClusterDescription(),
                                                                  getNamespace(),
                                                                  findAndUpdate,
                                                                  getPrimitiveCodecs(),
                                                                  resultDecoder);
             } else {
-                final FindAndReplace<DBObject> findAndReplace = new FindAndReplace<DBObject>(update)
+                final FindAndReplace<DBObject> findAndReplace = new FindAndReplace<DBObject>(update, getName())
                                                                 .where(toNullableDocument(query))
                                                                 .sortBy(toNullableDocument(sort))
                                                                 .select(toFieldSelectorDocument(fields))
@@ -1483,8 +1481,6 @@ public class DBCollection implements IDBCollection {
                                                                 .upsert(upsert);
                 operation = new FindAndReplaceOperation<DBObject>(getBufferPool(),
                                                                   getSession(),
-                                                                  getDB()
-                                                                  .getClusterDescription(),
                                                                   getNamespace(),
                                                                   findAndReplace,
                                                                   getPrimitiveCodecs(),

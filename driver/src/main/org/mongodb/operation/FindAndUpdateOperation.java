@@ -20,30 +20,23 @@ import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
 import org.mongodb.MongoNamespace;
 import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.command.Command;
 import org.mongodb.command.FindAndModifyCommandResultCodec;
-import org.mongodb.command.FindAndUpdateCommand;
 import org.mongodb.connection.BufferProvider;
-import org.mongodb.connection.ClusterDescription;
 import org.mongodb.operation.protocol.CommandProtocol;
+import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
-import static org.mongodb.operation.CommandReadPreferenceHelper.getCommandReadPreference;
-import static org.mongodb.operation.CommandReadPreferenceHelper.isQuery;
-
 public class FindAndUpdateOperation<T> extends OperationBase<T> {
     private final FindAndUpdate<T> findAndUpdate;
-    private final ClusterDescription clusterDescription;
     private final MongoNamespace namespace;
     private final FindAndModifyCommandResultCodec<T> findAndModifyCommandResultCodec;
 
-    public FindAndUpdateOperation(final BufferProvider bufferProvider, final Session session, final ClusterDescription clusterDescription,
-                                  final MongoNamespace namespace, final FindAndUpdate<T> findAndUpdate,
-                                  final PrimitiveCodecs primitiveCodecs, final Decoder<T> resultDecoder) {
+    public FindAndUpdateOperation(final BufferProvider bufferProvider, final Session session, final MongoNamespace namespace,
+                                  final FindAndUpdate<T> findAndUpdate, final PrimitiveCodecs primitiveCodecs,
+                                  final Decoder<T> resultDecoder) {
         super(bufferProvider, session, false);
         this.findAndUpdate = findAndUpdate;
-        this.clusterDescription = clusterDescription;
         this.namespace = namespace;
         findAndModifyCommandResultCodec = new FindAndModifyCommandResultCodec<T>(primitiveCodecs, resultDecoder);
     }
@@ -51,21 +44,16 @@ public class FindAndUpdateOperation<T> extends OperationBase<T> {
     @SuppressWarnings("unchecked")
     @Override
     public T execute() {
-        final FindAndUpdateCommand<T> command = new FindAndUpdateCommand<T>(findAndUpdate, namespace.getCollectionName());
-        final ServerConnectionProvider provider = getServerConnectionProvider(command);
-        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), command.toDocument(),
-                                                                findAndModifyCommandResultCodec,
-                                                                getBufferProvider(), provider.getServerDescription(),
-                                                                provider.getConnection(), true).execute();
+        final ServerConnectionProvider provider = getServerConnectionProvider();
+        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndUpdate.toDocument(),
+                                                                findAndModifyCommandResultCodec, getBufferProvider(),
+                                                                provider.getServerDescription(), provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");
         // TODO: any way to remove the warning?  This could be a design flaw
     }
 
-
-    //TODO: how can we reuse this effectively?
-    private ServerConnectionProvider getServerConnectionProvider(final Command command) {
-        final ReadPreferenceServerSelector serverSelector = new ReadPreferenceServerSelector(getCommandReadPreference(command,
-                                                                                                                      clusterDescription));
-        return getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(isQuery(command), serverSelector));
+    private ServerConnectionProvider getServerConnectionProvider() {
+        return getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(false, new PrimaryServerSelector()));
     }
+
 }

@@ -391,7 +391,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
         }
 
         public T updateOneAndGet(final Document updateOperations, final Get beforeOrAfter) {
-            final FindAndUpdate<T> findAndUpdate = new FindAndUpdate<T>().where(findOp.getFilter())
+            final FindAndUpdate<T> findAndUpdate = new FindAndUpdate<T>(name).where(findOp.getFilter())
                                                                          .updateWith(updateOperations)
                                                                          .returnNew(asBoolean(beforeOrAfter))
                                                                          .select(findOp.getFields())
@@ -399,29 +399,29 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                          .upsert(upsert);
 
             return new FindAndUpdateOperation<T>(client.getBufferProvider(), client.getSession(),
-                                                 client.getCluster().getDescription(), getNamespace(), findAndUpdate,
+                                                 getNamespace(), findAndUpdate,
                                                  getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 
         public T replaceOneAndGet(final T replacement, final Get beforeOrAfter) {
-            final FindAndReplace<T> findAndReplace = new FindAndReplace<T>(replacement).where(findOp.getFilter())
+            final FindAndReplace<T> findAndReplace = new FindAndReplace<T>(replacement, getName()).where(findOp.getFilter())
                                                                                        .returnNew(asBoolean(beforeOrAfter))
                                                                                        .select(findOp.getFields())
                                                                                        .sortBy(findOp.getOrder())
                                                                                        .upsert(upsert);
             return new FindAndReplaceOperation<T>(client.getBufferProvider(), client.getSession(),
-                                                  client.getCluster().getDescription(), getNamespace(), findAndReplace,
+                                                  getNamespace(), findAndReplace,
                                                   getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 
         @Override
         public T getOneAndRemove() {
-            final FindAndRemove<T> findAndRemove = new FindAndRemove<T>().where(findOp.getFilter())
-                                                                         .select(findOp.getFields())
-                                                                         .sortBy(findOp.getOrder());
+            final FindAndRemove<T> findAndRemove = new FindAndRemove<T>(getName()).where(findOp.getFilter())
+                                                                                  .select(findOp.getFields())
+                                                                                  .sortBy(findOp.getOrder());
 
             return new FindAndRemoveOperation<T>(client.getBufferProvider(), client.getSession(),
-                                                 client.getCluster().getDescription(), getNamespace(), findAndRemove,
+                                                 getNamespace(), findAndRemove,
                                                  getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 

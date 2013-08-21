@@ -45,15 +45,13 @@ public class CommandOperation extends OperationBase<CommandResult> {
         this.codec = codec;
     }
 
-    public Command getCommand() {
-        return command;
-    }
-
     @Override
     public CommandResult execute() {
         try {
             final ServerConnectionProvider provider = getSession()
-                                                .createServerConnectionProvider(new ServerConnectionProviderOptions(isQuery(command),
+                                                .createServerConnectionProvider(new ServerConnectionProviderOptions(isQuery(
+                                                                                                                           command
+                                                                                                                           .toDocument()),
                                                                                                                     getServerSelector()));
             return new CommandProtocol(database, command.toDocument(), codec, getBufferProvider(), provider.getServerDescription(),
                                        provider.getConnection(), true).execute();

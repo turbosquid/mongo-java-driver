@@ -50,10 +50,6 @@ public class AsyncCommandOperation implements AsyncServerSelectingOperation<Comm
         this.codec = codec;
     }
 
-    public Command getCommand() {
-        return command;
-    }
-
     @Override
     public MongoFuture<CommandResult> execute(final AsyncServerConnection connection) {
         final SingleResultFuture<CommandResult> retVal = new SingleResultFuture<CommandResult>();
@@ -76,6 +72,6 @@ public class AsyncCommandOperation implements AsyncServerSelectingOperation<Comm
 
     @Override
     public boolean isQuery() {
-        return CommandReadPreferenceHelper.isQuery(command);
+        return CommandReadPreferenceHelper.isQuery(command.toDocument());
     }
 }

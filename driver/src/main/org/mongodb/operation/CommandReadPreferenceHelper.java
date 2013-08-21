@@ -50,10 +50,10 @@ public final class CommandReadPreferenceHelper {
     /**
      * Returns true if the command is a query in disguise.
      *
-     * @param command the command
      * @return true if the command is a query, false otherwise.
+     * @param command the Document containing the details of the command
      */
-    public static boolean isQuery(final Command command) {
+    public static boolean isQuery(final Document command) {
        return !isPrimaryRequired(command);
     }
 
@@ -69,7 +69,7 @@ public final class CommandReadPreferenceHelper {
             return command.getReadPreference();
         }
 
-        boolean primaryRequired = isPrimaryRequired(command);
+        final boolean primaryRequired = isPrimaryRequired(command.toDocument());
 
         if (primaryRequired) {
             return ReadPreference.primary();
@@ -79,11 +79,10 @@ public final class CommandReadPreferenceHelper {
         }
     }
 
-    private static boolean isPrimaryRequired(final Command command) {
-        Document commandDocument = command.toDocument();
-        String commandName = commandDocument.keySet().iterator().next().toLowerCase();
+    private static boolean isPrimaryRequired(final Document commandDocument) {
+        final String commandName = commandDocument.keySet().iterator().next().toLowerCase();
 
-        boolean primaryRequired;
+        final boolean primaryRequired;
 
         // explicitly check for inline mapreduce commands
         if (commandName.equals("mapreduce")) {

@@ -16,18 +16,22 @@
 
 package org.mongodb.operation;
 
+import org.mongodb.ConvertibleToDocument;
 import org.mongodb.Document;
 
-public class FindAndUpdate<T> extends FindAndModify {
+import static org.mongodb.operation.CommandDocumentTemplates.findAndModifyDocument;
+
+public class FindAndUpdate<T> extends FindAndModify implements ConvertibleToDocument {
     private Document updateOperations;
+    private final String collectionName;
+
+    public FindAndUpdate(final String collectionName) {
+        this.collectionName = collectionName;
+    }
 
     public FindAndUpdate<T> updateWith(final Document anUpdateOperations) {
         this.updateOperations = anUpdateOperations;
         return this;
-    }
-
-    public Document getUpdateOperations() {
-        return updateOperations;
     }
 
     @Override
@@ -60,4 +64,10 @@ public class FindAndUpdate<T> extends FindAndModify {
         return this;
     }
 
+    @Override
+    public Document toDocument() {
+        final Document cmd = findAndModifyDocument(this, collectionName);
+        cmd.put("update", updateOperations);
+        return cmd;
+    }
 }
