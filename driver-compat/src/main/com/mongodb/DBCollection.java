@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-
 package com.mongodb;
-
 
 import com.mongodb.codecs.CollectibleDBObjectCodec;
 import com.mongodb.codecs.CompoundDBObjectCodec;
@@ -86,7 +84,6 @@ import static com.mongodb.DBObjects.toFieldSelectorDocument;
 import static com.mongodb.DBObjects.toNullableDocument;
 import static com.mongodb.DBObjects.toUpdateOperationsDocument;
 import static com.mongodb.MongoExceptions.mapException;
-
 
 /**
  * Implementation of a database collection.
@@ -1646,8 +1643,7 @@ public class DBCollection implements IDBCollection {
     @Override
     public List<DBObject> getIndexInfo() {
         try {
-            return new GetIndexesOperation<DBObject>(getBufferPool(), getSession(), false, getNamespace(), documentCodec, objectCodec)
-                   .execute();
+            return new GetIndexesOperation<DBObject>(getBufferPool(), getSession(), getNamespace(), objectCodec).execute();
         } catch (org.mongodb.MongoException e) {
             throw mapException(e);
         }

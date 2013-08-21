@@ -2,9 +2,10 @@ package org.mongodb.operation;
 
 import org.mongodb.Decoder;
 import org.mongodb.Document;
-import org.mongodb.Encoder;
 import org.mongodb.MongoCursor;
 import org.mongodb.MongoNamespace;
+import org.mongodb.codecs.DocumentCodec;
+import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.session.Session;
 
@@ -17,18 +18,16 @@ import static org.mongodb.assertions.Assertions.notNull;
 public class GetIndexesOperation<T> extends OperationBase<List<T>> {
     private static final String NAMESPACE_KEY_NAME = "ns";
 
-    private final Encoder<Document> queryEncoder;
-    private final Decoder<T> resultDecoder;
+    private final DocumentCodec simpleDocumentCodec = new DocumentCodec(PrimitiveCodecs.createDefault());
     private final MongoNamespace indexesNamespace;
     private final Find queryForCollectionNamespace;
+    private final Decoder<T> resultDecoder;
 
-    public GetIndexesOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
-                               final MongoNamespace collectionNamespace, final Encoder<Document> queryEncoder,
+    public GetIndexesOperation(final BufferProvider bufferProvider, final Session session, final MongoNamespace collectionNamespace,
                                final Decoder<T> resultDecoder) {
-        super(bufferProvider, session, closeSession);
-        notNull("collectionNamespace", resultDecoder);
-        this.queryEncoder = notNull("queryEncoder", queryEncoder);
+        super(bufferProvider, session, false);
         this.resultDecoder = notNull("resultDecoder", resultDecoder);
+        notNull("collectionNamespace", collectionNamespace);
         indexesNamespace = new MongoNamespace(collectionNamespace.getDatabaseName(), "system.indexes");
         queryForCollectionNamespace = new Find(new Document(NAMESPACE_KEY_NAME, collectionNamespace.getFullName()))
                                       .readPreference(primary());
@@ -37,9 +36,9 @@ public class GetIndexesOperation<T> extends OperationBase<List<T>> {
     @Override
     public List<T> execute() {
         final List<T> retVal = new ArrayList<T>();
-        final MongoCursor<T> cursor = new QueryOperation<T>(indexesNamespace, queryForCollectionNamespace, queryEncoder,
-                                                            resultDecoder, getBufferProvider(), getSession(),
-                                                            isCloseSession()).execute();
+        final MongoCursor<T> cursor = new QueryOperation<T>(indexesNamespace, queryForCollectionNamespace,
+                                                                          simpleDocumentCodec, resultDecoder, getBufferProvider(),
+                                                                          getSession(), isCloseSession()).execute();
         while (cursor.hasNext()) {
             retVal.add(cursor.next());
         }
