@@ -690,7 +690,7 @@ public class DBCollection implements IDBCollection {
                 .batchSize(-1);
 
         try {
-            MongoCursor<DBObject> cursor = new QueryOperation<DBObject>(getNamespace(), find, documentCodec, objectCodec, getBufferPool(),
+            final MongoCursor<DBObject> cursor = new QueryOperation<DBObject>(getNamespace(), find, documentCodec, objectCodec, getBufferPool(),
                     getSession(), false).execute();
 
             return cursor.hasNext() ? cursor.next() : null;
@@ -902,7 +902,7 @@ public class DBCollection implements IDBCollection {
         }
 
         // TODO: investigate case of int to long for skip
-        Find find = new Find(toDocument(query)).limit((int) limit).skip((int) skip).readPreference(readPreference.toNew());
+        final Find find = new Find(toDocument(query)).limit((int) limit).skip((int) skip).readPreference(readPreference.toNew());
 
         return executeOperation(new CountOperation(find, getNamespace(), getDocumentCodec(), getBufferPool(), getSession(), false));
     }
@@ -1195,7 +1195,7 @@ public class DBCollection implements IDBCollection {
     public AggregationOutput aggregate(final DBObject firstOp, final DBObject... additionalOps) {
         final List<Document> pipeline = new ArrayList<Document>(additionalOps.length + 1);
         pipeline.add(toDocument(firstOp));
-        for (DBObject op : additionalOps) {
+        for (final DBObject op : additionalOps) {
             pipeline.add(toDocument(op));
         }
 
@@ -1449,7 +1449,6 @@ public class DBCollection implements IDBCollection {
                                                                                        .returnNew(returnNew);
             operation = new FindAndRemoveOperation<DBObject>(getBufferPool(),
                                                              getSession(),
-                                                             false,
                                                              getDB().getClusterDescription(),
                                                              getNamespace(),
                                                              findAndRemove,
@@ -1469,7 +1468,6 @@ public class DBCollection implements IDBCollection {
                                                                                            .upsert(upsert);
                 operation = new FindAndUpdateOperation<DBObject>(getBufferPool(),
                                                                  getSession(),
-                                                                 false,
                                                                  getDB()
                                                                  .getClusterDescription(),
                                                                  getNamespace(),
@@ -1485,7 +1483,6 @@ public class DBCollection implements IDBCollection {
                                                                 .upsert(upsert);
                 operation = new FindAndReplaceOperation<DBObject>(getBufferPool(),
                                                                   getSession(),
-                                                                  false,
                                                                   getDB()
                                                                   .getClusterDescription(),
                                                                   getNamespace(),

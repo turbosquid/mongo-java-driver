@@ -398,7 +398,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                          .sortBy(findOp.getOrder())
                                                                          .upsert(upsert);
 
-            return new FindAndUpdateOperation<T>(client.getBufferProvider(), client.getSession(), false,
+            return new FindAndUpdateOperation<T>(client.getBufferProvider(), client.getSession(),
                                                  client.getCluster().getDescription(), getNamespace(), findAndUpdate,
                                                  getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
@@ -409,7 +409,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                                        .select(findOp.getFields())
                                                                                        .sortBy(findOp.getOrder())
                                                                                        .upsert(upsert);
-            return new FindAndReplaceOperation<T>(client.getBufferProvider(), client.getSession(), false,
+            return new FindAndReplaceOperation<T>(client.getBufferProvider(), client.getSession(),
                                                   client.getCluster().getDescription(), getNamespace(), findAndReplace,
                                                   getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
@@ -420,7 +420,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                          .select(findOp.getFields())
                                                                          .sortBy(findOp.getOrder());
 
-            return new FindAndRemoveOperation<T>(client.getBufferProvider(), client.getSession(), false,
+            return new FindAndRemoveOperation<T>(client.getBufferProvider(), client.getSession(),
                                                  client.getCluster().getDescription(), getNamespace(), findAndRemove,
                                                  getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
