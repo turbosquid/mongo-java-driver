@@ -15,7 +15,6 @@ import org.mongodb.connection.impl.DefaultConnectionFactory
 import org.mongodb.connection.impl.DefaultConnectionProviderFactory
 import org.mongodb.session.ClusterSession
 import org.mongodb.session.Session
-import spock.lang.Ignore
 
 import static java.util.concurrent.Executors.newScheduledThreadPool
 import static org.mongodb.Fixture.getBufferProvider
@@ -36,7 +35,6 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
     private final Cluster cluster = new DefaultClusterFactory().create(new ServerAddress(), clusterableServerFactory)
     private final Session session = new ClusterSession(cluster)
 
-    @Ignore('This test is failing and I think it might actually indicate a bug in the code not the test')
     def 'should remove single document'() {
         given:
         Document pete = new Document('name', 'Pete').append('job', 'handyman')
@@ -46,7 +44,7 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
         collection.insert(sam);
 
         when:
-        FindAndRemove findAndRemove = new FindAndRemove(getCollectionName()).select(new Document('name', 'Pete'));
+        FindAndRemove findAndRemove = new FindAndRemove(getCollectionName()).where(new Document('name', 'Pete'));
 
         FindAndRemoveOperation<Document> operation = new FindAndRemoveOperation<Document>(getBufferProvider(), session, false,
                                                                                           collection.namespace, findAndRemove,
@@ -60,5 +58,4 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
     }
 
     //TODO: test types that are not Document
-    //TODO: fix test, needs to return original document.
 }
