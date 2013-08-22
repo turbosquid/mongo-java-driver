@@ -60,4 +60,5 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
     }
 
     //TODO: test types that are not Document
+    //TODO: fix test, needs to return original document.
 }

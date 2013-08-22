@@ -50,17 +50,17 @@ public final class CommandReadPreferenceHelper {
     /**
      * Returns true if the command is a query in disguise.
      *
-     * @return true if the command is a query, false otherwise.
      * @param command the Document containing the details of the command
+     * @return true if the command is a query, false otherwise.
      */
     public static boolean isQuery(final Document command) {
-       return !isPrimaryRequired(command);
+        return !isPrimaryRequired(command);
     }
 
     /**
      * Returns the recommended read preference for the given command when run against a cluster with the given description.
      *
-     * @param command the command
+     * @param command            the command
      * @param clusterDescription the cluster description
      * @return the recommended read preference for the given command when run against a cluster with the given description
      */
@@ -73,8 +73,7 @@ public final class CommandReadPreferenceHelper {
 
         if (primaryRequired) {
             return ReadPreference.primary();
-        }
-        else {
+        } else {
             return command.getReadPreference();
         }
     }
@@ -87,9 +86,8 @@ public final class CommandReadPreferenceHelper {
         // explicitly check for inline mapreduce commands
         if (commandName.equals("mapreduce")) {
             primaryRequired = !(commandDocument.get("out") instanceof Document)
-                    || ((Document) commandDocument.get("out")).get("inline") == null;
-        }
-        else {
+                              || ((Document) commandDocument.get("out")).get("inline") == null;
+        } else {
             primaryRequired = !OBEDIENT_COMMANDS.contains(commandName);
         }
         return primaryRequired;
