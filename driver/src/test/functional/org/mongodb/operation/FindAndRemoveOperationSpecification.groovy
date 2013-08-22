@@ -46,7 +46,7 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
         collection.insert(sam);
 
         when:
-        FindAndRemove findAndRemove = new FindAndRemove().select(new Document('name', 'Pete'));
+        FindAndRemove findAndRemove = new FindAndRemove(getCollectionName()).select(new Document('name', 'Pete'));
 
         FindAndRemoveOperation<Document> operation = new FindAndRemoveOperation<Document>(getBufferProvider(), session, false,
                                                                                           collection.namespace, findAndRemove,
