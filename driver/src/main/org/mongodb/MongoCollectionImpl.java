@@ -399,7 +399,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                          .upsert(upsert);
 
             return new FindAndUpdateOperation<T>(client.getBufferProvider(), client.getSession(),
-                                                 getNamespace(), findAndUpdate,
+                                                 false, getNamespace(), findAndUpdate,
                                                  getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 
@@ -410,7 +410,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                                        .sortBy(findOp.getOrder())
                                                                                        .upsert(upsert);
             return new FindAndReplaceOperation<T>(client.getBufferProvider(), client.getSession(),
-                                                  getNamespace(), findAndReplace,
+                                                  false, getNamespace(), findAndReplace,
                                                   getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 
@@ -421,7 +421,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                                   .sortBy(findOp.getOrder());
 
             return new FindAndRemoveOperation<T>(client.getBufferProvider(), client.getSession(),
-                                                 getNamespace(), findAndRemove,
+                                                 false, getNamespace(), findAndRemove,
                                                  getOptions().getPrimitiveCodecs(), getCodec()).execute();
         }
 

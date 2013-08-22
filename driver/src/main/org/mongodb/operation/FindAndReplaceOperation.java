@@ -32,10 +32,10 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
     private final MongoNamespace namespace;
     private final FindAndModifyCommandResultCodec<T> findAndModifyCommandResultCodec;
 
-    public FindAndReplaceOperation(final BufferProvider bufferProvider, final Session session, final MongoNamespace namespace,
-                                   final FindAndReplace<T> findAndReplace, final PrimitiveCodecs primitiveCodecs,
-                                   final Decoder<T> decoder) {
-        super(bufferProvider, session, false);
+    public FindAndReplaceOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
+                                   final MongoNamespace namespace, final FindAndReplace<T> findAndReplace,
+                                   final PrimitiveCodecs primitiveCodecs, final Decoder<T> decoder) {
+        super(bufferProvider, session, closeSession);
         this.findAndReplace = findAndReplace;
         this.namespace = namespace;
         findAndModifyCommandResultCodec = new FindAndModifyCommandResultCodec<T>(primitiveCodecs, decoder);

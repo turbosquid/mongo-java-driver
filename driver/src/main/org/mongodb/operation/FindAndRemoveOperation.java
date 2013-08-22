@@ -32,9 +32,10 @@ public class FindAndRemoveOperation<T> extends OperationBase<T> {
     private final FindAndRemove<T> findAndRemove;
     private final FindAndModifyCommandResultCodec<T> findAndModifyCommandResultCodec;
 
-    public FindAndRemoveOperation(final BufferProvider bufferProvider, final Session session, final MongoNamespace namespace,
-                                  final FindAndRemove<T> findAndRemove, final PrimitiveCodecs primitiveCodecs, final Decoder<T> decoder) {
-        super(bufferProvider, session, false);
+    public FindAndRemoveOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
+                                  final MongoNamespace namespace, final FindAndRemove<T> findAndRemove,
+                                  final PrimitiveCodecs primitiveCodecs, final Decoder<T> decoder) {
+        super(bufferProvider, session, closeSession);
         this.namespace = namespace;
         this.findAndRemove = findAndRemove;
         findAndModifyCommandResultCodec = new FindAndModifyCommandResultCodec<T>(primitiveCodecs, decoder);

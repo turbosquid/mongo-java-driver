@@ -1449,7 +1449,7 @@ public class DBCollection implements IDBCollection {
                                                                                        .returnNew(returnNew);
             operation = new FindAndRemoveOperation<DBObject>(getBufferPool(),
                                                              getSession(),
-                                                             getNamespace(),
+                                                             false, getNamespace(),
                                                              findAndRemove,
                                                              getPrimitiveCodecs(),
                                                              resultDecoder);
@@ -1468,7 +1468,7 @@ public class DBCollection implements IDBCollection {
                                                               .upsert(upsert);
                 operation = new FindAndUpdateOperation<DBObject>(getBufferPool(),
                                                                  getSession(),
-                                                                 getNamespace(),
+                                                                 false, getNamespace(),
                                                                  findAndUpdate,
                                                                  getPrimitiveCodecs(),
                                                                  resultDecoder);
@@ -1481,7 +1481,7 @@ public class DBCollection implements IDBCollection {
                                                                 .upsert(upsert);
                 operation = new FindAndReplaceOperation<DBObject>(getBufferPool(),
                                                                   getSession(),
-                                                                  getNamespace(),
+                                                                  false, getNamespace(),
                                                                   findAndReplace,
                                                                   getPrimitiveCodecs(),
                                                                   resultDecoder);

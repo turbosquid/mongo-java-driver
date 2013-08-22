@@ -48,8 +48,7 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
         when:
         FindAndRemove findAndRemove = new FindAndRemove().select(new Document('name', 'Pete'));
 
-        FindAndRemoveOperation<Document> operation = new FindAndRemoveOperation<Document>(getBufferProvider(), session
-                                                                                          ,
+        FindAndRemoveOperation<Document> operation = new FindAndRemoveOperation<Document>(getBufferProvider(), session, false,
                                                                                           collection.namespace, findAndRemove,
                                                                                           primitiveCodecs, documentDecoder)
         Document returnedDocument = operation.execute()
