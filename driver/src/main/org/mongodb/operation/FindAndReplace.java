@@ -19,7 +19,8 @@ package org.mongodb.operation;
 import org.mongodb.ConvertibleToDocument;
 import org.mongodb.Document;
 
-import static org.mongodb.operation.CommandDocumentTemplates.findAndModifyDocument;
+import static org.mongodb.operation.DocumentHelper.putIfNotNull;
+import static org.mongodb.operation.DocumentHelper.putIfTrue;
 
 public class FindAndReplace<T> extends FindAndModify implements ConvertibleToDocument {
     private final T replacement;
@@ -62,9 +63,16 @@ public class FindAndReplace<T> extends FindAndModify implements ConvertibleToDoc
 
     @Override
     public Document toDocument() {
-        final Document cmd = findAndModifyDocument(this, collectionName);
+        final Document command = new Document("findandmodify", collectionName);
+        putIfNotNull(command, "query", getFilter());
+        putIfNotNull(command, "fields", getSelector());
+        putIfNotNull(command, "sort", getSortCriteria());
+        putIfTrue(command, isReturnNew(), "new", true);
+        putIfTrue(command, isUpsert(), "upsert", true);
+
         // TODO: I don't think this will work, as we don't have a Class<T> to make sure that serialization works properly
-        cmd.put("update", replacement);
-        return cmd;
+        command.put("update", replacement);
+        return command;
     }
+
 }

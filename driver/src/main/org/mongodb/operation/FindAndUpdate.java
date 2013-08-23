@@ -19,7 +19,8 @@ package org.mongodb.operation;
 import org.mongodb.ConvertibleToDocument;
 import org.mongodb.Document;
 
-import static org.mongodb.operation.CommandDocumentTemplates.findAndModifyDocument;
+import static org.mongodb.operation.DocumentHelper.putIfNotNull;
+import static org.mongodb.operation.DocumentHelper.putIfTrue;
 
 public class FindAndUpdate<T> extends FindAndModify implements ConvertibleToDocument {
     private Document updateOperations;
@@ -66,8 +67,14 @@ public class FindAndUpdate<T> extends FindAndModify implements ConvertibleToDocu
 
     @Override
     public Document toDocument() {
-        final Document cmd = findAndModifyDocument(this, collectionName);
-        cmd.put("update", updateOperations);
-        return cmd;
+        final Document command = new Document("findandmodify", collectionName);
+        putIfNotNull(command, "query", getFilter());
+        putIfNotNull(command, "fields", getSelector());
+        putIfNotNull(command, "sort", getSortCriteria());
+        putIfTrue(command, isReturnNew(), "new", true);
+        putIfTrue(command, isUpsert(), "upsert", true);
+
+        command.put("update", updateOperations);
+        return command;
     }
 }

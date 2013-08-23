@@ -19,7 +19,7 @@ package org.mongodb.operation;
 import org.mongodb.ConvertibleToDocument;
 import org.mongodb.Document;
 
-import static org.mongodb.operation.CommandDocumentTemplates.findAndModifyDocument;
+import static org.mongodb.operation.DocumentHelper.putIfNotNull;
 
 public class FindAndRemove<T> extends FindAndModify implements ConvertibleToDocument {
     private final String collectionName;
@@ -63,8 +63,11 @@ public class FindAndRemove<T> extends FindAndModify implements ConvertibleToDocu
 
     @Override
     public Document toDocument() {
-        final Document cmd = findAndModifyDocument(this, collectionName);
-        cmd.put("remove", true);
-        return cmd;
+        final Document command = new Document("findandmodify", collectionName);
+        putIfNotNull(command, "query", getFilter());
+        putIfNotNull(command, "fields", getSelector());
+        putIfNotNull(command, "sort", getSortCriteria());
+        command.put("remove", true);
+        return command;
     }
 }
