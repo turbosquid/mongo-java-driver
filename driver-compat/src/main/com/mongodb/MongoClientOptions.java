@@ -17,9 +17,14 @@
 package com.mongodb;
 
 import org.mongodb.annotations.Immutable;
+import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
+import org.mongodb.connection.impl.DefaultConnectionSettings;
+import org.mongodb.connection.impl.DefaultServerSettings;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Various settings to control the behavior of a <code>MongoClient</code>.
@@ -38,23 +43,57 @@ public class MongoClientOptions {
     private final DBEncoderFactory dbEncoderFactory;
     private final SocketFactory socketFactory;
     private final boolean cursorFinalizerEnabled;
+    private final DefaultConnectionProviderSettings connectionProviderSettings;
+    private final DefaultConnectionSettings connectionSettings;
+    private final DefaultServerSettings serverSettings;
+    private final DefaultConnectionSettings heartbeatConnectionSettings;
 
     MongoClientOptions(final org.mongodb.MongoClientOptions proxied) {
-        this.proxied = proxied;
-
-        this.dbDecoderFactory = DefaultDBDecoder.FACTORY;
-        this.dbEncoderFactory = DefaultDBEncoder.FACTORY;
-        this.socketFactory = proxied.isSSLEnabled() ? SSLSocketFactory.getDefault() : SocketFactory.getDefault();
-        this.cursorFinalizerEnabled = true;
+        this(proxied, DefaultDBDecoder.FACTORY, DefaultDBEncoder.FACTORY,
+             proxied.isSSLEnabled() ? SSLSocketFactory.getDefault() : SocketFactory.getDefault(),
+             true);
     }
 
     private MongoClientOptions(final Builder builder) {
-        this.proxied = builder.proxied.build();
+        this(builder.proxied.build(), builder.dbDecoderFactory, builder.dbEncoderFactory, builder.socketFactory,
+             builder.cursorFinalizerEnabled);
+    }
 
-        this.dbDecoderFactory = builder.dbDecoderFactory;
-        this.dbEncoderFactory = builder.dbEncoderFactory;
-        this.socketFactory = builder.socketFactory;
-        this.cursorFinalizerEnabled = builder.cursorFinalizerEnabled;
+    private MongoClientOptions(final org.mongodb.MongoClientOptions proxied, final DBDecoderFactory dbDecoderFactory,
+                               final DBEncoderFactory dbEncoderFactory, final SocketFactory socketFactory,
+                               final boolean cursorFinalizerEnabled) {
+        this.proxied = proxied;
+        this.dbDecoderFactory = dbDecoderFactory;
+        this.dbEncoderFactory = dbEncoderFactory;
+        this.socketFactory = socketFactory;
+        this.cursorFinalizerEnabled = cursorFinalizerEnabled;
+
+        final int maxWaitQueueSize = proxied.getMaxConnectionPoolSize() * proxied.getThreadsAllowedToBlockForConnectionMultiplier();
+        connectionProviderSettings = DefaultConnectionProviderSettings.builder()
+                                                                      .minSize(proxied.getMinConnectionPoolSize())
+                                                                      .maxSize(proxied.getMaxConnectionPoolSize())
+                                                                      .maxWaitQueueSize(maxWaitQueueSize)
+                                                                      .maxWaitTime(proxied.getMaxWaitTime(), MILLISECONDS)
+                                                                      .maxConnectionIdleTime(proxied.getMaxConnectionIdleTime(),
+                                                                                             MILLISECONDS)
+                                                                      .maxConnectionLifeTime(proxied.getMaxConnectionLifeTime(),
+                                                                                             MILLISECONDS)
+                                                                      .build();
+
+        connectionSettings = DefaultConnectionSettings.builder()
+                                                      .connectTimeoutMS(proxied.getConnectTimeout())
+                                                      .readTimeoutMS(proxied.getSocketTimeout())
+                                                      .keepAlive(proxied.isSocketKeepAlive())
+                                                      .build();
+        heartbeatConnectionSettings = DefaultConnectionSettings.builder()
+                                                               .connectTimeoutMS(proxied.getHeartbeatConnectTimeout())
+                                                               .readTimeoutMS(proxied.getHeartbeatSocketTimeout())
+                                                               .keepAlive(proxied.isSocketKeepAlive())
+                                                               .build();
+        serverSettings = DefaultServerSettings.builder()
+                                              .heartbeatFrequency(proxied.getHeartbeatFrequency(), MILLISECONDS)
+                                              .connectRetryFrequency(proxied.getHeartbeatConnectRetryFrequency(), MILLISECONDS)
+                                              .build();
     }
 
     /**
@@ -348,6 +387,22 @@ public class MongoClientOptions {
         return cursorFinalizerEnabled;
     }
 
+
+    DefaultConnectionProviderSettings getConnectionProviderSettings() {
+        return connectionProviderSettings;
+    }
+
+    DefaultConnectionSettings getConnectionSettings() {
+        return connectionSettings;
+    }
+
+    DefaultServerSettings getServerSettings() {
+        return serverSettings;
+    }
+
+    DefaultConnectionSettings getHeartbeatConnectionSettings() {
+        return heartbeatConnectionSettings;
+    }
 
     @Override
     public boolean equals(Object o) {

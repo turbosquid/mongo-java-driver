@@ -32,9 +32,6 @@ import org.mongodb.connection.impl.DefaultClusterFactory;
 import org.mongodb.connection.impl.DefaultClusterableServerFactory;
 import org.mongodb.connection.impl.DefaultConnectionFactory;
 import org.mongodb.connection.impl.DefaultConnectionProviderFactory;
-import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
-import org.mongodb.connection.impl.DefaultConnectionSettings;
-import org.mongodb.connection.impl.DefaultServerSettings;
 import org.mongodb.connection.impl.PowerOfTwoBufferPool;
 import org.mongodb.session.ClusterSession;
 import org.mongodb.session.PinnedSession;
@@ -49,7 +46,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.MongoExceptions.mapException;
 import static org.mongodb.connection.ClusterConnectionMode.Discovering;
@@ -682,41 +678,20 @@ public class Mongo {
                                                                            final MongoClientOptions options) {
         final BufferProvider bufferProvider = new PowerOfTwoBufferPool();
 
-        final DefaultConnectionProviderSettings connectionProviderSettings = DefaultConnectionProviderSettings.builder()
-                .minSize(options.getMinConnectionsPerHost())
-                .maxSize(options.getConnectionsPerHost())
-                .maxWaitQueueSize(options.getConnectionsPerHost() * options.getThreadsAllowedToBlockForConnectionMultiplier())
-                .maxWaitTime(options.getMaxWaitTime(), TimeUnit.MILLISECONDS)
-                .maxConnectionIdleTime(options.getMaxConnectionIdleTime(), TimeUnit.MILLISECONDS)
-                .maxConnectionLifeTime(options.getMaxConnectionLifeTime(), TimeUnit.MILLISECONDS)
-                .build();
-        final DefaultConnectionSettings connectionSettings = DefaultConnectionSettings.builder()
-                .connectTimeoutMS(options.getConnectTimeout())
-                .readTimeoutMS(options.getSocketTimeout())
-                .keepAlive(options.isSocketKeepAlive())
-                .build();
+        final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.getConnectionSettings(),
+                                                                                 options.getSocketFactory(),
+                                                                                 bufferProvider,
+                                                                                 createNewCredentialList(credentialList));
 
-        final ConnectionFactory connectionFactory = new DefaultConnectionFactory(
-                connectionSettings,
-                options.getSocketFactory(),
-                bufferProvider,
-                createNewCredentialList(credentialList)
-        );
-
-        return new DefaultClusterableServerFactory(
-                DefaultServerSettings.builder().heartbeatFrequency(options.getHeartbeatFrequency(), TimeUnit.MILLISECONDS).
-                        connectRetryFrequency(options.getHeartbeatConnectRetryFrequency(), TimeUnit.MILLISECONDS).build(),
-                new DefaultConnectionProviderFactory(connectionProviderSettings, connectionFactory),
-                null,
-                new DefaultConnectionFactory(
-                        DefaultConnectionSettings.builder()
-                                .connectTimeoutMS(options.getHeartbeatConnectTimeout())
-                                .readTimeoutMS(options.getHeartbeatSocketTimeout())
-                                .keepAlive(options.isSocketKeepAlive())
-                                .build(),
-                        options.getSocketFactory(), bufferProvider, Collections.<org.mongodb.MongoCredential>emptyList()),
-                Executors.newScheduledThreadPool(3),  // TODO: allow configuration
-                bufferProvider);
+        return new DefaultClusterableServerFactory(options.getServerSettings(),
+                                                   new DefaultConnectionProviderFactory(options.getConnectionProviderSettings(),
+                                                                                        connectionFactory),
+                                                   null,
+                                                   new DefaultConnectionFactory(options.getHeartbeatConnectionSettings(),
+                                                                                options.getSocketFactory(), bufferProvider,
+                                                                                Collections.<org.mongodb.MongoCredential>emptyList()),
+                                                   Executors.newScheduledThreadPool(3),  // TODO: allow configuration
+                                                   bufferProvider);
     }
 
     private static List<org.mongodb.connection.ServerAddress> createNewSeedList(final List<ServerAddress> seedList) {
