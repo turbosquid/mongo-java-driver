@@ -16,6 +16,11 @@
         </Class>
     </Match>
     <Match>
+        <Class name="org.mongodb.test.Worker">
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Class>
+    </Match>
+    <Match>
         <Class name="com.mongodb.codecs.DocumentCodec">
             <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
         </Class>

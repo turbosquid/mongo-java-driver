@@ -26,7 +26,7 @@ public class FindAndReplace<T> extends FindAndModify implements ConvertibleToDoc
     private final T replacement;
     private final String collectionName;
 
-    public FindAndReplace(final T replacement, final String collectionName) {
+    public FindAndReplace(final String collectionName, final T replacement) {
         this.replacement = replacement;
         this.collectionName = collectionName;
     }

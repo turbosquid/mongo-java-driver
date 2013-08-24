@@ -52,6 +52,16 @@ public class FindAndUpdateOperation<T> extends OperationBase<T> {
         // TODO: any way to remove the warning?  This could be a design flaw
     }
 
+//    final ServerConnectionProvider provider = getServerConnectionProvider();
+//    //TODO: CommandResult can be genericised?
+//    final CommandResult commandResult = new CommandWithPayloadProtocol<T>(namespace.getDatabaseName(), null,
+//                                                                          findAndUpdate.toDocument(),
+//                                                                          findAndModifyCommandResultCodec, getBufferProvider(),
+//                                                                          provider.getServerDescription(), provider.getConnection(),
+//                                                                          true).execute();
+//    return (T) commandResult.getResponse().get("value");
+//    // TODO: any way to remove the warning?  This could be a design flaw
+
     private ServerConnectionProvider getServerConnectionProvider() {
         return getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(false, new PrimaryServerSelector()));
     }

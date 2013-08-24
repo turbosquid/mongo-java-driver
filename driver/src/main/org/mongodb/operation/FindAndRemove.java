@@ -28,10 +28,6 @@ public class FindAndRemove<T> extends FindAndModify implements ConvertibleToDocu
         this.collectionName = collectionName;
     }
 
-    public boolean isRemove() {
-        return true;
-    }
-
     @Override
     public FindAndRemove<T> where(final Document filter) {
         super.where(filter);

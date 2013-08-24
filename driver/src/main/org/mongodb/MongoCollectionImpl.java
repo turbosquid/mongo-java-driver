@@ -404,14 +404,14 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
         }
 
         public T replaceOneAndGet(final T replacement, final Get beforeOrAfter) {
-            final FindAndReplace<T> findAndReplace = new FindAndReplace<T>(replacement, getName()).where(findOp.getFilter())
-                                                                                       .returnNew(asBoolean(beforeOrAfter))
-                                                                                       .select(findOp.getFields())
-                                                                                       .sortBy(findOp.getOrder())
-                                                                                       .upsert(upsert);
+            final FindAndReplace<T> findAndReplace = new FindAndReplace<T>(getName(), replacement).where(findOp.getFilter())
+                                                                                                  .returnNew(asBoolean(beforeOrAfter))
+                                                                                                  .select(findOp.getFields())
+                                                                                                  .sortBy(findOp.getOrder())
+                                                                                                  .upsert(upsert);
             return new FindAndReplaceOperation<T>(client.getBufferProvider(), client.getSession(),
                                                   false, getNamespace(), findAndReplace,
-                                                  getOptions().getPrimitiveCodecs(), getCodec()).execute();
+                                                  getOptions().getPrimitiveCodecs(), getCodec(), getCodec()).execute();
         }
 
         @Override

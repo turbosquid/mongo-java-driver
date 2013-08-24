@@ -1473,7 +1473,7 @@ public class DBCollection implements IDBCollection {
                                                                  getPrimitiveCodecs(),
                                                                  resultDecoder);
             } else {
-                final FindAndReplace<DBObject> findAndReplace = new FindAndReplace<DBObject>(update, getName())
+                final FindAndReplace<DBObject> findAndReplace = new FindAndReplace<DBObject>(getName(), update)
                                                                 .where(toNullableDocument(query))
                                                                 .sortBy(toNullableDocument(sort))
                                                                 .select(toFieldSelectorDocument(fields))
@@ -1484,7 +1484,7 @@ public class DBCollection implements IDBCollection {
                                                                   false, getNamespace(),
                                                                   findAndReplace,
                                                                   getPrimitiveCodecs(),
-                                                                  resultDecoder);
+                                                                  resultDecoder, objectCodec);
             }
         }
 

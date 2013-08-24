@@ -16,13 +16,14 @@
 
 package org.mongodb.operation;
 
+import org.mongodb.CollectibleCodec;
 import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
 import org.mongodb.MongoNamespace;
 import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.command.FindAndModifyCommandResultCodec;
 import org.mongodb.connection.BufferProvider;
-import org.mongodb.operation.protocol.CommandProtocol;
+import org.mongodb.operation.protocol.CommandWithPayloadProtocol;
 import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
@@ -31,13 +32,17 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
     private final FindAndReplace<T> findAndReplace;
     private final MongoNamespace namespace;
     private final FindAndModifyCommandResultCodec<T> findAndModifyCommandResultCodec;
+    private final CollectibleCodec<T> payloadCodec;
 
     public FindAndReplaceOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
                                    final MongoNamespace namespace, final FindAndReplace<T> findAndReplace,
-                                   final PrimitiveCodecs primitiveCodecs, final Decoder<T> decoder) {
+                                   final PrimitiveCodecs primitiveCodecs, final Decoder<T> decoder,
+                                   final CollectibleCodec<T> payloadCodec) {
         super(bufferProvider, session, closeSession);
         this.findAndReplace = findAndReplace;
         this.namespace = namespace;
+        this.payloadCodec = payloadCodec;
+        //need to change this to be more inline with the payload codec
         findAndModifyCommandResultCodec = new FindAndModifyCommandResultCodec<T>(primitiveCodecs, decoder);
     }
 
@@ -45,10 +50,12 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
     @Override
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
-        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndReplace.toDocument(),
-                                                                findAndModifyCommandResultCodec,
-                                                                getBufferProvider(), provider.getServerDescription(),
-                                                                provider.getConnection(), true).execute();
+        //TODO: CommandResult can be genericised?
+        final CommandResult commandResult = new CommandWithPayloadProtocol<T>(namespace.getDatabaseName(), payloadCodec,
+                                                                              findAndReplace.toDocument(),
+                                                                              findAndModifyCommandResultCodec,
+                                                                              getBufferProvider(), provider.getServerDescription(),
+                                                                              provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");
         // TODO: any way to remove the warning?  This could be a design flaw
     }
@@ -56,4 +63,35 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
     private ServerConnectionProvider getServerConnectionProvider() {
         return getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(false, new PrimaryServerSelector()));
     }
+
+
+    //    private final FindAndReplace<T> findAndReplace;
+    //    private final MongoNamespace namespace;
+    //    private final PrimitiveCodecs primitiveCodecs;
+    //    private final Decoder<T> decoder;
+    //    private final ClusterDescription clusterDescription;
+    //
+    //    public FindAndReplaceOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
+    //                                   final ClusterDescription clusterDescription, final MongoNamespace namespace,
+    //                                   final FindAndReplace<T> findAndReplace, final PrimitiveCodecs primitiveCodecs,
+    //                                   final Encoder<T> encoder, final Decoder<T> decoder) {
+    //        super(bufferProvider, session, closeSession);
+    //        this.findAndReplace = findAndReplace;
+    //        this.namespace = namespace;
+    //        //for encoding query
+    //        this.primitiveCodecs = primitiveCodecs;
+    //        this.decoder = decoder;
+    //        this.clusterDescription = clusterDescription;
+    //    }
+    //
+    //    @Override
+    //    public T execute() {
+    //        final FindAndReplaceCommand<T> command = new FindAndReplaceCommand<T>(findAndReplace, namespace.getCollectionName());
+    //        return new FindAndModifyCommandResult<T>(new CommandOperation(namespace.getDatabaseName(), command,
+    //                                                                      new FindAndModifyCommandResultCodec<T>(PrimitiveCodecs
+    // .createDefault(), decoder),
+    //                                                                      clusterDescription, getBufferProvider(), getSession(), false)
+    //                                                 .execute()).getValue();
+    //    }
+
 }
