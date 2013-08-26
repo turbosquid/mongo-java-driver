@@ -18,7 +18,7 @@ package org.mongodb;
 
 import org.mongodb.connection.ServerAddress;
 
-public class CommandResult {
+public class CommandResult<T> {
     private final Document command;
     private final ServerAddress address;
     private final Document response;
@@ -31,7 +31,7 @@ public class CommandResult {
         this.elapsedNanoseconds = elapsedNanoseconds;
     }
 
-    public CommandResult(final CommandResult baseResult) {
+    public CommandResult(final CommandResult<T> baseResult) {
         this.command = baseResult.command;
         this.address = baseResult.address;
         this.response = baseResult.response;
@@ -55,7 +55,7 @@ public class CommandResult {
     }
 
     public int getErrorCode() {
-        Integer errorCode = (Integer) getResponse().get("code");
+        final Integer errorCode = (Integer) getResponse().get("code");
         return (errorCode != null) ? errorCode : -1;
     }
 
