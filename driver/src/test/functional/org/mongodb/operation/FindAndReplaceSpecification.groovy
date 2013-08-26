@@ -37,7 +37,7 @@ import static java.util.concurrent.Executors.newScheduledThreadPool
 import static org.mongodb.Fixture.getBufferProvider
 import static org.mongodb.Fixture.getSSLSettings
 
-class FindAndReplaceOperationCustomCodecsSpecification extends FunctionalSpecification {
+class FindAndReplaceSpecification extends FunctionalSpecification {
     private final MongoClientOptions options = MongoClientOptions.builder().build();
     private final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.connectionSettings,
                                                                                      getSSLSettings(), getBufferProvider(), [])

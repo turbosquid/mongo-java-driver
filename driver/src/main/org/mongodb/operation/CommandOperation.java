@@ -16,8 +16,8 @@
 
 package org.mongodb.operation;
 
-import org.mongodb.Codec;
 import org.mongodb.CommandResult;
+import org.mongodb.Decoder;
 import org.mongodb.Document;
 import org.mongodb.codecs.DocumentCodec;
 import org.mongodb.codecs.PrimitiveCodecs;
@@ -35,18 +35,18 @@ import static org.mongodb.operation.CommandReadPreferenceHelper.isQuery;
 public class CommandOperation extends OperationBase<CommandResult> {
     private final DocumentCodec commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
     private final Command command;
-    private final Codec<Document> codec;
+    private final Decoder<Document> commandDecoder;
     private final String database;
     private final ClusterDescription clusterDescription;
 
-    public CommandOperation(final String database, final Command command, final Codec<Document> codec,
+    public CommandOperation(final String database, final Command command, final Decoder<Document> commandDecoder,
                             final ClusterDescription clusterDescription, final BufferProvider bufferProvider,
                             final Session session, final boolean closeSession) {
         super(bufferProvider, session, closeSession);
         this.database = database;
         this.clusterDescription = clusterDescription;
         this.command = command;
-        this.codec = codec;
+        this.commandDecoder = commandDecoder;
     }
 
     @Override
@@ -55,8 +55,8 @@ public class CommandOperation extends OperationBase<CommandResult> {
             final ServerConnectionProviderOptions options = new ServerConnectionProviderOptions(isQuery(command.toDocument()),
                                                                                                 getServerSelector());
             final ServerConnectionProvider provider = getSession().createServerConnectionProvider(options);
-            return new CommandProtocol(database, command.toDocument(), commandEncoder, codec,
-                                       getBufferProvider(), provider.getServerDescription(), provider.getConnection(), true).execute();
+            return new CommandProtocol(database, command.toDocument(), commandEncoder, commandDecoder, getBufferProvider(),
+                                       provider.getServerDescription(), provider.getConnection(), true).execute();
         } finally {
             if (isCloseSession()) {
                 getSession().close();

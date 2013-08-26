@@ -32,26 +32,26 @@ import static org.mongodb.operation.OperationHelpers.getMessageSettings;
 import static org.mongodb.operation.OperationHelpers.getResponseSettings;
 
 public class CommandProtocol implements Protocol<CommandResult> {
-    private final Decoder<Document> commandEncoder;
     private final MongoNamespace namespace;
+    private final Document command;
+    private final Decoder<Document> commandEncoder;
+    private final Encoder<Document> commandResultDecoder;
     private final BufferProvider bufferProvider;
     private final ServerDescription serverDescription;
     private final Connection connection;
     private final boolean closeConnection;
-    private final Document command;
-    private final Encoder<Document> commandResultDecoder;
 
     public CommandProtocol(final String database, final Document command, final Encoder<Document> commandEncoder,
                            final Decoder<Document> commandResultDecoder, final BufferProvider bufferProvider,
                            final ServerDescription serverDescription, final Connection connection, final boolean closeConnection) {
+        this.namespace = new MongoNamespace(database, MongoNamespace.COMMAND_COLLECTION_NAME);
+        this.command = command;
+        this.commandEncoder = commandResultDecoder;
+        this.commandResultDecoder = commandEncoder;
+        this.bufferProvider = bufferProvider;
         this.serverDescription = serverDescription;
         this.connection = connection;
         this.closeConnection = closeConnection;
-        this.namespace = new MongoNamespace(database, MongoNamespace.COMMAND_COLLECTION_NAME);
-        this.bufferProvider = bufferProvider;
-        this.commandEncoder = commandResultDecoder;
-        this.commandResultDecoder = commandEncoder;
-        this.command = command;
     }
 
     public CommandResult execute() {

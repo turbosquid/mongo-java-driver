@@ -29,8 +29,8 @@ import org.mongodb.session.Session;
 public class FindAndReplaceOperation<T> extends OperationBase<T> {
     private final MongoNamespace namespace;
     private final FindAndReplace<T> findAndReplace;
-    private final CommandResultWithPayloadDecoder<T> findAndReplaceResultDecoder;
-    private final CommandWithPayloadEncoder<T> findAndReplaceEncoder;
+    private final CommandResultWithPayloadDecoder<T> resultDecoder;
+    private final CommandWithPayloadEncoder<T> commandEncoder;
 
     public FindAndReplaceOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
                                    final MongoNamespace namespace, final FindAndReplace<T> findAndReplace,
@@ -38,8 +38,8 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
         super(bufferProvider, session, closeSession);
         this.namespace = namespace;
         this.findAndReplace = findAndReplace;
-        findAndReplaceResultDecoder = new CommandResultWithPayloadDecoder<T>(payloadDecoder);
-        findAndReplaceEncoder = new CommandWithPayloadEncoder<T>("update", payloadEncoder);
+        resultDecoder = new CommandResultWithPayloadDecoder<T>(payloadDecoder);
+        commandEncoder = new CommandWithPayloadEncoder<T>("update", payloadEncoder);
     }
 
     @SuppressWarnings("unchecked")
@@ -47,7 +47,7 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
         final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndReplace.toDocument(),
-                                                                findAndReplaceEncoder, findAndReplaceResultDecoder, getBufferProvider(),
+                                                                commandEncoder, resultDecoder, getBufferProvider(),
                                                                 provider.getServerDescription(), provider.getConnection(), true
         ).execute();
         return (T) commandResult.getResponse().get("value");
