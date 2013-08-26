@@ -400,7 +400,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
             return new FindAndUpdateOperation<T>(client.getBufferProvider(), client.getSession(),
                                                  false, getNamespace(), findAndUpdate,
-                                                 getOptions().getPrimitiveCodecs(), getCodec()).execute();
+                                                 getCodec()).execute();
         }
 
         public T replaceOneAndGet(final T replacement, final Get beforeOrAfter) {

@@ -1469,7 +1469,6 @@ public class DBCollection implements IDBCollection {
                                                                  getSession(),
                                                                  false, getNamespace(),
                                                                  findAndUpdate,
-                                                                 getPrimitiveCodecs(),
                                                                  resultDecoder);
             } else {
                 final FindAndReplace<DBObject> findAndReplace = new FindAndReplace<DBObject>(getName(), update)

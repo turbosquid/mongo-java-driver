@@ -27,8 +27,8 @@ import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
 public class FindAndReplaceOperation<T> extends OperationBase<T> {
-    private final FindAndReplace<T> findAndReplace;
     private final MongoNamespace namespace;
+    private final FindAndReplace<T> findAndReplace;
     private final CommandResultWithPayloadDecoder<T> findAndReplaceResultDecoder;
     private final CommandWithPayloadEncoder<T> findAndReplaceEncoder;
 
@@ -36,9 +36,8 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
                                    final MongoNamespace namespace, final FindAndReplace<T> findAndReplace,
                                    final Decoder<T> payloadDecoder, final Encoder<T> payloadEncoder) {
         super(bufferProvider, session, closeSession);
-        this.findAndReplace = findAndReplace;
         this.namespace = namespace;
-        //need to change this to be more inline with the payload codec
+        this.findAndReplace = findAndReplace;
         findAndReplaceResultDecoder = new CommandResultWithPayloadDecoder<T>(payloadDecoder);
         findAndReplaceEncoder = new CommandWithPayloadEncoder<T>("update", payloadEncoder);
     }
@@ -47,7 +46,6 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
     @Override
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
-        //TODO: CommandResult can be genericised?
         final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndReplace.toDocument(),
                                                                 findAndReplaceEncoder, findAndReplaceResultDecoder, getBufferProvider(),
                                                                 provider.getServerDescription(), provider.getConnection(), true

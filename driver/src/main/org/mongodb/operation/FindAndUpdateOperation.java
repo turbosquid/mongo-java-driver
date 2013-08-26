@@ -28,17 +28,17 @@ import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
 public class FindAndUpdateOperation<T> extends OperationBase<T> {
-    private final FindAndUpdate<T> findAndUpdate;
     private final MongoNamespace namespace;
-    private final CommandResultWithPayloadDecoder<T> commandResultWithPayloadDecoder;
+    private final FindAndUpdate<T> findAndUpdate;
+    private final CommandResultWithPayloadDecoder<T> resultDecoder;
+    private final DocumentCodec commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
 
     public FindAndUpdateOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
-                                  final MongoNamespace namespace, final FindAndUpdate<T> findAndUpdate,
-                                  final PrimitiveCodecs primitiveCodecs, final Decoder<T> resultDecoder) {
+                                  final MongoNamespace namespace, final FindAndUpdate<T> findAndUpdate, final Decoder<T> resultDecoder) {
         super(bufferProvider, session, closeSession);
-        this.findAndUpdate = findAndUpdate;
         this.namespace = namespace;
-        commandResultWithPayloadDecoder = new CommandResultWithPayloadDecoder<T>(resultDecoder);
+        this.findAndUpdate = findAndUpdate;
+        this.resultDecoder = new CommandResultWithPayloadDecoder<T>(resultDecoder);
     }
 
     @SuppressWarnings("unchecked")
@@ -46,23 +46,12 @@ public class FindAndUpdateOperation<T> extends OperationBase<T> {
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
         final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndUpdate.toDocument(),
-                                                                new DocumentCodec(PrimitiveCodecs.createDefault()),
-                                                                commandResultWithPayloadDecoder, getBufferProvider(),
+                                                                commandEncoder, resultDecoder, getBufferProvider(),
                                                                 provider.getServerDescription(), provider.getConnection(), true
         ).execute();
         return (T) commandResult.getResponse().get("value");
         // TODO: any way to remove the warning?  This could be a design flaw
     }
-
-//    final ServerConnectionProvider provider = getServerConnectionProvider();
-//    //TODO: CommandResult can be genericised?
-//    final CommandResult commandResult = new CommandWithPayloadProtocol<T>(namespace.getDatabaseName(), null,
-//                                                                          findAndUpdate.toDocument(),
-//                                                                          findAndModifyCommandResultCodec, getBufferProvider(),
-//                                                                          provider.getServerDescription(), provider.getConnection(),
-//                                                                          true).execute();
-//    return (T) commandResult.getResponse().get("value");
-//    // TODO: any way to remove the warning?  This could be a design flaw
 
     private ServerConnectionProvider getServerConnectionProvider() {
         return getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(false, new PrimaryServerSelector()));
