@@ -22,9 +22,9 @@ final class DocumentHelper {
 
     private DocumentHelper() { }
 
-    static void putIfTrue(final Document command, final boolean condition, final String key, final boolean value) {
+    static void putIfTrue(final Document command, final String key, final boolean condition) {
         if (condition) {
-            command.put(key, value);
+            command.put(key, condition);
         }
     }
 

@@ -67,8 +67,8 @@ public class FindAndReplace<T> extends FindAndModify implements ConvertibleToDoc
         putIfNotNull(command, "query", getFilter());
         putIfNotNull(command, "fields", getSelector());
         putIfNotNull(command, "sort", getSortCriteria());
-        putIfTrue(command, isReturnNew(), "new", true);
-        putIfTrue(command, isUpsert(), "upsert", true);
+        putIfTrue(command, "new", isReturnNew());
+        putIfTrue(command, "upsert", isUpsert());
 
         // TODO: I don't think this will work, as we don't have a Class<T> to make sure that serialization works properly
         command.put("update", replacement);

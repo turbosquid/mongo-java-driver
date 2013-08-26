@@ -25,16 +25,18 @@ public final class Worker {
     private String name;
     private String jobTitle;
     private Date dateStarted;
+    private int numberOfJobs;
 
-    public Worker(final String name, final String jobTitle, final Date dateStarted) {
-        this(new ObjectId(), name, jobTitle, dateStarted);
+    public Worker(final String name, final String jobTitle, final Date dateStarted, final int numberOfJobs) {
+        this(new ObjectId(), name, jobTitle, dateStarted, numberOfJobs);
     }
 
-    public Worker(final ObjectId id, final String name, final String jobTitle, final Date dateStarted) {
+    public Worker(final ObjectId id, final String name, final String jobTitle, final Date dateStarted, final int numberOfJobs) {
         this.id = id;
         this.name = name;
         this.jobTitle = jobTitle;
         this.dateStarted = dateStarted;
+        this.numberOfJobs = numberOfJobs;
     }
 
     public ObjectId getId() {
@@ -49,9 +51,12 @@ public final class Worker {
         return jobTitle;
     }
 
-    //
     public Date getDateStarted() {
         return dateStarted;
+    }
+
+    public int getNumberOfJobs() {
+        return numberOfJobs;
     }
 
     @Override
@@ -65,6 +70,9 @@ public final class Worker {
 
         final Worker worker = (Worker) o;
 
+        if (numberOfJobs != worker.numberOfJobs) {
+            return false;
+        }
         if (!dateStarted.equals(worker.dateStarted)) {
             return false;
         }
@@ -87,6 +95,7 @@ public final class Worker {
         result = 31 * result + name.hashCode();
         result = 31 * result + jobTitle.hashCode();
         result = 31 * result + dateStarted.hashCode();
+        result = 31 * result + numberOfJobs;
         return result;
     }
 
@@ -97,6 +106,7 @@ public final class Worker {
                + ", name='" + name + '\''
                + ", jobTitle='" + jobTitle + '\''
                + ", dateStarted=" + dateStarted
+               + ", numberOfJobs=" + numberOfJobs
                + '}';
     }
 }

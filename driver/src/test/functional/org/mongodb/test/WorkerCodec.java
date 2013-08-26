@@ -36,6 +36,7 @@ public final class WorkerCodec implements CollectibleCodec<Worker> {
         bsonWriter.writeString("name", value.getName());
         bsonWriter.writeString("jobTitle", value.getJobTitle());
         bsonWriter.writeDateTime("dateStarted", value.getDateStarted().getTime());
+        bsonWriter.writeInt32("numberOfJobs", value.getNumberOfJobs());
         bsonWriter.writeEndDocument();
     }
 
@@ -46,8 +47,9 @@ public final class WorkerCodec implements CollectibleCodec<Worker> {
         final String name = reader.readString("name");
         final String jobTitle = reader.readString("jobTitle");
         final Date dateStarted = new Date(reader.readDateTime("dateStarted"));
+        final int numberOfJobs = reader.readInt32("numberOfJobs");
         reader.readEndDocument();
-        return new Worker(id, name, jobTitle, dateStarted);
+        return new Worker(id, name, jobTitle, dateStarted, numberOfJobs);
     }
 
     @Override

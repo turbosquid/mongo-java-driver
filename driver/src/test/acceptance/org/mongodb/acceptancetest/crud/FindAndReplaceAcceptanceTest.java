@@ -55,19 +55,35 @@ public class FindAndReplaceAcceptanceTest extends DatabaseTestCase {
     }
 
     @Test
-    public void shouldFindAndReplaceWithDocumentRequiringACustomEncoder() {
-        Worker pat = new Worker(new ObjectId(), "Pat", "Sales", new Date());
+    public void shouldReplaceAndReturnOriginalItemWithDocumentRequiringACustomEncoder() {
+        Worker pat = new Worker(new ObjectId(), "Pat", "Sales", new Date(), 0);
         final MongoCollection<Worker> collection = database.getCollection(getCollectionName(), new WorkerCodec());
         collection.insert(pat);
 
         assertThat(collection.find().count(), is(1L));
 
-        final Worker jordan = new Worker(pat.getId(), "Jordan", "Engineer", new Date());
+        final Worker jordan = new Worker(pat.getId(), "Jordan", "Engineer", new Date(), 1);
         final Worker returnedDocument = collection.find(new Document("name", "Pat"))
                                                   .getOneAndReplace(jordan);
 
         assertThat("Document, retrieved from getOneAndReplace, should match the document inserted before",
                    returnedDocument, equalTo(pat));
+    }
+
+    @Test
+    public void shouldReplaceAndReturnNewItemWithDocumentRequiringACustomEncoder() {
+        Worker pat = new Worker(new ObjectId(), "Pat", "Sales", new Date(), 3);
+        final MongoCollection<Worker> collection = database.getCollection(getCollectionName(), new WorkerCodec());
+        collection.insert(pat);
+
+        assertThat(collection.find().count(), is(1L));
+
+        final Worker jordan = new Worker(pat.getId(), "Jordan", "Engineer", new Date(), 7);
+        final Worker returnedDocument = collection.find(new Document("name", "Pat"))
+                                                  .replaceOneAndGet(jordan);
+
+        assertThat("Worker retrieved from replaceOneAndGet should match the updated Worker",
+                   returnedDocument, equalTo(jordan));
     }
 
     @Test
@@ -86,9 +102,8 @@ public class FindAndReplaceAcceptanceTest extends DatabaseTestCase {
                    document, equalTo(documentReplacement));
     }
 
-
     @Test
-    public void shouldReturnNullWhenNothingToReplace() {
+    public void shouldReturnNullWhenNothingToReplaceForGetOneAndReplace() {
         final Document documentInserted = new Document(KEY, VALUE_TO_CARE_ABOUT);
         collection.insert(documentInserted);
 
@@ -97,12 +112,24 @@ public class FindAndReplaceAcceptanceTest extends DatabaseTestCase {
         final Document document = collection.find(new Document(KEY, "bar"))
                                             .getOneAndReplace(new Document("foo", "bar"));
 
-        assertNull("Document retrieved from replaceAndGet should be null", document);
+        assertNull("Document retrieved from getOneAndReplace should be null when no matching document found", document);
     }
 
+    @Test
+    public void shouldReturnNullWhenNothingToReplaceForReplaceOneAndGet() {
+        final Document documentInserted = new Document(KEY, VALUE_TO_CARE_ABOUT);
+        collection.insert(documentInserted);
+
+        assertThat(collection.find().count(), is(1L));
+
+        final Document document = collection.find(new Document(KEY, "bar"))
+                                            .replaceOneAndGet(new Document("foo", "bar"));
+
+        assertNull("Document retrieved from replaceOneAndGet should be null when no matching document found", document);
+    }
 
     @Test
-    public void shouldInsertDocumentWhenFilterDoesNotMatchAnyDocuments() {
+    public void shouldInsertDocumentWhenFilterDoesNotMatchAnyDocumentsAndUpsertFlagIsSet() {
         final Document originalDocument = new Document(KEY, VALUE_TO_CARE_ABOUT);
         collection.insert(originalDocument);
 
@@ -115,7 +142,7 @@ public class FindAndReplaceAcceptanceTest extends DatabaseTestCase {
                                             .replaceOneAndGet(replacementDocument);
 
         assertThat(collection.find().count(), is(2L));
-        assertThat("Document retrieved from replaceOrInsertAndGet with filter that doesn't match should match the replacement document",
+        assertThat("Document retrieved from replaceOneAndGet with filter that doesn't match should match the replacement document",
                    document, equalTo(replacementDocument));
     }
 

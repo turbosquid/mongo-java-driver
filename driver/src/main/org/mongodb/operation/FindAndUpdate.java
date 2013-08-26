@@ -71,8 +71,8 @@ public class FindAndUpdate<T> extends FindAndModify implements ConvertibleToDocu
         putIfNotNull(command, "query", getFilter());
         putIfNotNull(command, "fields", getSelector());
         putIfNotNull(command, "sort", getSortCriteria());
-        putIfTrue(command, isReturnNew(), "new", true);
-        putIfTrue(command, isUpsert(), "upsert", true);
+        putIfTrue(command, "new", isReturnNew());
+        putIfTrue(command, "upsert", isUpsert());
 
         command.put("update", updateOperations);
         return command;

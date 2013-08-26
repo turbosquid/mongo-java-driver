@@ -37,7 +37,7 @@ import static java.util.concurrent.Executors.newScheduledThreadPool
 import static org.mongodb.Fixture.getBufferProvider
 import static org.mongodb.Fixture.getSSLSettings
 
-class FindAndReplaceOperationCustomCodecsSpecification extends FunctionalSpecification {
+class FindAndUpdateOperationSpecification extends FunctionalSpecification {
     private final MongoClientOptions options = MongoClientOptions.builder().build();
     private final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.connectionSettings,
                                                                                      getSSLSettings(), getBufferProvider(), [])
@@ -48,6 +48,7 @@ class FindAndReplaceOperationCustomCodecsSpecification extends FunctionalSpecifi
 
     private final Cluster cluster = new DefaultClusterFactory().create(new ServerAddress(), clusterableServerFactory)
     private final Session session = new ClusterSession(cluster)
+
     private MongoCollection<Worker> workerCollection
 
     def setup() {
@@ -55,29 +56,27 @@ class FindAndReplaceOperationCustomCodecsSpecification extends FunctionalSpecifi
         workerCollection = database.getCollection(getCollectionName(), new WorkerCodec())
     }
 
-    def 'should be able to specify a custom encoder for the replacement object'() {
+    def 'should be able to specify a custom encoder and have the found value return in that type'() {
         given:
         Worker pete = new Worker('Pete', 'handyman', new Date(), 3)
-        Worker sam = new Worker('Sam', 'plumber', new Date(), 5)
-        Worker jordan = new Worker(pete.id, 'Jordan', 'sparky', new Date(), 7)
+        Worker sam = new Worker('Sam', 'plumber', new Date(), 7)
 
         workerCollection.insert(pete);
         workerCollection.insert(sam);
 
         when:
-        FindAndReplace findAndReplace = new FindAndReplace<Worker>(getCollectionName(), jordan).where(new Document('name', 'Pete'))
-                .returnNew(false);
+        FindAndUpdate findAndUpdate = new FindAndUpdate<Worker>(getCollectionName()).where(new Document('name', 'Pete'))
+                .updateWith(new Document('$inc', new Document('numberOfJobs', 1)))
+                .returnNew(true);
 
-        FindAndReplaceOperation<Worker> operation = new FindAndReplaceOperation<Worker>(getBufferProvider(), session, false,
-                                                                                        workerCollection.namespace, findAndReplace,
-                                                                                        new WorkerCodec(), new WorkerCodec())
+        FindAndUpdateOperation<Worker> operation = new FindAndUpdateOperation<Worker>(getBufferProvider(), session, false,
+                                                                                      workerCollection.namespace, findAndUpdate,
+                                                                                      new WorkerCodec())
         Worker returnedValue = operation.execute()
 
         then:
-        returnedValue == pete
+        Worker updatedPete = new Worker(pete.id, pete.name, pete.jobTitle, pete.dateStarted, 4)
+        returnedValue == updatedPete
     }
-
-    //TODO: what about custom Date formats?
-    //TODO: test null returns
 
 }

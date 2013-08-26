@@ -4,7 +4,6 @@ import org.mongodb.Document
 import org.mongodb.FunctionalSpecification
 import org.mongodb.MongoClientOptions
 import org.mongodb.codecs.DocumentCodec
-import org.mongodb.codecs.PrimitiveCodecs
 import org.mongodb.connection.Cluster
 import org.mongodb.connection.ClusterableServerFactory
 import org.mongodb.connection.ConnectionFactory
@@ -22,7 +21,6 @@ import static org.mongodb.Fixture.getSSLSettings
 
 class FindAndRemoveOperationSpecification extends FunctionalSpecification {
     private final DocumentCodec documentDecoder = new DocumentCodec()
-    private final PrimitiveCodecs primitiveCodecs = PrimitiveCodecs.createDefault()
 
     private final MongoClientOptions options = MongoClientOptions.builder().build();
     private final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.connectionSettings,
