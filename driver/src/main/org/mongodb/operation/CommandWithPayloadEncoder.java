@@ -24,17 +24,20 @@ import org.mongodb.codecs.validators.FieldNameValidator;
 
 import java.util.Map;
 
-public class FindAndModifyCommandEncoder<T> implements Encoder<Document> {
+class CommandWithPayloadEncoder<T> implements Encoder<Document> {
+    //Commands should be simple documents with no special types, other than the payload document
+    private final Codecs codecs = Codecs.createDefault();
+
     private final Encoder<T> payloadEncoder;
     private final FieldNameValidator fieldNameValidator = new FieldNameValidator();
-    private final Codecs codecs;
+    private final String fieldContainingPayload;
 
-    public FindAndModifyCommandEncoder(final Encoder<T> payloadEncoder, final Codecs codecs) {
+    CommandWithPayloadEncoder(final String fieldContainingPayload, final Encoder<T> payloadEncoder) {
         this.payloadEncoder = payloadEncoder;
-        this.codecs = codecs;
+        this.fieldContainingPayload = fieldContainingPayload;
     }
 
-    //we need to cast the replacement value to (T) to encode it
+    //we need to cast the payload to (T) to encode it
     @SuppressWarnings("unchecked")
     @Override
     public void encode(final BSONWriter bsonWriter, final Document value) {
@@ -45,10 +48,10 @@ public class FindAndModifyCommandEncoder<T> implements Encoder<Document> {
             fieldNameValidator.validate(fieldName);
 
             bsonWriter.writeName(fieldName);
-            if (!"update".equals(fieldName)) {
-                codecs.encode(bsonWriter, entry.getValue());
-            } else {
+            if (fieldContainingPayload.equals(fieldName)) {
                 payloadEncoder.encode(bsonWriter, (T) entry.getValue());
+            } else {
+                codecs.encode(bsonWriter, entry.getValue());
             }
         }
         bsonWriter.writeEndDocument();

@@ -20,6 +20,8 @@ import org.mongodb.Codec;
 import org.mongodb.Document;
 import org.mongodb.MongoNamespace;
 import org.mongodb.Operation;
+import org.mongodb.codecs.DocumentCodec;
+import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.operation.Find;
 import org.mongodb.operation.ReadPreferenceServerSelector;
@@ -44,7 +46,8 @@ public class CountOperation extends BaseCountOperation implements Operation<Long
         try {
             final ServerConnectionProvider serverConnectionProvider = session.createServerConnectionProvider(
                     new ServerConnectionProviderOptions(true, new ReadPreferenceServerSelector(getCount().getReadPreference())));
-            return getCount(new CommandProtocol(getCount().getNamespace().getDatabaseName(), getCount().toDocument(), getCodec(),
+            return getCount(new CommandProtocol(getCount().getNamespace().getDatabaseName(), getCount().toDocument(),
+                                                new DocumentCodec(PrimitiveCodecs.createDefault()), getCodec(),
                     getBufferProvider(), serverConnectionProvider.getServerDescription(), serverConnectionProvider.getConnection(), true
             )
                     .execute());

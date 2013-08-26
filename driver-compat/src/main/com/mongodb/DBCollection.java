@@ -1483,7 +1483,6 @@ public class DBCollection implements IDBCollection {
                                                                   getSession(),
                                                                   false, getNamespace(),
                                                                   findAndReplace,
-                                                                  getPrimitiveCodecs(),
                                                                   resultDecoder, objectCodec);
             }
         }

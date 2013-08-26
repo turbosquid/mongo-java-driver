@@ -20,7 +20,6 @@ import org.mongodb.Document
 import org.mongodb.FunctionalSpecification
 import org.mongodb.MongoClientOptions
 import org.mongodb.MongoCollection
-import org.mongodb.codecs.PrimitiveCodecs
 import org.mongodb.connection.Cluster
 import org.mongodb.connection.ClusterableServerFactory
 import org.mongodb.connection.ConnectionFactory
@@ -39,8 +38,6 @@ import static org.mongodb.Fixture.getBufferProvider
 import static org.mongodb.Fixture.getSSLSettings
 
 class FindAndReplaceOperationCustomCodecsSpecification extends FunctionalSpecification {
-    private final PrimitiveCodecs primitiveCodecs = PrimitiveCodecs.createDefault()
-
     private final MongoClientOptions options = MongoClientOptions.builder().build();
     private final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.connectionSettings,
                                                                                      getSSLSettings(), getBufferProvider(), [])
@@ -72,8 +69,8 @@ class FindAndReplaceOperationCustomCodecsSpecification extends FunctionalSpecifi
                 .returnNew(false);
 
         FindAndReplaceOperation<Worker> operation = new FindAndReplaceOperation<Worker>(getBufferProvider(), session, false,
-                                                                                        workerCollection.namespace, findAndReplace,
-                                                                                        primitiveCodecs, new WorkerCodec(),
+                                                                                        workerCollection.namespace, findAndReplace
+                                                                                        , new WorkerCodec(),
                                                                                         new WorkerCodec())
         Worker returnedValue = operation.execute()
 

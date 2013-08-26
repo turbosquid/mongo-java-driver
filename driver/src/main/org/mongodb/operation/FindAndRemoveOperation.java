@@ -19,11 +19,10 @@ package org.mongodb.operation;
 import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
 import org.mongodb.MongoNamespace;
+import org.mongodb.codecs.DocumentCodec;
 import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.command.CommandResultWithPayloadDecoder;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.operation.protocol.CommandProtocol;
-import org.mongodb.operation.protocol.CommandWithPayloadProtocol;
 import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
@@ -39,7 +38,7 @@ public class FindAndRemoveOperation<T> extends OperationBase<T> {
         super(bufferProvider, session, closeSession);
         this.namespace = namespace;
         this.findAndRemove = findAndRemove;
-        commandResultWithPayloadDecoder = new CommandResultWithPayloadDecoder<T>(primitiveCodecs, decoder);
+        commandResultWithPayloadDecoder = new CommandResultWithPayloadDecoder<T>(decoder);
     }
 
     @SuppressWarnings("unchecked")
@@ -47,8 +46,10 @@ public class FindAndRemoveOperation<T> extends OperationBase<T> {
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
         final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndRemove.toDocument(),
+                                                                new DocumentCodec(PrimitiveCodecs.createDefault()),
                                                                 commandResultWithPayloadDecoder, getBufferProvider(),
-                                                                provider.getServerDescription(), provider.getConnection(), true).execute();
+                                                                provider.getServerDescription(), provider.getConnection(), true
+        ).execute();
         return (T) commandResult.getResponse().get("value");
         // TODO: any way to remove the warning?  This could be a design flaw
     }

@@ -19,6 +19,8 @@ package org.mongodb.operation;
 import org.mongodb.Codec;
 import org.mongodb.CommandResult;
 import org.mongodb.Document;
+import org.mongodb.codecs.DocumentCodec;
+import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.command.Command;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.connection.ClusterDescription;
@@ -27,9 +29,11 @@ import org.mongodb.operation.protocol.CommandProtocol;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
+import static org.mongodb.operation.CommandReadPreferenceHelper.getCommandReadPreference;
 import static org.mongodb.operation.CommandReadPreferenceHelper.isQuery;
 
 public class CommandOperation extends OperationBase<CommandResult> {
+    private final DocumentCodec commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
     private final Command command;
     private final Codec<Document> codec;
     private final String database;
@@ -48,13 +52,11 @@ public class CommandOperation extends OperationBase<CommandResult> {
     @Override
     public CommandResult execute() {
         try {
-            final ServerConnectionProvider provider = getSession()
-                                                .createServerConnectionProvider(new ServerConnectionProviderOptions(isQuery(
-                                                                                                                           command
-                                                                                                                           .toDocument()),
-                                                                                                                    getServerSelector()));
-            return new CommandProtocol(database, command.toDocument(), codec, getBufferProvider(), provider.getServerDescription(),
-                                       provider.getConnection(), true).execute();
+            final ServerConnectionProviderOptions options = new ServerConnectionProviderOptions(isQuery(command.toDocument()),
+                                                                                                getServerSelector());
+            final ServerConnectionProvider provider = getSession().createServerConnectionProvider(options);
+            return new CommandProtocol(database, command.toDocument(), commandEncoder, codec,
+                                       getBufferProvider(), provider.getServerDescription(), provider.getConnection(), true).execute();
         } finally {
             if (isCloseSession()) {
                 getSession().close();
@@ -63,6 +65,6 @@ public class CommandOperation extends OperationBase<CommandResult> {
     }
 
     private ServerSelector getServerSelector() {
-        return new ReadPreferenceServerSelector(CommandReadPreferenceHelper.getCommandReadPreference(command, clusterDescription));
+        return new ReadPreferenceServerSelector(getCommandReadPreference(command, clusterDescription));
     }
 }

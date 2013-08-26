@@ -20,10 +20,8 @@ import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
 import org.mongodb.Encoder;
 import org.mongodb.MongoNamespace;
-import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.command.CommandResultWithPayloadDecoder;
 import org.mongodb.connection.BufferProvider;
-import org.mongodb.operation.protocol.CommandWithPayloadProtocol;
+import org.mongodb.operation.protocol.CommandProtocol;
 import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
@@ -31,19 +29,18 @@ import org.mongodb.session.Session;
 public class FindAndReplaceOperation<T> extends OperationBase<T> {
     private final FindAndReplace<T> findAndReplace;
     private final MongoNamespace namespace;
-    private final CommandResultWithPayloadDecoder<T> commandResultDecoder;
-    private final Encoder<T> payloadEncoder;
+    private final CommandResultWithPayloadDecoder<T> findAndReplaceResultDecoder;
+    private final CommandWithPayloadEncoder<T> findAndReplaceEncoder;
 
     public FindAndReplaceOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
                                    final MongoNamespace namespace, final FindAndReplace<T> findAndReplace,
-                                   final PrimitiveCodecs primitiveCodecs, final Decoder<T> payloadDecoder,
-                                   final Encoder<T> payloadEncoder) {
+                                   final Decoder<T> payloadDecoder, final Encoder<T> payloadEncoder) {
         super(bufferProvider, session, closeSession);
         this.findAndReplace = findAndReplace;
         this.namespace = namespace;
-        this.payloadEncoder = payloadEncoder;
         //need to change this to be more inline with the payload codec
-        commandResultDecoder = new CommandResultWithPayloadDecoder<T>(primitiveCodecs, payloadDecoder);
+        findAndReplaceResultDecoder = new CommandResultWithPayloadDecoder<T>(payloadDecoder);
+        findAndReplaceEncoder = new CommandWithPayloadEncoder<T>("update", payloadEncoder);
     }
 
     @SuppressWarnings("unchecked")
@@ -51,11 +48,10 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
         //TODO: CommandResult can be genericised?
-        final CommandResult commandResult = new CommandWithPayloadProtocol<T>(namespace.getDatabaseName(), payloadEncoder,
-                                                                              findAndReplace.toDocument(),
-                                                                              commandResultDecoder,
-                                                                              getBufferProvider(), provider.getServerDescription(),
-                                                                              provider.getConnection(), true).execute();
+        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndReplace.toDocument(),
+                                                                findAndReplaceEncoder, findAndReplaceResultDecoder, getBufferProvider(),
+                                                                provider.getServerDescription(), provider.getConnection(), true
+        ).execute();
         return (T) commandResult.getResponse().get("value");
         // TODO: any way to remove the warning?  This could be a design flaw
     }

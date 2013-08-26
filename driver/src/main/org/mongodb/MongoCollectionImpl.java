@@ -411,7 +411,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                                                   .upsert(upsert);
             return new FindAndReplaceOperation<T>(client.getBufferProvider(), client.getSession(),
                                                   false, getNamespace(), findAndReplace,
-                                                  getOptions().getPrimitiveCodecs(), getCodec(), getCodec()).execute();
+                                                  getCodec(), getCodec()).execute();
         }
 
         @Override
