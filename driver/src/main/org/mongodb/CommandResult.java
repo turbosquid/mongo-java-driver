@@ -18,7 +18,7 @@ package org.mongodb;
 
 import org.mongodb.connection.ServerAddress;
 
-public class CommandResult<T> {
+public class CommandResult {
     private final Document command;
     private final ServerAddress address;
     private final Document response;
@@ -31,7 +31,7 @@ public class CommandResult<T> {
         this.elapsedNanoseconds = elapsedNanoseconds;
     }
 
-    public CommandResult(final CommandResult<T> baseResult) {
+    public CommandResult(final CommandResult baseResult) {
         this.command = baseResult.command;
         this.address = baseResult.address;
         this.response = baseResult.response;

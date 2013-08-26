@@ -17,7 +17,6 @@
 package org.mongodb.operation;
 
 import org.bson.BSONWriter;
-import org.mongodb.CollectibleCodec;
 import org.mongodb.Document;
 import org.mongodb.Encoder;
 import org.mongodb.codecs.Codecs;
@@ -26,11 +25,11 @@ import org.mongodb.codecs.validators.FieldNameValidator;
 import java.util.Map;
 
 public class FindAndModifyCommandEncoder<T> implements Encoder<Document> {
-    private final CollectibleCodec<T> payloadEncoder;
+    private final Encoder<T> payloadEncoder;
     private final FieldNameValidator fieldNameValidator = new FieldNameValidator();
     private final Codecs codecs;
 
-    public FindAndModifyCommandEncoder(final CollectibleCodec<T> payloadEncoder, final Codecs codecs) {
+    public FindAndModifyCommandEncoder(final Encoder<T> payloadEncoder, final Codecs codecs) {
         this.payloadEncoder = payloadEncoder;
         this.codecs = codecs;
     }

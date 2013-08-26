@@ -22,12 +22,10 @@ import org.mongodb.codecs.PrimitiveCodecs;
 
 //TODO: think these warnings mean we've got our types all wrong
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class FindAndModifyCommandResultCodec<T> extends DocumentCodec {
-
+public class CommandResultWithPayloadDecoder<T> extends DocumentCodec {
     private final Decoder<T> decoder;
 
-    public FindAndModifyCommandResultCodec(final PrimitiveCodecs primitiveCodecs, final Decoder<T>
-            decoder) {
+    public CommandResultWithPayloadDecoder(final PrimitiveCodecs primitiveCodecs, final Decoder<T> decoder) {
         super(primitiveCodecs);
         this.decoder = decoder;
     }

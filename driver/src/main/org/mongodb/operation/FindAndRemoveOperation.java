@@ -20,8 +20,9 @@ import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
 import org.mongodb.MongoNamespace;
 import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.command.FindAndModifyCommandResultCodec;
+import org.mongodb.command.CommandResultWithPayloadDecoder;
 import org.mongodb.connection.BufferProvider;
+import org.mongodb.operation.protocol.CommandProtocol;
 import org.mongodb.operation.protocol.CommandWithPayloadProtocol;
 import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
@@ -30,7 +31,7 @@ import org.mongodb.session.Session;
 public class FindAndRemoveOperation<T> extends OperationBase<T> {
     private final MongoNamespace namespace;
     private final FindAndRemove<T> findAndRemove;
-    private final FindAndModifyCommandResultCodec<T> findAndModifyCommandResultCodec;
+    private final CommandResultWithPayloadDecoder<T> commandResultWithPayloadDecoder;
 
     public FindAndRemoveOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
                                   final MongoNamespace namespace, final FindAndRemove<T> findAndRemove,
@@ -38,17 +39,16 @@ public class FindAndRemoveOperation<T> extends OperationBase<T> {
         super(bufferProvider, session, closeSession);
         this.namespace = namespace;
         this.findAndRemove = findAndRemove;
-        findAndModifyCommandResultCodec = new FindAndModifyCommandResultCodec<T>(primitiveCodecs, decoder);
+        commandResultWithPayloadDecoder = new CommandResultWithPayloadDecoder<T>(primitiveCodecs, decoder);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
-        final CommandResult commandResult = new CommandWithPayloadProtocol<T>(namespace.getDatabaseName(), null, findAndRemove.toDocument(),
-                                                                              findAndModifyCommandResultCodec, getBufferProvider(),
-                                                                              provider.getServerDescription(), provider.getConnection(),
-                                                                              true).execute();
+        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndRemove.toDocument(),
+                                                                commandResultWithPayloadDecoder, getBufferProvider(),
+                                                                provider.getServerDescription(), provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");
         // TODO: any way to remove the warning?  This could be a design flaw
     }

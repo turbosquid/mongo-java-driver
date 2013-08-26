@@ -18,8 +18,8 @@ package org.mongodb.operation.protocol;
 
 import org.bson.BSONBinaryWriter;
 import org.bson.io.OutputBuffer;
-import org.mongodb.CollectibleCodec;
 import org.mongodb.Document;
+import org.mongodb.Encoder;
 import org.mongodb.MongoInvalidDocumentException;
 import org.mongodb.codecs.Codecs;
 import org.mongodb.operation.FindAndModifyCommandEncoder;
@@ -30,7 +30,7 @@ public class CommandWithPayloadMessage<T> extends RequestMessage {
     private final FindAndModifyCommandEncoder<T> findAndModifyCommandEncoder;
     private final Document command;
 
-    public CommandWithPayloadMessage(final String collectionName, final Document command, final CollectibleCodec<T> payloadEncoder,
+    public CommandWithPayloadMessage(final String collectionName, final Document command, final Encoder<T> payloadEncoder,
                                      final MessageSettings settings) {
         super(collectionName, OP_QUERY, settings);
         this.command = command;

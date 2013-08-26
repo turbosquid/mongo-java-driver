@@ -16,12 +16,12 @@
 
 package org.mongodb.operation;
 
-import org.mongodb.CollectibleCodec;
 import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
+import org.mongodb.Encoder;
 import org.mongodb.MongoNamespace;
 import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.command.FindAndModifyCommandResultCodec;
+import org.mongodb.command.CommandResultWithPayloadDecoder;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.operation.protocol.CommandWithPayloadProtocol;
 import org.mongodb.session.PrimaryServerSelector;
@@ -31,19 +31,19 @@ import org.mongodb.session.Session;
 public class FindAndReplaceOperation<T> extends OperationBase<T> {
     private final FindAndReplace<T> findAndReplace;
     private final MongoNamespace namespace;
-    private final FindAndModifyCommandResultCodec<T> findAndModifyCommandResultCodec;
-    private final CollectibleCodec<T> payloadCodec;
+    private final CommandResultWithPayloadDecoder<T> commandResultDecoder;
+    private final Encoder<T> payloadEncoder;
 
     public FindAndReplaceOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
                                    final MongoNamespace namespace, final FindAndReplace<T> findAndReplace,
-                                   final PrimitiveCodecs primitiveCodecs, final Decoder<T> decoder,
-                                   final CollectibleCodec<T> payloadCodec) {
+                                   final PrimitiveCodecs primitiveCodecs, final Decoder<T> payloadDecoder,
+                                   final Encoder<T> payloadEncoder) {
         super(bufferProvider, session, closeSession);
         this.findAndReplace = findAndReplace;
         this.namespace = namespace;
-        this.payloadCodec = payloadCodec;
+        this.payloadEncoder = payloadEncoder;
         //need to change this to be more inline with the payload codec
-        findAndModifyCommandResultCodec = new FindAndModifyCommandResultCodec<T>(primitiveCodecs, decoder);
+        commandResultDecoder = new CommandResultWithPayloadDecoder<T>(primitiveCodecs, payloadDecoder);
     }
 
     @SuppressWarnings("unchecked")
@@ -51,9 +51,9 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
         //TODO: CommandResult can be genericised?
-        final CommandResult commandResult = new CommandWithPayloadProtocol<T>(namespace.getDatabaseName(), payloadCodec,
+        final CommandResult commandResult = new CommandWithPayloadProtocol<T>(namespace.getDatabaseName(), payloadEncoder,
                                                                               findAndReplace.toDocument(),
-                                                                              findAndModifyCommandResultCodec,
+                                                                              commandResultDecoder,
                                                                               getBufferProvider(), provider.getServerDescription(),
                                                                               provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");
@@ -63,35 +63,4 @@ public class FindAndReplaceOperation<T> extends OperationBase<T> {
     private ServerConnectionProvider getServerConnectionProvider() {
         return getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(false, new PrimaryServerSelector()));
     }
-
-
-    //    private final FindAndReplace<T> findAndReplace;
-    //    private final MongoNamespace namespace;
-    //    private final PrimitiveCodecs primitiveCodecs;
-    //    private final Decoder<T> decoder;
-    //    private final ClusterDescription clusterDescription;
-    //
-    //    public FindAndReplaceOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
-    //                                   final ClusterDescription clusterDescription, final MongoNamespace namespace,
-    //                                   final FindAndReplace<T> findAndReplace, final PrimitiveCodecs primitiveCodecs,
-    //                                   final Encoder<T> encoder, final Decoder<T> decoder) {
-    //        super(bufferProvider, session, closeSession);
-    //        this.findAndReplace = findAndReplace;
-    //        this.namespace = namespace;
-    //        //for encoding query
-    //        this.primitiveCodecs = primitiveCodecs;
-    //        this.decoder = decoder;
-    //        this.clusterDescription = clusterDescription;
-    //    }
-    //
-    //    @Override
-    //    public T execute() {
-    //        final FindAndReplaceCommand<T> command = new FindAndReplaceCommand<T>(findAndReplace, namespace.getCollectionName());
-    //        return new FindAndModifyCommandResult<T>(new CommandOperation(namespace.getDatabaseName(), command,
-    //                                                                      new FindAndModifyCommandResultCodec<T>(PrimitiveCodecs
-    // .createDefault(), decoder),
-    //                                                                      clusterDescription, getBufferProvider(), getSession(), false)
-    //                                                 .execute()).getValue();
-    //    }
-
 }

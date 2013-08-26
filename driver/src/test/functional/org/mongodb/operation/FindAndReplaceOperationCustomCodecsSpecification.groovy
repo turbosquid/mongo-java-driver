@@ -51,7 +51,7 @@ class FindAndReplaceOperationCustomCodecsSpecification extends FunctionalSpecifi
 
     private final Cluster cluster = new DefaultClusterFactory().create(new ServerAddress(), clusterableServerFactory)
     private final Session session = new ClusterSession(cluster)
-    MongoCollection<Worker> workerCollection
+    private MongoCollection<Worker> workerCollection
 
     def setup() {
         //setup with a collection designed to store Workers not Documents

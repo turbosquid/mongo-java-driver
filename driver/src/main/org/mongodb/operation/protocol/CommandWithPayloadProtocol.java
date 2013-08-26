@@ -16,10 +16,10 @@
 
 package org.mongodb.operation.protocol;
 
-import org.mongodb.Codec;
-import org.mongodb.CollectibleCodec;
 import org.mongodb.CommandResult;
+import org.mongodb.Decoder;
 import org.mongodb.Document;
+import org.mongodb.Encoder;
 import org.mongodb.MongoNamespace;
 import org.mongodb.command.MongoCommandFailureException;
 import org.mongodb.connection.BufferProvider;
@@ -32,8 +32,8 @@ import static org.mongodb.operation.OperationHelpers.getMessageSettings;
 import static org.mongodb.operation.OperationHelpers.getResponseSettings;
 
 public class CommandWithPayloadProtocol<T> implements Protocol<CommandResult> {
-    private final Codec<Document> codec;
-    private final CollectibleCodec<T> payloadCodec;
+    private final Decoder<Document> responseDecoder;
+    private final Encoder<T> payloadEncoder;
     private final MongoNamespace namespace;
     private final BufferProvider bufferProvider;
     private final ServerDescription serverDescription;
@@ -41,23 +41,24 @@ public class CommandWithPayloadProtocol<T> implements Protocol<CommandResult> {
     private final boolean closeConnection;
     private final Document command;
 
-    public CommandWithPayloadProtocol(final String database, final CollectibleCodec<T> payloadCodec, final Document command,
-                                      final Codec<Document> codec,
-                                      final BufferProvider bufferProvider, final ServerDescription serverDescription,
-                                      final Connection connection, final boolean closeConnection) {
-        this.payloadCodec = payloadCodec;
+    public CommandWithPayloadProtocol(final String database, final Encoder<T> payloadEncoder, final Document command,
+                                      final Decoder<Document> responseDecoder, final BufferProvider bufferProvider,
+                                      final ServerDescription serverDescription, final Connection connection,
+                                      final boolean closeConnection) {
+        this.payloadEncoder = payloadEncoder;
         this.serverDescription = serverDescription;
         this.connection = connection;
         this.closeConnection = closeConnection;
         this.namespace = new MongoNamespace(database, MongoNamespace.COMMAND_COLLECTION_NAME);
         this.bufferProvider = bufferProvider;
-        this.codec = codec;
+        this.responseDecoder = responseDecoder;
         this.command = command;
     }
 
     public CommandResult execute() {
         try {
-            return receiveMessage(sendMessage());
+            final CommandWithPayloadMessage<T> sentMessage = sendMessage();
+            return receiveMessage(sentMessage.getId());
         } finally {
             if (closeConnection) {
                 connection.close();
@@ -68,7 +69,7 @@ public class CommandWithPayloadProtocol<T> implements Protocol<CommandResult> {
     private CommandWithPayloadMessage<T> sendMessage() {
         final PooledByteBufferOutputBuffer buffer = new PooledByteBufferOutputBuffer(bufferProvider);
         try {
-            final CommandWithPayloadMessage<T> message = new CommandWithPayloadMessage<T>(namespace.getFullName(), command, payloadCodec,
+            final CommandWithPayloadMessage<T> message = new CommandWithPayloadMessage<T>(namespace.getFullName(), command, payloadEncoder,
                     getMessageSettings(serverDescription));
             message.encode(buffer);
             connection.sendMessage(buffer.getByteBuffers());
@@ -78,11 +79,11 @@ public class CommandWithPayloadProtocol<T> implements Protocol<CommandResult> {
         }
     }
 
-    private CommandResult receiveMessage(final CommandWithPayloadMessage<T> message) {
+    private CommandResult receiveMessage(final int messageId) {
         final ResponseBuffers responseBuffers = connection.receiveMessage(
-                getResponseSettings(serverDescription, message.getId()));
+                getResponseSettings(serverDescription, messageId));
         try {
-            final ReplyMessage<Document> replyMessage = new ReplyMessage<Document>(responseBuffers, codec, message.getId());
+            final ReplyMessage<Document> replyMessage = new ReplyMessage<Document>(responseBuffers, responseDecoder, messageId);
             return commandResult(replyMessage);
         } finally {
             responseBuffers.close();

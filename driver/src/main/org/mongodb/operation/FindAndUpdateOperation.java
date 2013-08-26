@@ -20,7 +20,7 @@ import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
 import org.mongodb.MongoNamespace;
 import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.command.FindAndModifyCommandResultCodec;
+import org.mongodb.command.CommandResultWithPayloadDecoder;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.operation.protocol.CommandProtocol;
 import org.mongodb.session.PrimaryServerSelector;
@@ -30,7 +30,7 @@ import org.mongodb.session.Session;
 public class FindAndUpdateOperation<T> extends OperationBase<T> {
     private final FindAndUpdate<T> findAndUpdate;
     private final MongoNamespace namespace;
-    private final FindAndModifyCommandResultCodec<T> findAndModifyCommandResultCodec;
+    private final CommandResultWithPayloadDecoder<T> commandResultWithPayloadDecoder;
 
     public FindAndUpdateOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
                                   final MongoNamespace namespace, final FindAndUpdate<T> findAndUpdate,
@@ -38,7 +38,7 @@ public class FindAndUpdateOperation<T> extends OperationBase<T> {
         super(bufferProvider, session, closeSession);
         this.findAndUpdate = findAndUpdate;
         this.namespace = namespace;
-        findAndModifyCommandResultCodec = new FindAndModifyCommandResultCodec<T>(primitiveCodecs, resultDecoder);
+        commandResultWithPayloadDecoder = new CommandResultWithPayloadDecoder<T>(primitiveCodecs, resultDecoder);
     }
 
     @SuppressWarnings("unchecked")
@@ -46,7 +46,7 @@ public class FindAndUpdateOperation<T> extends OperationBase<T> {
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
         final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndUpdate.toDocument(),
-                                                                findAndModifyCommandResultCodec, getBufferProvider(),
+                                                                commandResultWithPayloadDecoder, getBufferProvider(),
                                                                 provider.getServerDescription(), provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");
         // TODO: any way to remove the warning?  This could be a design flaw
