@@ -30,15 +30,15 @@ import org.mongodb.session.Session;
 public class FindAndRemoveOperation<T> extends OperationBase<T> {
     private final MongoNamespace namespace;
     private final FindAndRemove<T> findAndRemove;
-    private final CommandResultWithPayloadDecoder<T> commandResultWithPayloadDecoder;
+    private final CommandResultWithPayloadDecoder<T> resultDecoder;
     private final DocumentCodec commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
 
     public FindAndRemoveOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
-                                  final MongoNamespace namespace, final FindAndRemove<T> findAndRemove, final Decoder<T> decoder) {
+                                  final MongoNamespace namespace, final FindAndRemove<T> findAndRemove, final Decoder<T> resultDecoder) {
         super(bufferProvider, session, closeSession);
         this.namespace = namespace;
         this.findAndRemove = findAndRemove;
-        commandResultWithPayloadDecoder = new CommandResultWithPayloadDecoder<T>(decoder);
+        this.resultDecoder = new CommandResultWithPayloadDecoder<T>(resultDecoder);
     }
 
     @SuppressWarnings("unchecked")
@@ -46,7 +46,7 @@ public class FindAndRemoveOperation<T> extends OperationBase<T> {
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
         final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndRemove.toDocument(),
-                                                                commandEncoder, commandResultWithPayloadDecoder, getBufferProvider(),
+                                                                commandEncoder, resultDecoder, getBufferProvider(),
                                                                 provider.getServerDescription(), provider.getConnection(), true
         ).execute();
         return (T) commandResult.getResponse().get("value");
