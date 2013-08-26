@@ -422,7 +422,7 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
             return new FindAndRemoveOperation<T>(client.getBufferProvider(), client.getSession(),
                                                  false, getNamespace(), findAndRemove,
-                                                 getOptions().getPrimitiveCodecs(), getCodec()).execute();
+                                                 getCodec()).execute();
         }
 
         @Override
