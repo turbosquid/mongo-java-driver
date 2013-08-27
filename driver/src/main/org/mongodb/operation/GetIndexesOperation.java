@@ -15,7 +15,7 @@ import java.util.List;
 import static org.mongodb.ReadPreference.primary;
 import static org.mongodb.assertions.Assertions.notNull;
 
-public class GetIndexesOperation<T> extends OperationBase<List<T>> {
+public class GetIndexesOperation<T> extends BaseOperation<List<T>> {
     private static final String NAMESPACE_KEY_NAME = "ns";
 
     private final DocumentCodec simpleDocumentCodec = new DocumentCodec(PrimitiveCodecs.createDefault());

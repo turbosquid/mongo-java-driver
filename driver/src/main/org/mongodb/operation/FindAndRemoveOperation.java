@@ -27,7 +27,7 @@ import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
-public class FindAndRemoveOperation<T> extends OperationBase<T> {
+public class FindAndRemoveOperation<T> extends BaseOperation<T> {
     private final MongoNamespace namespace;
     private final FindAndRemove<T> findAndRemove;
     private final CommandResultWithPayloadDecoder<T> resultDecoder;

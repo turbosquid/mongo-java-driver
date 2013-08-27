@@ -26,7 +26,7 @@ import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
-public class FindAndReplaceOperation<T> extends OperationBase<T> {
+public class FindAndReplaceOperation<T> extends BaseOperation<T> {
     private final MongoNamespace namespace;
     private final FindAndReplace<T> findAndReplace;
     private final CommandResultWithPayloadDecoder<T> resultDecoder;

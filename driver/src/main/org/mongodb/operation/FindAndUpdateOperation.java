@@ -27,7 +27,7 @@ import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
-public class FindAndUpdateOperation<T> extends OperationBase<T> {
+public class FindAndUpdateOperation<T> extends BaseOperation<T> {
     private final MongoNamespace namespace;
     private final FindAndUpdate<T> findAndUpdate;
     private final CommandResultWithPayloadDecoder<T> resultDecoder;

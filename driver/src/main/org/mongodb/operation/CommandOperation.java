@@ -33,7 +33,7 @@ import org.mongodb.session.Session;
 import static org.mongodb.operation.CommandReadPreferenceHelper.getCommandReadPreference;
 import static org.mongodb.operation.CommandReadPreferenceHelper.isQuery;
 
-public class CommandOperation extends OperationBase<CommandResult> {
+public class CommandOperation extends BaseOperation<CommandResult> {
     private final Command command;
     private final Encoder<Document> commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
     private final Decoder<Document> commandDecoder;
