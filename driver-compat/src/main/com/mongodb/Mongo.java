@@ -264,41 +264,29 @@ public class Mongo {
     }
 
     Mongo(final ServerAddress serverAddress, final List<MongoCredential> credentialsList, final MongoClientOptions options) {
-        this(
-            createCluster(serverAddress, credentialsList, options),
-            options,
-            credentialsList
-            );
+        this(createCluster(serverAddress, credentialsList, options),
+             options,
+             credentialsList);
     }
 
     Mongo(final List<ServerAddress> seedList, final List<MongoCredential> credentialsList, final MongoClientOptions options) {
-        this(
-            createCluster(seedList, credentialsList, options),
-            options,
-            credentialsList
-            );
+        this(createCluster(seedList, credentialsList, options),
+             options,
+             credentialsList);
     }
 
     Mongo(final MongoClientURI mongoURI) throws UnknownHostException {
-        this(
-            createCluster(mongoURI),
-            mongoURI.getOptions(),
-            mongoURI.getCredentials() != null
-            ? Arrays.asList(mongoURI.getCredentials())
-            : Collections.<MongoCredential>emptyList()
-            );
+        this(createCluster(mongoURI),
+             mongoURI.getOptions(),
+             mongoURI.getCredentials() != null ? Arrays.asList(mongoURI.getCredentials()) : Collections.<MongoCredential>emptyList());
     }
 
     Mongo(final Cluster cluster, final MongoClientOptions options, final List<MongoCredential> credentialsList) {
         this.cluster = cluster;
         this.documentCodec = new DocumentCodec(PrimitiveCodecs.createDefault());
         this.options = options;
-        this.readPreference = options.getReadPreference() != null
-                              ? options.getReadPreference()
-                              : ReadPreference.primary();
-        this.writeConcern = options.getWriteConcern() != null
-                            ? options.getWriteConcern()
-                            : WriteConcern.UNACKNOWLEDGED;
+        this.readPreference = options.getReadPreference() != null ? options.getReadPreference() : ReadPreference.primary();
+        this.writeConcern = options.getWriteConcern() != null ? options.getWriteConcern() : WriteConcern.UNACKNOWLEDGED;
         this.optionHolder = new Bytes.OptionHolder(null);
         this.credentialsList = Collections.unmodifiableList(credentialsList);
     }

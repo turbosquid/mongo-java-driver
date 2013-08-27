@@ -29,6 +29,7 @@ import org.mongodb.operation.protocol.CommandMessage;
 import org.mongodb.operation.protocol.MessageSettings;
 import org.mongodb.operation.protocol.ReplyMessage;
 
+import static org.mongodb.MongoNamespace.COMMAND_COLLECTION_NAME;
 import static org.mongodb.operation.OperationHelpers.createCommandResult;
 
 final class CommandHelper {
@@ -42,8 +43,8 @@ final class CommandHelper {
                                               final Connection connection, final BufferProvider bufferProvider) {
         final PooledByteBufferOutputBuffer buffer = new PooledByteBufferOutputBuffer(bufferProvider);
         try {
-            final CommandMessage message = new CommandMessage(new MongoNamespace(database, MongoNamespace.COMMAND_COLLECTION_NAME)
-                    .getFullName(), command, codec, MessageSettings.builder().build());
+            final CommandMessage message = new CommandMessage(new MongoNamespace(database, COMMAND_COLLECTION_NAME).getFullName(),
+                                                              command, codec, MessageSettings.builder().build());
             message.encode(buffer);
             connection.sendMessage(buffer.getByteBuffers());
             return message;
@@ -52,8 +53,7 @@ final class CommandHelper {
         }
     }
 
-    private static CommandResult receiveMessage(final Codec<Document> codec, final Connection connection,
-                                                final CommandMessage message) {
+    private static CommandResult receiveMessage(final Codec<Document> codec, final Connection connection, final CommandMessage message) {
         final ResponseBuffers responseBuffers = connection.receiveMessage(ResponseSettings.builder().responseTo(message.getId()).build());
         try {
             final ReplyMessage<Document> replyMessage = new ReplyMessage<Document>(responseBuffers, codec, message.getId());
