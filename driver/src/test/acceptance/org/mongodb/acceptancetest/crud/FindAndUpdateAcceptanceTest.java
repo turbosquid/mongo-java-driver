@@ -116,18 +116,17 @@ public class FindAndUpdateAcceptanceTest extends DatabaseTestCase {
                    document.get(KEY).toString(), equalTo(newValueThatDoesNotMatchAnythingInDatabase));
     }
 
-    //    @Test(expected = IllegalArgumentException.class)
-    //    public void shouldThrowAnExceptionIfReplacementContainsUpdateOperators() {
-    //        final Document documentInserted = new Document(KEY, VALUE_TO_CARE_ABOUT);
-    //        collection.insert(documentInserted);
-    //
-    //        assertThat(collection.count(), is(1L));
-    //
-    //        collection.filter(new Document(KEY, VALUE_TO_CARE_ABOUT))
-    //                .replaceAndGet(new Document("$set", new Document("foo", "bar")), Get.AfterChangeApplied);
-    //    }
+//    @Test(expected = IllegalArgumentException.class)
+//    public void shouldThrowAnExceptionIfReplacementContainsUpdateOperators() {
+//        final Document documentInserted = new Document(KEY, VALUE_TO_CARE_ABOUT);
+//        collection.insert(documentInserted);
+//
+//        final Document updateOperation = new Document("someNumber", 1);
+//        collection.find()
+//                  .getOneAndUpdate(updateOperation);
+//
+//    }
 
     //TODO: should not be able to change the ID of a document
-    //TODO: Should reject an update that doesn't have a $ operator
 
 }

@@ -19,6 +19,7 @@ package org.mongodb.operation;
 import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
 import org.mongodb.Document;
+import org.mongodb.Encoder;
 import org.mongodb.codecs.DocumentCodec;
 import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.command.Command;
@@ -33,8 +34,8 @@ import static org.mongodb.operation.CommandReadPreferenceHelper.getCommandReadPr
 import static org.mongodb.operation.CommandReadPreferenceHelper.isQuery;
 
 public class CommandOperation extends OperationBase<CommandResult> {
-    private final DocumentCodec commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
     private final Command command;
+    private final Encoder<Document> commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
     private final Decoder<Document> commandDecoder;
     private final String database;
     private final ClusterDescription clusterDescription;

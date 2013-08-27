@@ -47,10 +47,8 @@ public class FindAndUpdateOperation<T> extends OperationBase<T> {
         final ServerConnectionProvider provider = getServerConnectionProvider();
         final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndUpdate.toDocument(),
                                                                 commandEncoder, resultDecoder, getBufferProvider(),
-                                                                provider.getServerDescription(), provider.getConnection(), true
-        ).execute();
+                                                                provider.getServerDescription(), provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");
-        // TODO: any way to remove the warning?  This could be a design flaw
     }
 
     private ServerConnectionProvider getServerConnectionProvider() {

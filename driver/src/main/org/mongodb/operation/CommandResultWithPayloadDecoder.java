@@ -32,7 +32,6 @@ class CommandResultWithPayloadDecoder<T> implements Decoder<Document> {
 
     CommandResultWithPayloadDecoder(final Decoder<T> payloadDecoder) {
         this.payloadDecoder = payloadDecoder;
-        //TODO: is this right? command results should be very simple documents in internal-only representation, requiring no custom codecs
         this.codecs = Codecs.createDefault();
     }
 
