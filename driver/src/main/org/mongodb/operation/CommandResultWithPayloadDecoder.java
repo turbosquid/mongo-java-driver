@@ -43,18 +43,14 @@ class CommandResultWithPayloadDecoder<T> implements Decoder<Document> {
         reader.readStartDocument();
         while (reader.readBSONType() != END_OF_DOCUMENT) {
             final String fieldName = reader.readName();
-            final Object result;
             final BSONType bsonType = reader.getCurrentBSONType();
             if (bsonType.equals(DOCUMENT) && fieldName.equals(FIELD_CONTAINING_PAYLOAD)) {
-                result = payloadDecoder.decode(reader);
+                document.put(fieldName, payloadDecoder.decode(reader));
             } else {
-                result = codecs.decode(reader);
+                document.put(fieldName, codecs.decode(reader));
             }
-            document.put(fieldName, result);
         }
-
         reader.readEndDocument();
-
         return document;
     }
 }

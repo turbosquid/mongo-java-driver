@@ -20,7 +20,7 @@ import org.bson.BSONWriter;
 import org.mongodb.Document;
 import org.mongodb.Encoder;
 import org.mongodb.codecs.Codecs;
-import org.mongodb.codecs.validators.FieldNameValidator;
+import org.mongodb.codecs.validators.Validator;
 
 import java.util.Map;
 
@@ -29,12 +29,14 @@ class CommandWithPayloadEncoder<T> implements Encoder<Document> {
     private final Codecs codecs = Codecs.createDefault();
 
     private final Encoder<T> payloadEncoder;
-    private final FieldNameValidator fieldNameValidator = new FieldNameValidator();
     private final String fieldContainingPayload;
+    private final Validator<T> payloadValidator;
 
-    CommandWithPayloadEncoder(final String fieldContainingPayload, final Encoder<T> payloadEncoder) {
+    CommandWithPayloadEncoder(final String fieldContainingPayload, final Encoder<T> payloadEncoder,
+                              final Validator<T> payloadValidator) {
         this.payloadEncoder = payloadEncoder;
         this.fieldContainingPayload = fieldContainingPayload;
+        this.payloadValidator = payloadValidator;
     }
 
     //we need to cast the payload to (T) to encode it
@@ -45,11 +47,12 @@ class CommandWithPayloadEncoder<T> implements Encoder<Document> {
 
         for (final Map.Entry<String, Object> entry : value.entrySet()) {
             final String fieldName = entry.getKey();
-            fieldNameValidator.validate(fieldName);
 
             bsonWriter.writeName(fieldName);
             if (fieldContainingPayload.equals(fieldName)) {
-                payloadEncoder.encode(bsonWriter, (T) entry.getValue());
+                final T payload = (T) entry.getValue();
+                payloadValidator.validate(payload);
+                payloadEncoder.encode(bsonWriter, payload);
             } else {
                 codecs.encode(bsonWriter, entry.getValue());
             }

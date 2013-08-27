@@ -26,10 +26,12 @@ import org.mongodb.test.WorkerCodec;
 
 import java.util.Date;
 
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * Documents and tests the functionality provided for find-and-replace atomic operations.
@@ -146,16 +148,21 @@ public class FindAndReplaceAcceptanceTest extends DatabaseTestCase {
                    document, equalTo(replacementDocument));
     }
 
-    //    @Test(expected = IllegalArgumentException.class)
-    //    public void shouldThrowAnExceptionIfReplacementContainsUpdateOperators() {
-    //        final Document documentInserted = new Document(KEY, VALUE_TO_CARE_ABOUT);
-    //        collection.insert(documentInserted);
-    //
-    //        assertThat(collection.count(), is(1L));
-    //
-    //        collection.filter(new Document(KEY, VALUE_TO_CARE_ABOUT))
-    //                .replaceAndGet(new Document("$set", new Document("foo", "bar")), Get.AfterChangeApplied);
-    //    }
+    @Test
+    public void shouldThrowAnExceptionIfReplacementContainsUpdateOperators() {
+        final Document documentInserted = new Document(KEY, VALUE_TO_CARE_ABOUT);
+        collection.insert(documentInserted);
+
+        assertThat(collection.find().count(), is(1L));
+
+        try {
+            collection.find(new Document(KEY, VALUE_TO_CARE_ABOUT))
+                      .getOneAndReplace(new Document("$inc", new Document("someNumber", "635")));
+            fail("Should throw an IllegalArgumentException when trying to do a replace with a document containing an update operation");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage(), startsWith("Can't use update operators (beginning with '$') in a find and replace operation"));
+        }
+    }
 
     //TODO: should not be able to change the ID of a document
 
