@@ -24,15 +24,23 @@ import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.command.ListDatabases;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.connection.Cluster;
+import org.mongodb.connection.ClusterConnectionMode;
 import org.mongodb.connection.ClusterDescription;
+import org.mongodb.connection.ClusterSettings;
 import org.mongodb.connection.ClusterableServerFactory;
 import org.mongodb.connection.ConnectionFactory;
 import org.mongodb.connection.ServerDescription;
+import org.mongodb.connection.impl.ConnectionProviderSettings;
+import org.mongodb.connection.impl.ConnectionSettings;
 import org.mongodb.connection.impl.DefaultClusterFactory;
 import org.mongodb.connection.impl.DefaultClusterableServerFactory;
 import org.mongodb.connection.impl.DefaultConnectionFactory;
 import org.mongodb.connection.impl.DefaultConnectionProviderFactory;
+import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
+import org.mongodb.connection.impl.DefaultConnectionSettings;
+import org.mongodb.connection.impl.DefaultServerSettings;
 import org.mongodb.connection.impl.PowerOfTwoBufferPool;
+import org.mongodb.connection.impl.ServerSettings;
 import org.mongodb.session.ClusterSession;
 import org.mongodb.session.PinnedSession;
 import org.mongodb.session.Session;
@@ -48,7 +56,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 
 import static com.mongodb.MongoExceptions.mapException;
-import static org.mongodb.connection.ClusterConnectionMode.Discovering;
+import static org.mongodb.connection.ClusterConnectionMode.Multiple;
 import static org.mongodb.connection.ClusterType.ReplicaSet;
 
 @ThreadSafe
@@ -418,7 +426,7 @@ public class Mongo {
      * @return replica set status information
      */
     public ReplicaSetStatus getReplicaSetStatus() {
-        return getClusterDescription().getType() == ReplicaSet && getClusterDescription().getMode() == Discovering
+        return getClusterDescription().getType() == ReplicaSet && getClusterDescription().getConnectionMode() == Multiple
                 ? new ReplicaSetStatus(cluster) : null; // this is intended behavior in 2.x
     }
 
@@ -645,7 +653,8 @@ public class Mongo {
                     credentialList,
                     mongoURI.getOptions()
             );
-        } else {
+        }
+        else {
             final List<ServerAddress> seedList = new ArrayList<ServerAddress>(mongoURI.getHosts().size());
             for (final String host : mongoURI.getHosts()) {
                 seedList.add(new ServerAddress(host));
@@ -661,15 +670,20 @@ public class Mongo {
     private static Cluster createCluster(final List<ServerAddress> seedList,
                                          final List<MongoCredential> credentialsList, final MongoClientOptions options) {
         return new DefaultClusterFactory().create(
-                createNewSeedList(seedList),
-                createClusterableServerFactory(credentialsList, options)
-        );
+                ClusterSettings.builder().hosts(createNewSeedList(seedList))
+                        .requiredReplicaSetName(options.getRequiredReplicaSetName())
+                        .build(),
+                createClusterableServerFactory(credentialsList, options));
     }
 
-    private static Cluster createCluster(final ServerAddress serverAddress,
-                                         final List<MongoCredential> credentialsList, final MongoClientOptions options) {
+    private static Cluster createCluster(final ServerAddress serverAddress, final List<MongoCredential> credentialsList,
+                                         final MongoClientOptions options) {
         return new DefaultClusterFactory().create(
-                serverAddress.toNew(),
+                ClusterSettings.builder()
+                        .mode(getSingleServerClusterMode(options.toNew()))
+                        .hosts(Arrays.asList(serverAddress.toNew()))
+                        .requiredReplicaSetName(options.getRequiredReplicaSetName())
+                        .build(),
                 createClusterableServerFactory(credentialsList, options)
         );
     }
@@ -749,6 +763,15 @@ public class Mongo {
                 pinnedSession.remove();
                 currentlyBound.session.close();
             }
+        }
+    }
+
+    private static ClusterConnectionMode getSingleServerClusterMode(final org.mongodb.MongoClientOptions options) {
+        if (options.getRequiredReplicaSetName() == null) {
+            return ClusterConnectionMode.Single;
+        }
+        else {
+            return ClusterConnectionMode.Multiple;
         }
     }
 

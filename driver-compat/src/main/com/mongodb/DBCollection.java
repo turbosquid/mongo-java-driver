@@ -16,6 +16,7 @@
 
 package com.mongodb;
 
+
 import com.mongodb.codecs.CollectibleDBObjectCodec;
 import com.mongodb.codecs.CompoundDBObjectCodec;
 import com.mongodb.codecs.DBDecoderAdapter;
@@ -85,6 +86,7 @@ import static com.mongodb.DBObjects.toNullableDocument;
 import static com.mongodb.DBObjects.toUpdateOperationsDocument;
 import static com.mongodb.MongoExceptions.mapException;
 
+
 /**
  * Implementation of a database collection.
  * <p/>
@@ -126,7 +128,7 @@ import static com.mongodb.MongoExceptions.mapException;
  */
 @ThreadSafe
 @SuppressWarnings({"rawtypes", "deprecation"})
-public class DBCollection implements IDBCollection {
+public class DBCollection {
     private static final String NAMESPACE_KEY_NAME = "ns";
     private final DB database;
     private final String name;
@@ -179,7 +181,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult insert(final DBObject document, final WriteConcern writeConcern) {
         return insert(Arrays.asList(document), writeConcern);
     }
@@ -194,7 +195,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult insert(final DBObject... documents) {
         return insert(Arrays.asList(documents), getWriteConcern());
     }
@@ -209,7 +209,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult insert(final WriteConcern writeConcern, final DBObject... documents) {
         return insert(documents, writeConcern);
     }
@@ -224,7 +223,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult insert(final DBObject[] documents, final WriteConcern writeConcern) {
         return insert(Arrays.asList(documents), writeConcern);
     }
@@ -238,7 +236,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult insert(final List<DBObject> documents) {
         return insert(documents, getWriteConcern());
     }
@@ -253,7 +250,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult insert(final List<DBObject> documents, final WriteConcern aWriteConcern) {
         final Insert<DBObject> insert = new Insert<DBObject>(aWriteConcern.toNew(), documents);
         return new WriteResult(insert(insert, objectCodec), aWriteConcern);
@@ -270,7 +266,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult insert(final DBObject[] documents, final WriteConcern aWriteConcern, final DBEncoder encoder) {
         return insert(Arrays.asList(documents), aWriteConcern, encoder);
     }
@@ -286,7 +281,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult insert(final List<DBObject> documents, final WriteConcern aWriteConcern, final DBEncoder dbEncoder) {
         final Encoder<DBObject> encoder = toEncoder(dbEncoder);
 
@@ -331,7 +325,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult save(final DBObject document) {
         return save(document, getWriteConcern());
     }
@@ -350,7 +343,6 @@ public class DBCollection implements IDBCollection {
      * @return the result of the operation
      * @throws MongoException if the operation fails
      */
-    @Override
     public WriteResult save(final DBObject document, final WriteConcern writeConcern) {
         try {
             final Object id = getObjectCodec().getId(document);
@@ -389,7 +381,6 @@ public class DBCollection implements IDBCollection {
      * @param aWriteConcern {@code WriteConcern} to be used during operation
      * @return the result of the operation
      */
-    @Override
     public WriteResult update(final DBObject query, final DBObject update, final boolean upsert, final boolean multi,
                               final WriteConcern aWriteConcern) {
         if (update == null) {
@@ -420,7 +411,6 @@ public class DBCollection implements IDBCollection {
      * @param encoder       {@code DBEncoder} to be used
      * @return the result of the operation
      */
-    @Override
     public WriteResult update(final DBObject query, final DBObject update, final boolean upsert, final boolean multi,
                               final WriteConcern aWriteConcern, final DBEncoder encoder) {
         if (update == null) {
@@ -459,7 +449,6 @@ public class DBCollection implements IDBCollection {
      * @param multi  update all documents in the collection that match the update query criteria
      * @return the result of the operation
      */
-    @Override
     public WriteResult update(final DBObject query, final DBObject update, final boolean upsert, final boolean multi) {
         return update(query, update, upsert, multi, getWriteConcern());
     }
@@ -472,7 +461,6 @@ public class DBCollection implements IDBCollection {
      * @param update the modifications to apply
      * @return the result of the operation
      */
-    @Override
     public WriteResult update(final DBObject query, final DBObject update) {
         return update(query, update, false, false);
     }
@@ -485,7 +473,6 @@ public class DBCollection implements IDBCollection {
      * @param update the modifications to apply
      * @return the result of the operation
      */
-    @Override
     public WriteResult updateMulti(final DBObject query, final DBObject update) {
         return update(query, update, false, true);
     }
@@ -496,7 +483,6 @@ public class DBCollection implements IDBCollection {
      * @param query he deletion criteria using query operators. Omit the query parameter or pass an empty document to delete all documents in the collection.
      * @return the result of the operation
      */
-    @Override
     public WriteResult remove(final DBObject query) {
         return remove(query, getWriteConcern());
     }
@@ -509,7 +495,6 @@ public class DBCollection implements IDBCollection {
      * @param writeConcern {@code WriteConcern} to be used during operation
      * @return the result of the operation
      */
-    @Override
     public WriteResult remove(final DBObject query, final WriteConcern writeConcern) {
         final Remove remove = new Remove(writeConcern.toNew(), toDocument(query));
         try {
@@ -529,7 +514,6 @@ public class DBCollection implements IDBCollection {
      * @param encoder      {@code DBEncoder} to be used
      * @return the result of the operation
      */
-    @Override
     public WriteResult remove(final DBObject query, final WriteConcern aWriteConcern, final DBEncoder encoder) {
         final Document filter = toDocument(query, encoder, getDocumentCodec());
         final Remove remove = new Remove(aWriteConcern.toNew(), filter);
@@ -553,8 +537,10 @@ public class DBCollection implements IDBCollection {
      * @param batchSize  see {@link DBCursor#batchSize(int)} for more information
      * @param options    query options to be used
      * @return A cursor to the documents that match the query criteria
+     * @deprecated Please use subsequent calls {@link #find(DBObject, DBObject)}, {@link DBCursor#batchSize(int)},
+     *             {@link DBCursor#skip(int)}, {@link DBCursor#setOptions(int)}  instead.
      */
-    @Override
+    @Deprecated
     public DBCursor find(final DBObject query, final DBObject projection, final int numToSkip, final int batchSize,
                          final int options) {
         return new DBCursor(this, query, projection, getReadPreference()).batchSize(batchSize).skip(numToSkip).setOptions(options);
@@ -569,8 +555,10 @@ public class DBCollection implements IDBCollection {
      * @param numToSkip  number of documents to skip
      * @param batchSize  see {@link DBCursor#batchSize(int)} for more information
      * @return A cursor to the documents that match the query criteria
+     * @deprecated Please use subsequent calls {@link #find(DBObject, DBObject)},
+     *             {@link DBCursor#batchSize(int)}, {@link DBCursor#skip(int)} instead.
      */
-    @Override
+    @Deprecated
     public DBCursor find(final DBObject query, final DBObject projection, final int numToSkip, final int batchSize) {
         return new DBCursor(this, query, projection, getReadPreference()).batchSize(batchSize).skip(numToSkip);
     }
@@ -582,7 +570,6 @@ public class DBCollection implements IDBCollection {
      *              documents in the collection.
      * @return A cursor to the documents that match the query criteria
      */
-    @Override
     public DBCursor find(final DBObject query) {
         return new DBCursor(this, query, null, getReadPreference());
     }
@@ -595,7 +582,6 @@ public class DBCollection implements IDBCollection {
      * @param projection specifies which fields MongoDB will return from the documents in the result set.
      * @return A cursor to the documents that match the query criteria
      */
-    @Override
     public DBCursor find(final DBObject query, final DBObject projection) {
         return new DBCursor(this, query, projection, getReadPreference());
     }
@@ -605,7 +591,6 @@ public class DBCollection implements IDBCollection {
      *
      * @return A cursor to the documents that match the query criteria
      */
-    @Override
     public DBCursor find() {
         return find(new BasicDBObject());
     }
@@ -615,7 +600,6 @@ public class DBCollection implements IDBCollection {
      *
      * @return A document that satisfies the query specified as the argument to this method.
      */
-    @Override
     public DBObject findOne() {
         return findOne(new BasicDBObject());
     }
@@ -626,7 +610,6 @@ public class DBCollection implements IDBCollection {
      * @param query the selection criteria using query operators.
      * @return A document that satisfies the query specified as the argument to this method.
      */
-    @Override
     public DBObject findOne(final DBObject query) {
         return findOne(query, null, null, getReadPreference());
     }
@@ -638,7 +621,6 @@ public class DBCollection implements IDBCollection {
      * @param projection specifies which fields MongoDB will return from the documents in the result set.
      * @return A document that satisfies the query specified as the argument to this method.
      */
-    @Override
     public DBObject findOne(final DBObject query, final DBObject projection) {
         return findOne(query, projection, null, getReadPreference());
     }
@@ -651,7 +633,6 @@ public class DBCollection implements IDBCollection {
      * @param sort       A document whose fields specify the attributes on which to sort the result set.
      * @return A document that satisfies the query specified as the argument to this method.
      */
-    @Override
     public DBObject findOne(final DBObject query, final DBObject projection, final DBObject sort) {
         return findOne(query, projection, sort, getReadPreference());
     }
@@ -664,7 +645,6 @@ public class DBCollection implements IDBCollection {
      * @param readPreference {@link ReadPreference} to be used for this operation
      * @return A document that satisfies the query specified as the argument to this method.
      */
-    @Override
     public DBObject findOne(final DBObject query, final DBObject projection, final ReadPreference readPreference) {
         return findOne(query, projection, null, readPreference);
     }
@@ -678,7 +658,6 @@ public class DBCollection implements IDBCollection {
      * @param readPreference {@code ReadPreference} to be used for this operation
      * @return A document that satisfies the query specified as the argument to this method.
      */
-    @Override
     public DBObject findOne(final DBObject query, final DBObject projection, final DBObject sort,
                             final ReadPreference readPreference) {
 
@@ -705,7 +684,6 @@ public class DBCollection implements IDBCollection {
      * @param id value of '_id' field of a document we are looking for
      * @return A document with '_id' provided as the argument to this method.
      */
-    @Override
     public DBObject findOne(final Object id) {
         return findOne(id, null);
     }
@@ -717,7 +695,6 @@ public class DBCollection implements IDBCollection {
      * @param projection specifies which projection MongoDB will return from the documents in the result set.
      * @return A document that satisfies the query specified as the argument to this method.
      */
-    @Override
     public DBObject findOne(final Object id, final DBObject projection) {
         return findOne(new BasicDBObject("_id", id), projection);
     }
@@ -730,7 +707,6 @@ public class DBCollection implements IDBCollection {
      * @param document document to be passed to {@code doapply()}
      * @return '_id' of the document
      */
-    @Override
     public Object apply(final DBObject document) {
         return apply(document, true);
     }
@@ -744,7 +720,6 @@ public class DBCollection implements IDBCollection {
      * @param ensureId specifies if '_id' field needs to be added to the document in case of absence.
      * @return '_id' of the document
      */
-    @Override
     public Object apply(final DBObject document, final boolean ensureId) {
         Object id = document.get("_id");
         if (ensureId && id == null) {
@@ -771,7 +746,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents in collection
      * @throws MongoException
      */
-    @Override
     public long count() {
         return getCount(new BasicDBObject(), null);
     }
@@ -783,7 +757,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents that matches selection criteria
      * @throws MongoException
      */
-    @Override
     public long count(final DBObject query) {
         return getCount(query, null);
     }
@@ -796,7 +769,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents that matches selection criteria
      * @throws MongoException
      */
-    @Override
     public long count(final DBObject query, final ReadPreference readPreference) {
         return getCount(query, null, readPreference);
     }
@@ -807,7 +779,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents in collection
      * @throws MongoException
      */
-    @Override
     public long getCount() {
         return getCount(new BasicDBObject(), null);
     }
@@ -819,7 +790,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents in collection
      * @throws MongoException
      */
-    @Override
     public long getCount(final ReadPreference readPreference) {
         return getCount(new BasicDBObject(), null, readPreference);
     }
@@ -832,7 +802,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents that matches selection criteria
      * @throws MongoException
      */
-    @Override
     public long getCount(final DBObject query) {
         return getCount(query, null);
     }
@@ -845,7 +814,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents that matches selection criteria
      * @throws MongoException
      */
-    @Override
     public long getCount(final DBObject query, final DBObject projection) {
         return getCount(query, projection, 0, 0);
     }
@@ -859,7 +827,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents that matches selection criteria
      * @throws MongoException
      */
-    @Override
     public long getCount(final DBObject query, final DBObject projection, final ReadPreference readPreference) {
         return getCount(query, projection, 0, 0, readPreference);
     }
@@ -874,7 +841,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents that matches selection criteria
      * @throws MongoException
      */
-    @Override
     public long getCount(final DBObject query, final DBObject projection, final long limit, final long skip) {
         return getCount(query, projection, limit, skip, getReadPreference());
     }
@@ -890,7 +856,6 @@ public class DBCollection implements IDBCollection {
      * @return the number of documents that matches selection criteria
      * @throws MongoException
      */
-    @Override
     public long getCount(final DBObject query, final DBObject projection, final long limit, final long skip,
                          final ReadPreference readPreference) {
         if (limit > Integer.MAX_VALUE) {
@@ -914,7 +879,6 @@ public class DBCollection implements IDBCollection {
      * @return the collection with new name
      * @throws MongoException if target is the name of an existing collection.
      */
-    @Override
     public DBCollection rename(final String newName) {
         return rename(newName, false);
     }
@@ -927,7 +891,6 @@ public class DBCollection implements IDBCollection {
      * @return the collection with new name
      * @throws MongoException if target is the name of an existing collection and {@code dropTarget=false}.
      */
-    @Override
     public DBCollection rename(final String newName, final boolean dropTarget) {
 
         final RenameCollectionOptions renameCollectionOptions = new RenameCollectionOptions(getName(), newName, dropTarget);
@@ -951,7 +914,6 @@ public class DBCollection implements IDBCollection {
      * @param reduce  specifies an $reduce function, that operates on the documents during the grouping operation
      * @return a document with the grouped records as well as the command meta-data
      */
-    @Override
     public DBObject group(final DBObject key, final DBObject cond, final DBObject initial, final String reduce) {
         return group(key, cond, initial, reduce, null);
     }
@@ -967,7 +929,6 @@ public class DBCollection implements IDBCollection {
      * @param finalize specifies a Javascript function that runs each item in the result set before final value will be returned
      * @return a document with the grouped records as well as the command meta-data
      */
-    @Override
     public DBObject group(final DBObject key, final DBObject cond, final DBObject initial, final String reduce,
                           final String finalize) {
         return group(key, cond, initial, reduce, finalize, getReadPreference());
@@ -985,7 +946,6 @@ public class DBCollection implements IDBCollection {
      * @param readPreference {@link ReadPreference} to be used for this operation
      * @return a document with the grouped records as well as the command meta-data
      */
-    @Override
     public DBObject group(final DBObject key, final DBObject cond, final DBObject initial, final String reduce,
                           final String finalize, final ReadPreference readPreference) {
         return group(new GroupCommand(this, key, cond, initial, reduce, finalize), readPreference);
@@ -998,7 +958,6 @@ public class DBCollection implements IDBCollection {
      * @param cmd the group command
      * @return a document with the grouped records as well as the command meta-data
      */
-    @Override
     public DBObject group(final GroupCommand cmd) {
         return group(cmd, getReadPreference());
     }
@@ -1011,7 +970,6 @@ public class DBCollection implements IDBCollection {
      * @param readPreference {@link ReadPreference} to be used for this operation
      * @return a document with the grouped records as well as the command meta-data
      */
-    @Override
     public DBObject group(final GroupCommand cmd, final ReadPreference readPreference) {
         return group(cmd.toNew());
     }
@@ -1023,7 +981,6 @@ public class DBCollection implements IDBCollection {
      * @param args specifies the arguments to the group function
      * @return a document with the grouped records as well as the command meta-data
      */
-    @Override
     @Deprecated
     public DBObject group(final DBObject args) {
         final Document commandDocument = new Document("group", toDocument(args).append("ns", getName()));
@@ -1042,7 +999,6 @@ public class DBCollection implements IDBCollection {
      * @param fieldName Specifies the field for which to return the distinct values.
      * @return an array of the distinct values
      */
-    @Override
     public List distinct(final String fieldName) {
         return distinct(fieldName, getReadPreference());
     }
@@ -1054,7 +1010,6 @@ public class DBCollection implements IDBCollection {
      * @param readPreference {@link ReadPreference} to be used for this operation
      * @return an array of the distinct values
      */
-    @Override
     public List distinct(final String fieldName, final ReadPreference readPreference) {
         return distinct(fieldName, new BasicDBObject(), readPreference);
     }
@@ -1066,7 +1021,6 @@ public class DBCollection implements IDBCollection {
      * @param query     specifies the selection query to determine the subset of documents from which to retrieve the distinct values
      * @return an array of the distinct values
      */
-    @Override
     public List distinct(final String fieldName, final DBObject query) {
         return distinct(fieldName, query, getReadPreference());
     }
@@ -1079,7 +1033,6 @@ public class DBCollection implements IDBCollection {
      * @param readPreference {@link ReadPreference} to be used for this operation
      * @return an array of the distinct values
      */
-    @Override
     public List distinct(final String fieldName, final DBObject query, final ReadPreference readPreference) {
         final Find find = new Find()
                 .filter(toDocument(query))
@@ -1097,7 +1050,6 @@ public class DBCollection implements IDBCollection {
      * @param query        specifies the selection criteria using query operators for determining the documents input to the map function.
      * @return a mapReduce output
      */
-    @Override
     public MapReduceOutput mapReduce(final String map, final String reduce, final String outputTarget,
                                      final DBObject query) {
         final MapReduceCommand command = new MapReduceCommand(this, map, reduce, outputTarget, MapReduceCommand.OutputType.REDUCE, query);
@@ -1114,7 +1066,6 @@ public class DBCollection implements IDBCollection {
      * @param query        specifies the selection criteria using query operators for determining the documents input to the map function.
      * @return a mapReduce output
      */
-    @Override
     public MapReduceOutput mapReduce(final String map, final String reduce, final String outputTarget,
                                      final MapReduceCommand.OutputType outputType, final DBObject query) {
         final MapReduceCommand command = new MapReduceCommand(this, map, reduce, outputTarget, outputType, query);
@@ -1131,7 +1082,6 @@ public class DBCollection implements IDBCollection {
      * @param query        specifies the selection criteria using query operators for determining the documents input to the map function.
      * @return a mapReduce output
      */
-    @Override
     public MapReduceOutput mapReduce(final String map, final String reduce, final String outputTarget,
                                      final MapReduceCommand.OutputType outputType, final DBObject query,
                                      final ReadPreference readPreference) {
@@ -1146,7 +1096,6 @@ public class DBCollection implements IDBCollection {
      * @param command specifies the command parameters
      * @return a mapReduce output
      */
-    @Override
     public MapReduceOutput mapReduce(final MapReduceCommand command) {
 
         final MapReduceCommandResultCodec<DBObject> mapReduceCodec =
@@ -1154,9 +1103,10 @@ public class DBCollection implements IDBCollection {
 
         final org.mongodb.CommandResult executionResult;
 
+        Command newStyleCommand = command.toNew();
         try {
             executionResult = new CommandOperation(getDB().getName(),
-                    command.toNew(),
+                    newStyleCommand,
                     mapReduceCodec,
                     getDB().getClusterDescription(),
                     getBufferPool(), getSession(), false).execute();
@@ -1164,9 +1114,10 @@ public class DBCollection implements IDBCollection {
             throw mapException(e);
         }
 
+        BasicDBObject commandDocument = toDBObject(newStyleCommand.toDocument());
         return command.getOutputType() == MapReduceCommand.OutputType.INLINE
-                ? new MapReduceOutput(this, new MapReduceInlineCommandResult<DBObject>(executionResult))
-                : new MapReduceOutput(this, new MapReduceCommandResult(executionResult));
+                ? new MapReduceOutput(commandDocument, new MapReduceInlineCommandResult<DBObject>(executionResult))
+                : new MapReduceOutput(this, commandDocument, new MapReduceCommandResult(executionResult));
     }
 
     /**
@@ -1175,7 +1126,6 @@ public class DBCollection implements IDBCollection {
      * @param command specifies the command parameters
      * @return a mapReduce output
      */
-    @Override
     public MapReduceOutput mapReduce(final DBObject command) {
         if (!command.containsField("mapreduce") && !command.containsField("mapReduce")) {
             throw new IllegalArgumentException("Operation requires mapReduce command");
@@ -1191,7 +1141,6 @@ public class DBCollection implements IDBCollection {
      * @param additionalOps additional operations to be performed in the aggregation pipeline
      * @return the aggregation operation's result set
      */
-    @Override
     public AggregationOutput aggregate(final DBObject firstOp, final DBObject... additionalOps) {
         final List<Document> pipeline = new ArrayList<Document>(additionalOps.length + 1);
         pipeline.add(toDocument(firstOp));
@@ -1211,7 +1160,6 @@ public class DBCollection implements IDBCollection {
      *
      * @return the name of a collection
      */
-    @Override
     public String getName() {
         return name;
     }
@@ -1221,7 +1169,6 @@ public class DBCollection implements IDBCollection {
      *
      * @return the name of a collection
      */
-    @Override
     public String getFullName() {
         return getNamespace().getFullName();
     }
@@ -1239,7 +1186,6 @@ public class DBCollection implements IDBCollection {
      * @param name the name of the collection to find
      * @return the matching collection
      */
-    @Override
     public DBCollection getCollection(final String name) {
         return database.getCollection(getName() + "." + name);
     }
@@ -1249,7 +1195,6 @@ public class DBCollection implements IDBCollection {
      *
      * @param keys a document that contains pairs with the name of the field or fields to index and order of the index
      */
-    @Override
     public void ensureIndex(final DBObject keys) {
         ensureIndex(keys, (DBObject) null);
     }
@@ -1260,7 +1205,6 @@ public class DBCollection implements IDBCollection {
      * @param keys a document that contains pairs with the name of the field or fields to index and order of the index
      * @param name specifies the name of the index
      */
-    @Override
     public void ensureIndex(final DBObject keys, final String name) {
         final BasicDBObject options = new BasicDBObject("name", name);
         ensureIndex(keys, options);
@@ -1274,7 +1218,6 @@ public class DBCollection implements IDBCollection {
      * @param unique specify true to create a unique index so that the collection will not accept insertion of documents where the index
      *               key or keys matches an existing value in the index
      */
-    @Override
     public void ensureIndex(final DBObject keys, final String name, final boolean unique) {
         final BasicDBObject options = new BasicDBObject("name", name);
         options.append("unique", unique);
@@ -1287,7 +1230,6 @@ public class DBCollection implements IDBCollection {
      * @param keys    a document that contains pairs with the name of the field or fields to index and order of the index
      * @param options a document that controls the creation of the index.
      */
-    @Override
     public void ensureIndex(final DBObject keys, final DBObject options) {
         final Insert<Document> insertIndexOperation
                 = new Insert<Document>(org.mongodb.WriteConcern.ACKNOWLEDGED, toIndexDetailsDocument(keys, options));
@@ -1299,7 +1241,6 @@ public class DBCollection implements IDBCollection {
      *
      * @param name specifies name of field to index on
      */
-    @Override
     public void ensureIndex(final String name) {
         final Index index = Index.builder().addKey(new Index.OrderedKey(name, OrderBy.ASC)).build();
         final Document indexDetails = index.toDocument();
@@ -1313,7 +1254,6 @@ public class DBCollection implements IDBCollection {
      *
      * @param keys a document that contains pairs with the name of the field or fields to index and order of the index
      */
-    @Override
     public void createIndex(final DBObject keys) {
         ensureIndex(keys);
     }
@@ -1324,7 +1264,6 @@ public class DBCollection implements IDBCollection {
      * @param keys    a document that contains pairs with the name of the field or fields to index and order of the index
      * @param options a document that controls the creation of the index.
      */
-    @Override
     public void createIndex(final DBObject keys, final DBObject options) {
         ensureIndex(keys, options);
     }
@@ -1336,7 +1275,6 @@ public class DBCollection implements IDBCollection {
      * @param options   a document that controls the creation of the index.
      * @param dbEncoder specifies the encoder that used during operation
      */
-    @Override
     public void createIndex(final DBObject keys, final DBObject options, final DBEncoder dbEncoder) {
 
         final Encoder<DBObject> encoder = toEncoder(dbEncoder);
@@ -1358,7 +1296,6 @@ public class DBCollection implements IDBCollection {
     /**
      * Clears all indices that have not yet been applied to this collection.
      */
-    @Override
     public void resetIndexCache() {
     }
 
@@ -1367,7 +1304,6 @@ public class DBCollection implements IDBCollection {
      *
      * @param indexes list of indexes to "hint" or force MongoDB to use when performing the query.
      */
-    @Override
     public void setHintFields(final List<DBObject> indexes) {
         this.hintFields = indexes;
     }
@@ -1389,7 +1325,6 @@ public class DBCollection implements IDBCollection {
      * @param update performs an update of the selected document
      * @return pre-modification document
      */
-    @Override
     public DBObject findAndModify(final DBObject query, final DBObject sort, final DBObject update) {
         return findAndModify(query, null, sort, false, update, false, false);
     }
@@ -1403,7 +1338,6 @@ public class DBCollection implements IDBCollection {
      * @param update performs an update of the selected document
      * @return pre-modification document
      */
-    @Override
     public DBObject findAndModify(final DBObject query, final DBObject update) {
         return findAndModify(query, null, null, false, update, false, false);
     }
@@ -1416,7 +1350,6 @@ public class DBCollection implements IDBCollection {
      * @param query specifies the selection criteria for the modification
      * @return pre-modification document
      */
-    @Override
     public DBObject findAndRemove(final DBObject query) {
         return findAndModify(query, null, null, true, null, false, false);
     }
@@ -1434,7 +1367,6 @@ public class DBCollection implements IDBCollection {
      * @param upsert    when true, operation creates a new document if the query returns no documents
      * @return pre-modification document
      */
-    @Override
     public DBObject findAndModify(final DBObject query, final DBObject fields, final DBObject sort,
                                   final boolean remove, final DBObject update,
                                   final boolean returnNew, final boolean upsert) {
@@ -1493,7 +1425,6 @@ public class DBCollection implements IDBCollection {
      *
      * @return this collection's database
      */
-    @Override
     public DB getDB() {
         return database;
     }
@@ -1503,7 +1434,6 @@ public class DBCollection implements IDBCollection {
      *
      * @return WriteConcern value
      */
-    @Override
     public WriteConcern getWriteConcern() {
         if (writeConcern != null) {
             return writeConcern;
@@ -1517,7 +1447,6 @@ public class DBCollection implements IDBCollection {
      *
      * @param writeConcern WriteConcern to use
      */
-    @Override
     public void setWriteConcern(final WriteConcern writeConcern) {
         this.writeConcern = writeConcern;
     }
@@ -1527,7 +1456,6 @@ public class DBCollection implements IDBCollection {
      *
      * @return ReadPreference value
      */
-    @Override
     public ReadPreference getReadPreference() {
         if (readPreference != null) {
             return readPreference;
@@ -1541,34 +1469,28 @@ public class DBCollection implements IDBCollection {
      *
      * @param preference ReadPreference to use
      */
-    @Override
     public void setReadPreference(final ReadPreference preference) {
         this.readPreference = preference;
     }
 
-    @Override
     @Deprecated
     public void slaveOk() {
         addOption(Bytes.QUERYOPTION_SLAVEOK);
     }
 
-    @Override
     public void addOption(final int option) {
         optionHolder.add(option);
     }
 
 
-    @Override
     public void resetOptions() {
         optionHolder.reset();
     }
 
-    @Override
     public int getOptions() {
         return optionHolder.get();
     }
 
-    @Override
     public void setOptions(final int options) {
         optionHolder.set(options);
     }
@@ -1578,7 +1500,6 @@ public class DBCollection implements IDBCollection {
      *
      * @throws MongoException
      */
-    @Override
     public void drop() {
         try {
             getDB().executeCommand(new Drop(getName()));
@@ -1590,12 +1511,10 @@ public class DBCollection implements IDBCollection {
         }
     }
 
-    @Override
     public synchronized DBDecoderFactory getDBDecoderFactory() {
         return decoderFactory;
     }
 
-    @Override
     public synchronized void setDBDecoderFactory(final DBDecoderFactory factory) {
         this.decoderFactory = factory;
 
@@ -1607,12 +1526,10 @@ public class DBCollection implements IDBCollection {
         this.objectCodec = new CompoundDBObjectCodec(objectCodec.getEncoder(), decoder);
     }
 
-    @Override
     public synchronized DBEncoderFactory getDBEncoderFactory() {
         return this.encoderFactory;
     }
 
-    @Override
     public synchronized void setDBEncoderFactory(final DBEncoderFactory factory) {
         this.encoderFactory = factory;
 
@@ -1630,7 +1547,6 @@ public class DBCollection implements IDBCollection {
      * @return list of index documents
      * @throws MongoException
      */
-    @Override
     public List<DBObject> getIndexInfo() {
         try {
             return new GetIndexesOperation<DBObject>(getBufferPool(), getSession(), getNamespace(), objectCodec).execute();
@@ -1639,7 +1555,6 @@ public class DBCollection implements IDBCollection {
         }
     }
 
-    @Override
     public void dropIndex(final DBObject keys) {
         final List<Index.Key<?>> keysFromDBObject = getKeysFromDBObject(keys);
         final Index indexToDrop = Index.builder().addKeys(keysFromDBObject).build();
@@ -1647,36 +1562,30 @@ public class DBCollection implements IDBCollection {
         getDB().executeCommand(dropIndex);
     }
 
-    @Override
     public void dropIndex(final String name) {
         final DropIndex dropIndex = new DropIndex(getName(), name);
         getDB().executeCommand(dropIndex);
     }
 
-    @Override
     public void dropIndexes() {
         dropIndexes("*");
     }
 
-    @Override
     public void dropIndexes(final String name) {
         dropIndex(name);
     }
 
-    @Override
     public CommandResult getStats() {
         final org.mongodb.CommandResult commandResult = getDB().executeCommand(new CollStats(getName()));
         return new CommandResult(commandResult);
     }
 
-    @Override
     public boolean isCapped() {
         final CommandResult commandResult = getStats();
         final Object cappedField = commandResult.get("capped");
         return cappedField != null && (cappedField.equals(1) || cappedField.equals(true));
     }
 
-    @Override
     public Class getObjectClass() {
         return objectFactory.getClassForPath(Collections.<String>emptyList());
     }

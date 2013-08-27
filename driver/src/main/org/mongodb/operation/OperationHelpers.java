@@ -18,6 +18,7 @@ package org.mongodb.operation;
 
 import org.mongodb.CommandResult;
 import org.mongodb.Document;
+import org.mongodb.command.Command;
 import org.mongodb.command.MongoCommandFailureException;
 import org.mongodb.connection.Connection;
 import org.mongodb.connection.PooledByteBufferOutputBuffer;

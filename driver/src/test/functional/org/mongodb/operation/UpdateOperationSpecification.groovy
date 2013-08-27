@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-package org.mongodb.util.management;
 
-/**
- * This class is NOT part of the public API.  It may change at any time without notification.
- */
-public class NullMBeanServer implements MBeanServer {
-    @Override
-    public boolean isRegistered(final String mBeanName) {
-        return false;
-    }
 
-    @Override
-    public void unregisterMBean(final String mBeanName) {
-    }
+package org.mongodb.operation
 
-    @Override
-    public void registerMBean(final Object mBean, final String mBeanName) {
-    }
+import org.mongodb.FunctionalSpecification
+
+class UpdateOperationSpecification extends FunctionalSpecification {
 }

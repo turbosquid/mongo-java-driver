@@ -16,6 +16,29 @@
 
 package org.mongodb.connection;
 
+/**
+ * An enumeration of all possible cluster types.
+ *
+ * @since 3.0
+ */
 public enum ClusterType {
-    StandAlone, ReplicaSet, Sharded, Unknown
+    /**
+     * A standalone mongod server.  A cluster of one.
+     */
+    StandAlone,
+
+    /**
+     * A replicas set cluster.
+     */
+    ReplicaSet,
+
+    /**
+     * A sharded cluster, connected via one or more mongos servers.
+     */
+    Sharded,
+
+    /**
+     * The cluster type is not yet known.
+     */
+    Unknown
 }

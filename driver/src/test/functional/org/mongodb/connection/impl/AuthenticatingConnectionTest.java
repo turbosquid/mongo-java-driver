@@ -16,6 +16,7 @@
 
 package org.mongodb.connection.impl;
 
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -42,7 +43,7 @@ public class AuthenticatingConnectionTest {
         userName = System.getProperty("org.mongodb.test.userName", "bob");
         password = System.getProperty("org.mongodb.test.password", "pwd123");
         source = System.getProperty("org.mongodb.test.source", "admin");
-        ConnectionFactory connectionFactory = new DefaultConnectionFactory(DefaultConnectionSettings.builder().build(),
+        ConnectionFactory connectionFactory = new DefaultConnectionFactory(ConnectionSettings.builder().build(),
                 getSSLSettings(),  getBufferProvider(), Collections.<MongoCredential>emptyList());
         connection = connectionFactory.create(getPrimary());
     }

@@ -17,6 +17,7 @@
 package org.mongodb;
 
 import org.mongodb.connection.Tags;
+import org.mongodb.diagnostics.Loggers;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -157,7 +158,7 @@ public class MongoClientURI {
     private static final String PREFIX = "mongodb://";
     private static final String UTF_8 = "UTF-8";
 
-    private static final Logger LOGGER = Logger.getLogger("com.mongodb.MongoURI");
+    private static final Logger LOGGER = Loggers.getLogger("uri");
 
     private final MongoClientOptions options;
     private final MongoCredential credentials;
@@ -288,6 +289,7 @@ public class MongoClientURI {
         generalOptionsKeys.add("sockettimeoutms");
         generalOptionsKeys.add("autoconnectretry");
         generalOptionsKeys.add("ssl");
+        generalOptionsKeys.add("replicaset");
 
         readPreferenceKeys.add("slaveok");
         readPreferenceKeys.add("readpreference");
@@ -352,6 +354,9 @@ public class MongoClientURI {
             }
             else if (key.equals("ssl") && parseBoolean(value)) {
                 builder.SSLEnabled(true);
+            }
+            else if (key.equals("replicaset")) {
+                builder.requiredReplicaSetName(value);
             }
         }
 

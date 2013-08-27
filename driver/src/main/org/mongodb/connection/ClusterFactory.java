@@ -16,8 +16,6 @@
 
 package org.mongodb.connection;
 
-import java.util.List;
-
 /**
  * Factory for {@code Cluster} implementations.
  *
@@ -25,26 +23,11 @@ import java.util.List;
  */
 public interface ClusterFactory {
     /**
-     * Create a cluster that is a direct connection to a single MongoDB server.  Even if this server is a member of a replica set,
-     * the cluster will not attempt to discover the other members of the replica set.
+     * Creates a cluster with the given settings.  The cluster mode will be based on the mode from the settings.
      *
-     * @param serverAddress the address of the server
-     * @param serverFactory the server factory that the cluster implementation should use to crate instances of {@code ClusterableServer}.
+     * @param settings the settings
+     * @param serverFactory the server factory that the cluster implementation should use to create instances of {@code ClusterableServer}.
      * @return the cluster
      */
-    Cluster create(ServerAddress serverAddress, ClusterableServerFactory serverFactory);
-
-    /**
-     * Create a cluster that is a connection to either a replica set or a sharded cluster.  In the case of a replica set, the cluster will
-     * attempt to discover the rest of the members of the replica set.  In the case of a sharded cluster,
-     * the server addresses should be mongos servers, and the cluster may attempt to discover other mongos servers.
-     * <p>
-     * In both cases, the cluster may attempt to balance the load across the discovered members.
-     * </p>
-     *
-     * @param seedList the seed list to use to find all the members of the cluster.
-     * @param serverFactory the server factory that the cluster implementation should use to crate instances of {@code ClusterableServer}.
-     * @return the cluster
-     */
-    Cluster create(List<ServerAddress> seedList, ClusterableServerFactory serverFactory);
+     Cluster create(final ClusterSettings settings, final ClusterableServerFactory serverFactory);
 }

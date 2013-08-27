@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
+
+
+
+
+
+
 package org.mongodb.connection.impl
 
 import org.mongodb.connection.ChangeEvent
 import org.mongodb.connection.ChangeListener
 import org.mongodb.connection.Cluster
+import org.mongodb.connection.ClusterConnectionMode
 import org.mongodb.connection.ClusterDescription
+import org.mongodb.connection.ClusterSettings
 import org.mongodb.connection.ServerAddress
 import org.mongodb.connection.ServerConnectionState
 import org.mongodb.connection.ServerDescription
@@ -40,7 +48,8 @@ class DefaultSingleServerClusterSpecification extends Specification {
     def 'should fire change event on cluster change'() {
         given:
         ChangeEvent<ClusterDescription> changeEvent = null
-        Cluster cluster = new DefaultClusterFactory().create(SERVER_ADDRESS, factory)
+        Cluster cluster = new DefaultClusterFactory().create(
+                ClusterSettings.builder().mode(ClusterConnectionMode.Single).hosts([SERVER_ADDRESS]).build(), factory)
         cluster.addChangeListener(new ChangeListener<ClusterDescription>() {
             @Override
             void stateChanged(final ChangeEvent<ClusterDescription> event) {

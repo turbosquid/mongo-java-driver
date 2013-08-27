@@ -16,14 +16,21 @@
 
 package org.mongodb;
 
+
 import org.mongodb.annotations.Immutable;
 import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.connection.SSLSettings;
 import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
 import org.mongodb.connection.impl.DefaultConnectionSettings;
 import org.mongodb.connection.impl.DefaultServerSettings;
+import org.mongodb.connection.AsyncConnectionSettings;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 
 /**
  * Various settings to control the behavior of a {@code MongoClient}.
@@ -60,6 +67,10 @@ public final class MongoClientOptions {
     private final int heartbeatConnectRetryFrequency;
     private final int heartbeatConnectTimeout;
     private final int heartbeatSocketTimeout;
+    private final int asyncPoolSize;
+    private final int asyncMaxPoolSize;
+    private final long asyncKeepAliveTime;
+    private final String requiredReplicaSetName;
     private final DefaultConnectionSettings connectionSettings;
     private final DefaultConnectionSettings heartbeatConnectionSettings;
     private final DefaultConnectionProviderSettings connectionProviderSettings;
@@ -109,6 +120,11 @@ public final class MongoClientOptions {
         private int heartbeatConnectRetryFrequency = 10;
         private int heartbeatConnectTimeout = 20000;
         private int heartbeatSocketTimeout = 20000;
+        private int asyncPoolSize = AsyncConnectionSettings.POOL_SIZE;
+        private int asyncMaxPoolSize = AsyncConnectionSettings.MAX_POOL_SIZE;
+        private long asyncKeepAliveTime = AsyncConnectionSettings.KEEP_ALIVE_TIME;
+
+        private String requiredReplicaSetName;
 
         /**
          * Sets the description.
@@ -362,6 +378,39 @@ public final class MongoClientOptions {
             this.asyncEnabled = aAsyncEnabled;
             return this;
         }
+        
+        /**
+         *  Sets the pool size for async connections
+         *
+         * @return {@code this}
+         * @see org.mongodb.MongoClientOptions#getAsyncPoolSize()
+         */
+        public Builder asyncPoolSize(final int count) {
+            this.asyncPoolSize = count;
+            return this;
+        }
+
+        /**
+         *  Sets the max pool size for async connections
+         *
+         * @return {@code this}
+         * @see org.mongodb.MongoClientOptions#getAsyncMaxPoolSize()
+         */
+        public Builder asyncMaxPoolSize(final int count) {
+            this.asyncMaxPoolSize = count;
+            return this;
+        }
+
+        /**
+         *  Sets the keep alive time for async threads in the pool
+         *
+         * @return {@code this}
+         * @see MongoClientOptions#getAsyncKeepAliveTime(TimeUnit) 
+         */
+        public Builder asyncKeepAliveTime(final long time, final TimeUnit unit) {
+            this.asyncKeepAliveTime = MILLISECONDS.convert(time, unit);
+            return this;
+        }
 
         /**
          * Sets whether JMX beans registered by the driver should always be MBeans, regardless of whether the VM is
@@ -441,6 +490,18 @@ public final class MongoClientOptions {
             }
             this.heartbeatSocketTimeout = aSocketTimeout;
             return this;
+         }
+ 
+         /**
+          * Sets the required replica set name for the cluster.
+          *
+          * @param aRequiredReplicaSetName the required replica set name for the replica set.
+          * @return this
+          * @see MongoClientOptions#getRequiredReplicaSetName()
+          */
+         public Builder requiredReplicaSetName(final String aRequiredReplicaSetName) {
+             this.requiredReplicaSetName = aRequiredReplicaSetName;
+             return this;
         }
 
         /**
@@ -759,112 +820,36 @@ public final class MongoClientOptions {
         return sslSettings;
     }
 
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        final MongoClientOptions that = (MongoClientOptions) o;
-
-        if (SSLEnabled != that.SSLEnabled) {
-            return false;
-        }
-        if (alwaysUseMBeans != that.alwaysUseMBeans) {
-            return false;
-        }
-        if (asyncEnabled != that.asyncEnabled) {
-            return false;
-        }
-        if (autoConnectRetry != that.autoConnectRetry) {
-            return false;
-        }
-        if (connectTimeout != that.connectTimeout) {
-            return false;
-        }
-        if (heartbeatConnectRetryFrequency != that.heartbeatConnectRetryFrequency) {
-            return false;
-        }
-        if (heartbeatConnectTimeout != that.heartbeatConnectTimeout) {
-            return false;
-        }
-        if (heartbeatFrequency != that.heartbeatFrequency) {
-            return false;
-        }
-        if (heartbeatSocketTimeout != that.heartbeatSocketTimeout) {
-            return false;
-        }
-        if (maxAutoConnectRetryTime != that.maxAutoConnectRetryTime) {
-            return false;
-        }
-        if (maxConnectionIdleTime != that.maxConnectionIdleTime) {
-            return false;
-        }
-        if (maxConnectionLifeTime != that.maxConnectionLifeTime) {
-            return false;
-        }
-        if (maxConnectionPoolSize != that.maxConnectionPoolSize) {
-            return false;
-        }
-        if (maxWaitTime != that.maxWaitTime) {
-            return false;
-        }
-        if (minConnectionPoolSize != that.minConnectionPoolSize) {
-            return false;
-        }
-        if (socketKeepAlive != that.socketKeepAlive) {
-            return false;
-        }
-        if (socketTimeout != that.socketTimeout) {
-            return false;
-        }
-        if (threadsAllowedToBlockForConnectionMultiplier != that.threadsAllowedToBlockForConnectionMultiplier) {
-            return false;
-        }
-        if (description != null ? !description.equals(that.description) : that.description != null) {
-            return false;
-        }
-        if (!primitiveCodecs.equals(that.primitiveCodecs)) {
-            return false;
-        }
-        if (!readPreference.equals(that.readPreference)) {
-            return false;
-        }
-        if (!writeConcern.equals(that.writeConcern)) {
-            return false;
-        }
-
-        return true;
+    /**
+     * Gets the required replica set name.  With this option set, the MongoClient instance will
+     *
+     * <p>
+     * 1. Connect in replica set mode, and discover all members of the set based on the given servers
+     * </p>
+     * <p>
+     * 2. Make sure that the set name reported by all members matches the required set name.
+     * </p>
+     * <p>
+     * 3. Refuse to service any requests if any member of the seed list is not part of a replica set with the required name.j
+     * </p>
+     *
+     * @return the required replica set name
+     * since 3.0
+     */
+    public String getRequiredReplicaSetName() {
+        return requiredReplicaSetName;
+    }
+    
+    public long getAsyncKeepAliveTime(final TimeUnit unit) {
+        return unit.convert(asyncKeepAliveTime, TimeUnit.MILLISECONDS);
     }
 
-    @Override
-    public int hashCode() {
-        int result = description != null ? description.hashCode() : 0;
-        result = 31 * result + readPreference.hashCode();
-        result = 31 * result + writeConcern.hashCode();
-        result = 31 * result + primitiveCodecs.hashCode();
-        result = 31 * result + minConnectionPoolSize;
-        result = 31 * result + maxConnectionPoolSize;
-        result = 31 * result + threadsAllowedToBlockForConnectionMultiplier;
-        result = 31 * result + maxWaitTime;
-        result = 31 * result + maxConnectionIdleTime;
-        result = 31 * result + maxConnectionLifeTime;
-        result = 31 * result + connectTimeout;
-        result = 31 * result + socketTimeout;
-        result = 31 * result + (socketKeepAlive ? 1 : 0);
-        result = 31 * result + (autoConnectRetry ? 1 : 0);
-        result = 31 * result + (int) (maxAutoConnectRetryTime ^ (maxAutoConnectRetryTime >>> 32));
-        result = 31 * result + (asyncEnabled ? 1 : 0);
-        result = 31 * result + (SSLEnabled ? 1 : 0);
-        result = 31 * result + (alwaysUseMBeans ? 1 : 0);
-        result = 31 * result + heartbeatFrequency;
-        result = 31 * result + heartbeatConnectRetryFrequency;
-        result = 31 * result + heartbeatConnectTimeout;
-        result = 31 * result + heartbeatSocketTimeout;
-        return result;
+    public int getAsyncMaxPoolSize() {
+        return asyncMaxPoolSize;
+    }
+
+    public int getAsyncPoolSize() {
+        return asyncPoolSize;
     }
 
     @Override
@@ -892,6 +877,10 @@ public final class MongoClientOptions {
                 + ", heartbeatConnectRetryFrequency=" + heartbeatConnectRetryFrequency
                 + ", heartbeatConnectTimeout=" + heartbeatConnectTimeout
                 + ", heartbeatSocketTimeout=" + heartbeatSocketTimeout
+                + ", asyncPoolSize=" + asyncPoolSize
+                + ", asyncMaxPoolSize=" + asyncMaxPoolSize
+                + ", asyncKeepAliveTime=" + asyncKeepAliveTime
+                + ", requiredReplicaSetName=" + requiredReplicaSetName
                 + '}';
     }
 
@@ -918,6 +907,10 @@ public final class MongoClientOptions {
         heartbeatConnectRetryFrequency = builder.heartbeatConnectRetryFrequency;
         heartbeatConnectTimeout = builder.heartbeatConnectTimeout;
         heartbeatSocketTimeout = builder.heartbeatSocketTimeout;
+        asyncPoolSize = builder.asyncPoolSize;
+        asyncMaxPoolSize = builder.asyncMaxPoolSize;
+        requiredReplicaSetName = builder.requiredReplicaSetName;
+        asyncKeepAliveTime = builder.asyncKeepAliveTime;
 
         connectionSettings = DefaultConnectionSettings.builder()
                                                       .connectTimeoutMS(connectTimeout)

@@ -25,7 +25,7 @@ import static org.mongodb.assertions.Assertions.isTrue;
 /**
  * @since 3.0
  */
-public class DefaultConnectionProviderSettings {
+public class ConnectionProviderSettings {
     private final int maxSize;
     private final int minSize;
     private final int maxWaitQueueSize;
@@ -84,8 +84,8 @@ public class DefaultConnectionProviderSettings {
         }
         // CHECKSTYLE:ON
 
-        public DefaultConnectionProviderSettings build() {
-            return new DefaultConnectionProviderSettings(this);
+        public ConnectionProviderSettings build() {
+            return new ConnectionProviderSettings(this);
         }
     }
 
@@ -126,7 +126,7 @@ public class DefaultConnectionProviderSettings {
             return false;
         }
 
-        final DefaultConnectionProviderSettings that = (DefaultConnectionProviderSettings) o;
+        final ConnectionProviderSettings that = (ConnectionProviderSettings) o;
 
         if (maxConnectionIdleTimeMS != that.maxConnectionIdleTimeMS) {
             return false;
@@ -167,18 +167,18 @@ public class DefaultConnectionProviderSettings {
 
     @Override
     public String toString() {
-        return "DefaultConnectionProviderSettings{"
-               + "maxSize=" + maxSize
-               + ", minSize=" + minSize
-               + ", maxWaitQueueSize=" + maxWaitQueueSize
-               + ", maxWaitTimeMS=" + maxWaitTimeMS
-               + ", maxConnectionLifeTimeMS=" + maxConnectionLifeTimeMS
-               + ", maxConnectionIdleTimeMS=" + maxConnectionIdleTimeMS
-               + ", maintenanceFrequencyMS=" + maintenanceFrequencyMS
-               + '}';
+        return "ConnectionProviderSettings{"
+                + "maxSize=" + maxSize
+                + ", minSize=" + minSize
+                + ", maxWaitQueueSize=" + maxWaitQueueSize
+                + ", maxWaitTimeMS=" + maxWaitTimeMS
+                + ", maxConnectionLifeTimeMS=" + maxConnectionLifeTimeMS
+                + ", maxConnectionIdleTimeMS=" + maxConnectionIdleTimeMS
+                + ", maintenanceFrequencyMS=" + maintenanceFrequencyMS
+                + '}';
     }
 
-    DefaultConnectionProviderSettings(final Builder builder) {
+    ConnectionProviderSettings(final Builder builder) {
         isTrue("maxSize > 0", builder.maxSize > 0);
         isTrue("minSize >= 0", builder.minSize >= 0);
         isTrue("maxWaitQueueSize >= 0", builder.maxWaitQueueSize >= 0);

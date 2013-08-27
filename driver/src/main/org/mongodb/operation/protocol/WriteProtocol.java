@@ -27,7 +27,6 @@ import org.mongodb.connection.Connection;
 import org.mongodb.connection.PooledByteBufferOutputBuffer;
 import org.mongodb.connection.ResponseBuffers;
 import org.mongodb.connection.ServerDescription;
-import org.mongodb.operation.BaseWrite;
 
 import static org.mongodb.MongoNamespace.COMMAND_COLLECTION_NAME;
 import static org.mongodb.command.GetLastError.parseGetLastErrorResponse;
@@ -52,7 +51,7 @@ public abstract class WriteProtocol implements Protocol<CommandResult> {
         this.connection = connection;
         this.closeConnection = closeConnection;
 
-        if (writeConcern.callGetLastError()) {
+        if (writeConcern.isAcknowledged()) {
             getLastErrorCommand = new GetLastError(writeConcern);
         }
         else {
@@ -109,8 +108,6 @@ public abstract class WriteProtocol implements Protocol<CommandResult> {
             responseBuffers.close();
         }
     }
-
-    protected abstract BaseWrite getWrite();
 
     protected abstract RequestMessage createRequestMessage(final MessageSettings settings);
 

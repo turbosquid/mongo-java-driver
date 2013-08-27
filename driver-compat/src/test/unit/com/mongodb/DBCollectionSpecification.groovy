@@ -22,6 +22,7 @@ import org.mongodb.command.MongoCommandFailureException
 import org.mongodb.connection.Cluster
 import org.mongodb.connection.ClusterConnectionMode
 import org.mongodb.connection.ClusterDescription
+import org.mongodb.connection.ClusterType
 import org.mongodb.session.Session
 import spock.lang.Specification
 import spock.lang.Subject
@@ -45,7 +46,7 @@ class DBCollectionSpecification extends Specification {
         database.getName() >> { 'TheDatabase' }
         database.getClusterDescription() >> { cluster.getDescription() }
         database.getBufferPool() >> { getBufferProvider() }
-        cluster.getDescription() >> { new ClusterDescription(ClusterConnectionMode.Direct) }
+        cluster.getDescription() >> { new ClusterDescription(ClusterConnectionMode.Multiple, ClusterType.Unknown, []) }
 
         //TODO: this shouldn't be required.  I think.
         database.setReadPreference(primary())
@@ -76,7 +77,7 @@ class DBCollectionSpecification extends Specification {
     def 'should throw MongoDuplicateKeyException when insert fails'() {
         given:
         session.createServerConnectionProvider(_) >> {
-            throw new org.mongodb.command.MongoDuplicateKeyException(new org.mongodb.CommandResult(new Document(),
+            throw new org.mongodb.command.MongoDuplicateKeyException(new org.mongodb.CommandResult(
                     new org.mongodb.connection.ServerAddress(),
                     new Document(),
                     15L))
@@ -103,7 +104,7 @@ class DBCollectionSpecification extends Specification {
     def 'should throw com.mongodb.CommandFailureException when group fails'() {
         given:
         database.executeCommand(_) >> {
-            Exception exception = new MongoCommandFailureException(new org.mongodb.CommandResult(new Document(),
+            Exception exception = new MongoCommandFailureException(new org.mongodb.CommandResult(
                     new org.mongodb.connection.ServerAddress(),
                     new Document(),
                     15L))
@@ -121,7 +122,7 @@ class DBCollectionSpecification extends Specification {
     def 'should throw MongoDuplicateKeyException when createIndex fails'() {
         given:
         session.createServerConnectionProvider(_) >> {
-            throw new org.mongodb.command.MongoDuplicateKeyException(new org.mongodb.CommandResult(new Document(),
+            throw new org.mongodb.command.MongoDuplicateKeyException(new org.mongodb.CommandResult(
                     new org.mongodb.connection.ServerAddress(),
                     new Document(),
                     15L))
@@ -148,7 +149,7 @@ class DBCollectionSpecification extends Specification {
     def 'should throw com.mongodb.MongoException when drop fails'() {
         given:
         database.executeCommand(_) >> {
-            Exception exception = new MongoCommandFailureException(new org.mongodb.CommandResult(new Document(),
+            Exception exception = new MongoCommandFailureException(new org.mongodb.CommandResult(
                     new org.mongodb.connection.ServerAddress(),
                     new Document(),
                     15L))
@@ -166,7 +167,6 @@ class DBCollectionSpecification extends Specification {
         given:
         database.executeCommand(_) >> {
             org.mongodb.MongoException exception = new MongoCommandFailureException(new org.mongodb.CommandResult(
-                    new Document(),
                     new org.mongodb.connection.ServerAddress(),
                     new Document('errmsg', 'ns not found'),
                     15L));

@@ -14,27 +14,52 @@
  * limitations under the License.
  */
 
+
 package org.mongodb.connection.impl;
+
 
 import org.mongodb.MongoCredential;
 import org.mongodb.connection.AsyncConnection;
 import org.mongodb.connection.AsyncConnectionFactory;
+import org.mongodb.connection.AsyncConnectionSettings;
 import org.mongodb.connection.BufferProvider;
+import org.mongodb.connection.SSLSettings;
 import org.mongodb.connection.ServerAddress;
 
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 
 public class DefaultAsyncConnectionFactory implements AsyncConnectionFactory {
+    private final ExecutorService service;
+    private SSLSettings sslSettings;
     private BufferProvider bufferProvider;
     private List<MongoCredential> credentialList;
 
-    public DefaultAsyncConnectionFactory(final BufferProvider bufferProvider, final List<MongoCredential> credentialList) {
+    public DefaultAsyncConnectionFactory(final AsyncConnectionSettings asyncSettings, final SSLSettings sslSettings,
+        final BufferProvider bufferProvider, final List<MongoCredential> credentialList) {
+        this.sslSettings = sslSettings;
         this.bufferProvider = bufferProvider;
         this.credentialList = credentialList;
+        service = new ThreadPoolExecutor(asyncSettings.getPoolSize(), asyncSettings.getMaxPoolSize(),
+            asyncSettings.getKeepAliveTime(MILLISECONDS), MILLISECONDS, new ArrayBlockingQueue<Runnable>(asyncSettings.getMaxPoolSize()));
     }
 
     @Override
     public AsyncConnection create(final ServerAddress serverAddress) {
-        return new AuthenticatingAsyncConnection(new DefaultAsyncConnection(serverAddress, bufferProvider), credentialList, bufferProvider);
+        AsyncConnection connection;
+        if (sslSettings.isEnabled()) {
+            connection = new AuthenticatingAsyncConnection(new DefaultSSLAsyncConnection(serverAddress, bufferProvider, service),
+                credentialList, bufferProvider);
+        } else {
+            connection = new AuthenticatingAsyncConnection(new DefaultAsyncConnection(serverAddress, bufferProvider), credentialList,
+                bufferProvider);
+        }
+        return connection;
     }
+
 }

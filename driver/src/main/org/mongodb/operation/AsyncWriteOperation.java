@@ -51,7 +51,7 @@ public abstract class AsyncWriteOperation implements AsyncServerSelectingOperati
         final PooledByteBufferOutputBuffer buffer = new PooledByteBufferOutputBuffer(bufferProvider);
         final RequestMessage nextMessage = encodeMessageToBuffer(createRequestMessage(getMessageSettings(connection.getDescription())),
                 buffer);
-        if (getWriteConcern().callGetLastError()) {
+        if (getWriteConcern().isAcknowledged()) {
             final GetLastError getLastError = new GetLastError(getWriteConcern());
             final CommandMessage getLastErrorMessage = new CommandMessage(new MongoNamespace(getNamespace().getDatabaseName(),
                                                                                              COMMAND_COLLECTION_NAME).getFullName(),
@@ -61,7 +61,7 @@ public abstract class AsyncWriteOperation implements AsyncServerSelectingOperati
             encodeMessageToBuffer(getLastErrorMessage, buffer);
             connection.sendMessage(buffer.getByteBuffers(),
                     new SendMessageCallback<CommandResult>(connection, buffer, getLastErrorMessage.getId(), retVal,
-                            new WriteResultCallback(retVal, getWrite(), getLastError, new DocumentCodec(),
+                            new WriteResultCallback(retVal, getWrite(), new DocumentCodec(),
                                     getNamespace(), nextMessage, connection, bufferProvider, getLastErrorMessage.getId())));
         }
         else {

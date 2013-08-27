@@ -22,7 +22,6 @@ import org.mongodb.CreateCollectionOptions;
 import org.mongodb.DatabaseTestCase;
 import org.mongodb.Document;
 import org.mongodb.MongoClient;
-import org.mongodb.MongoClientOptions;
 import org.mongodb.MongoClients;
 import org.mongodb.MongoCollection;
 import org.mongodb.MongoCredential;
@@ -210,7 +209,7 @@ public class DatabaseAcceptanceTest extends DatabaseTestCase {
             database.tools().addUser(credential.getUserName(), credential.getPassword(), true);
             database.tools().removeUser(credential.getUserName());
             try {
-                MongoClient client = MongoClients.create(getPrimary(), Arrays.asList(credential), MongoClientOptions.builder().build());
+                MongoClient client = MongoClients.create(getPrimary(), Arrays.asList(credential), getOptions());
                 client.getDatabase("test").getCollection("test").find().getOne();
             } catch (MongoSecurityException e) {
                 // all good.  using this style to make sure that it's not the addUser call that is throwing.  of course, could move

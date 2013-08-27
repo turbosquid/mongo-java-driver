@@ -31,6 +31,7 @@ import org.mongodb.connection.ServerDescription;
 import org.mongodb.connection.ServerType;
 import org.mongodb.connection.ServerVersion;
 import org.mongodb.connection.Tags;
+import org.mongodb.diagnostics.Loggers;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -56,7 +57,7 @@ import static org.mongodb.connection.impl.CommandHelper.executeCommand;
 @ThreadSafe
 class ServerStateNotifier implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger("org.mongodb.connection.monitor");
+    private static final Logger LOGGER = Loggers.getLogger("cluster.monitor");
 
     private ServerAddress serverAddress;
     private final ChangeListener<ServerDescription> serverStateListener;

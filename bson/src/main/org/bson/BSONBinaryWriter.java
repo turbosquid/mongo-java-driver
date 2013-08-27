@@ -23,11 +23,15 @@ import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 import org.bson.types.RegularExpression;
 
+import java.util.Stack;
+
 public class BSONBinaryWriter extends BSONWriter {
     private final BSONBinaryWriterSettings binaryWriterSettings;
 
     private final OutputBuffer buffer;
     private final boolean closeBuffer;
+    private final Stack<Integer> maxDocumentSizeStack = new Stack<Integer>();
+    private Mark mark;
 
     public BSONBinaryWriter(final OutputBuffer buffer, final boolean closeBuffer) {
         this(new BSONWriterSettings(), new BSONBinaryWriterSettings(), buffer, closeBuffer);
@@ -39,6 +43,7 @@ public class BSONBinaryWriter extends BSONWriter {
         this.binaryWriterSettings = binaryWriterSettings;
         this.buffer = buffer;
         this.closeBuffer = closeBuffer;
+        maxDocumentSizeStack.push(binaryWriterSettings.getMaxDocumentSize());
     }
 
     @Override
@@ -328,7 +333,8 @@ public class BSONBinaryWriter extends BSONWriter {
         setContext(getContext().getParentContext());
         if (getContext() == null) {
             setState(State.DONE);
-        } else {
+        }
+        else {
             if (getContext().getContextType() == BSONContextType.JAVASCRIPT_WITH_SCOPE) {
                 backpatchSize(); // size of the JavaScript with scope value
                 setContext(getContext().getParentContext());
@@ -340,20 +346,47 @@ public class BSONBinaryWriter extends BSONWriter {
     @Override
     public void pipe(final BSONReader reader) {
         if (reader instanceof BSONBinaryReader) {
+            if (getState() == State.VALUE) {
+                buffer.write(BSONType.DOCUMENT.getValue());
+                writeCurrentName();
+            }
             InputBuffer inputBuffer = ((BSONBinaryReader) reader).getBuffer();
             int size = inputBuffer.readInt32();
             buffer.writeInt(size);
             buffer.write(inputBuffer.readBytes(size - 4));
             reader.setState(BSONReader.State.TYPE);
-        } else {
+        }
+        else {
             super.pipe(reader);
         }
+    }
+
+    public void pushMaxDocumentSize(final int maxDocumentSize) {
+        maxDocumentSizeStack.push(maxDocumentSize);
+    }
+
+    public void popMaxDocumentSize() {
+        maxDocumentSizeStack.pop();
+    }
+
+    public void mark() {
+        mark = new Mark();
+    }
+
+    public void reset() {
+        if (mark == null) {
+            throw new IllegalStateException("Can not reset without first marking");
+        }
+
+        mark.reset();
+        mark = null;
     }
 
     private void writeCurrentName() {
         if (getContext().getContextType() == BSONContextType.ARRAY) {
             buffer.writeCString(Integer.toString(getContext().index++));
-        } else {
+        }
+        else {
             buffer.writeCString(getName());
         }
     }
@@ -361,9 +394,9 @@ public class BSONBinaryWriter extends BSONWriter {
 
     private void backpatchSize() {
         final int size = buffer.getPosition() - getContext().startPosition;
-        if (size > binaryWriterSettings.getMaxDocumentSize()) {
+        if (size > maxDocumentSizeStack.peek()) {
             final String message = String.format("Size %d is larger than MaxDocumentSize %d.", size,
-                                                 binaryWriterSettings.getMaxDocumentSize());
+                    binaryWriterSettings.getMaxDocumentSize());
             throw new BSONSerializationException(message);
         }
         buffer.backpatchSize(size);
@@ -378,9 +411,33 @@ public class BSONBinaryWriter extends BSONWriter {
             this.startPosition = startPosition;
         }
 
+        public Context(final Context from) {
+            super(from);
+            startPosition = from.startPosition;
+            index = from.index;
+        }
+
         @Override
         public Context getParentContext() {
             return (Context) super.getParentContext();
+        }
+
+        @Override
+        public Context copy() {
+            return new Context(this);
+        }
+    }
+
+    protected class Mark extends BSONWriter.Mark {
+        private final int position;
+
+        protected Mark() {
+            this.position = buffer.getPosition();
+        }
+
+        protected void reset() {
+            super.reset();
+            buffer.truncateToPosition(mark.position);
         }
     }
 }

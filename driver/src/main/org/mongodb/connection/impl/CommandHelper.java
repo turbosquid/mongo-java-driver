@@ -35,7 +35,7 @@ final class CommandHelper {
 
     static CommandResult executeCommand(final String database, final Document command, final Codec<Document> codec,
                                         final Connection connection, final BufferProvider bufferProvider) {
-        return receiveMessage(command, codec, connection, sendMessage(database, command, codec, connection, bufferProvider));
+        return receiveMessage(codec, connection, sendMessage(database, command, codec, connection, bufferProvider));
     }
 
     private static CommandMessage sendMessage(final String database, final Document command, final Codec<Document> codec,

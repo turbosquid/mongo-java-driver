@@ -17,11 +17,10 @@
 package org.mongodb.connection.impl;
 
 import org.mongodb.connection.Cluster;
+import org.mongodb.connection.ClusterConnectionMode;
 import org.mongodb.connection.ClusterFactory;
+import org.mongodb.connection.ClusterSettings;
 import org.mongodb.connection.ClusterableServerFactory;
-import org.mongodb.connection.ServerAddress;
-
-import java.util.List;
 
 /**
  * The default factory for cluster implementations.
@@ -34,12 +33,15 @@ public final class DefaultClusterFactory implements ClusterFactory {
     }
 
     @Override
-    public Cluster create(final ServerAddress serverAddress, final ClusterableServerFactory serverFactory) {
-        return new DefaultSingleServerCluster(serverAddress, serverFactory);
-    }
-
-    @Override
-    public Cluster create(final List<ServerAddress> seedList, final ClusterableServerFactory serverFactory) {
-        return new DefaultMultiServerCluster(seedList, serverFactory);
+    public Cluster create(final ClusterSettings settings, final ClusterableServerFactory serverFactory) {
+        if (settings.getMode() == ClusterConnectionMode.Single) {
+            return new SingleServerCluster(settings, serverFactory);
+        }
+        else if (settings.getMode() == ClusterConnectionMode.Multiple) {
+            return new MultiServerCluster(settings, serverFactory);
+        }
+        else {
+            throw new UnsupportedOperationException("Unsupported cluster mode: " + settings.getMode());
+        }
     }
 }

@@ -26,10 +26,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.mongodb.assertions.Assertions.notNull;
-import static org.mongodb.connection.ClusterType.ReplicaSet;
-import static org.mongodb.connection.ClusterType.Sharded;
-import static org.mongodb.connection.ClusterType.StandAlone;
-import static org.mongodb.connection.ClusterType.Unknown;
 import static org.mongodb.connection.ServerConnectionState.Connecting;
 
 
@@ -41,17 +37,15 @@ import static org.mongodb.connection.ServerConnectionState.Connecting;
 @Immutable
 public class ClusterDescription {
 
+    private final ClusterConnectionMode connectionMode;
+    private final ClusterType type;
     private final Set<ServerDescription> all;
 
-    private final ClusterConnectionMode mode;
-
-    public ClusterDescription(final ClusterConnectionMode mode) {
-        this(Collections.<ServerDescription>emptyList(), mode);
-    }
-
-    public ClusterDescription(final List<ServerDescription> serverDescriptions, final ClusterConnectionMode mode) {
+    public ClusterDescription(final ClusterConnectionMode connectionMode, final ClusterType type,
+                              final List<ServerDescription> serverDescriptions) {
         notNull("all", serverDescriptions);
-        this.mode = notNull("mode", mode);
+        this.connectionMode = notNull("connectionMode", connectionMode);
+        this.type = notNull("type", type);
         Set<ServerDescription> serverDescriptionSet = new TreeSet<ServerDescription>(new Comparator<ServerDescription>() {
             @Override
             public int compare(final ServerDescription o1, final ServerDescription o2) {
@@ -62,23 +56,12 @@ public class ClusterDescription {
         this.all = Collections.unmodifiableSet(serverDescriptionSet);
     }
 
-    public ClusterConnectionMode getMode() {
-        return mode;
+    public ClusterConnectionMode getConnectionMode() {
+        return connectionMode;
     }
 
     public ClusterType getType() {
-        for (ServerDescription description : all) {
-            if (description.isReplicaSetMember()) {
-                return ReplicaSet;
-            }
-            else if (description.isShardRouter()) {
-                return Sharded;
-            }
-            else if (description.isStandAlone()) {
-                return StandAlone;
-            }
-        }
-        return Unknown;
+        return type;
     }
 
     /**
@@ -173,7 +156,7 @@ public class ClusterDescription {
         if (!all.equals(that.all)) {
             return false;
         }
-        if (mode != that.mode) {
+        if (connectionMode != that.connectionMode) {
             return false;
         }
 
@@ -183,15 +166,16 @@ public class ClusterDescription {
     @Override
     public int hashCode() {
         int result = all.hashCode();
-        result = 31 * result + mode.hashCode();
+        result = 31 * result + connectionMode.hashCode();
         return result;
     }
 
     @Override
     public String toString() {
         return "ClusterDescription{"
-                + "all=" + all
-                + ", mode=" + mode
+                + "type=" + getType()
+                + ", connectionMode=" + connectionMode
+                + ", all=" + all
                 + '}';
     }
 

@@ -19,11 +19,14 @@ package org.mongodb.connection.impl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mongodb.connection.ClusterConnectionMode;
 import org.mongodb.connection.ClusterDescription;
+import org.mongodb.connection.ClusterSettings;
 import org.mongodb.connection.Server;
 import org.mongodb.connection.ServerDescription;
 import org.mongodb.connection.ServerSelector;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 
@@ -34,18 +37,19 @@ import static org.mongodb.Fixture.getCredentialList;
 import static org.mongodb.Fixture.getPrimary;
 import static org.mongodb.Fixture.getSSLSettings;
 
-public class DefaultSingleServerClusterTest {
-    private DefaultSingleServerCluster cluster;
+public class SingleServerClusterTest {
+    private SingleServerCluster cluster;
 
     @Before
     public void setUp() throws Exception {
-        cluster = new DefaultSingleServerCluster(getPrimary(),
-                new DefaultClusterableServerFactory(DefaultServerSettings.builder().build(),
-                        new DefaultConnectionProviderFactory(DefaultConnectionProviderSettings.builder().maxSize(1).build(),
-                                new DefaultConnectionFactory(DefaultConnectionSettings.builder().build(), getSSLSettings(),
+        cluster = new SingleServerCluster(
+                ClusterSettings.builder().mode(ClusterConnectionMode.Single).hosts(Arrays.asList(getPrimary())).build(),
+                new DefaultClusterableServerFactory(ServerSettings.builder().build(),
+                        new DefaultConnectionProviderFactory(ConnectionProviderSettings.builder().maxSize(1).build(),
+                                new DefaultConnectionFactory(ConnectionSettings.builder().build(), getSSLSettings(),
                                         getBufferProvider(), getCredentialList())),
                         null,
-                        new DefaultConnectionFactory(DefaultConnectionSettings.builder().build(), getSSLSettings(), getBufferProvider(),
+                        new DefaultConnectionFactory(ConnectionSettings.builder().build(), getSSLSettings(), getBufferProvider(),
                                 getCredentialList()), Executors.newScheduledThreadPool(1), getBufferProvider()));
     }
 

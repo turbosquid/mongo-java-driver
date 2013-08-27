@@ -27,6 +27,7 @@ import org.mongodb.connection.MongoWaitQueueFullException;
 import org.mongodb.connection.ResponseBuffers;
 import org.mongodb.connection.ResponseSettings;
 import org.mongodb.connection.ServerAddress;
+import org.mongodb.management.MBeanServerFactory;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -35,42 +36,36 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mongodb.assertions.Assertions.isTrue;
 import static org.mongodb.assertions.Assertions.notNull;
 
 class DefaultConnectionProvider implements ConnectionProvider {
+
     private final ConcurrentPool<UsageTrackingConnection> pool;
-    private final DefaultConnectionProviderSettings settings;
+    private final ConnectionProviderSettings settings;
     private final AtomicInteger waitQueueSize = new AtomicInteger(0);
     private final AtomicInteger generation = new AtomicInteger(0);
     private final ExecutorService sizeMaintenanceTimer;
+    private final ServerAddress serverAddress;
+    private final ConnectionPoolStatistics statistics;
+    private final Runnable maintenanceTask;
 
     public DefaultConnectionProvider(final ServerAddress serverAddress, final ConnectionFactory connectionFactory,
-                                     final DefaultConnectionProviderSettings settings) {
-        pool = new ConcurrentPool<UsageTrackingConnection>(settings.getMaxSize(),
-                new ConcurrentPool.ItemFactory<UsageTrackingConnection>() {
-                    @Override
-                    public UsageTrackingConnection create() {
-                        return new UsageTrackingConnection(connectionFactory.create(serverAddress), generation.get());
-                    }
-
-                    @Override
-                    public void close(final UsageTrackingConnection connection) {
-                        connection.close();
-                    }
-
-                    @Override
-                    public boolean shouldPrune(final UsageTrackingConnection usageTrackingConnection) {
-                        return DefaultConnectionProvider.this.shouldPrune(usageTrackingConnection);
-                    }
-                });
+                                     final ConnectionProviderSettings settings) {
+        this.serverAddress = serverAddress;
         this.settings = settings;
+        pool = new ConcurrentPool<UsageTrackingConnection>(settings.getMaxSize(),
+                new UsageTrackingConnectionItemFactory(connectionFactory));
+        statistics = new ConnectionPoolStatistics(serverAddress, settings.getMinSize(), settings.getMaxSize(), pool);
+        MBeanServerFactory.getMBeanServer().registerMBean(statistics, statistics.getObjectName());
+        maintenanceTask = createMaintenanceTask();
         sizeMaintenanceTimer = createTimer();
     }
 
     @Override
     public Connection get() {
-        return get(settings.getMaxWaitTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
+        return get(settings.getMaxWaitTime(MILLISECONDS), MILLISECONDS);
     }
 
     @Override
@@ -98,15 +93,33 @@ class DefaultConnectionProvider implements ConnectionProvider {
         if (sizeMaintenanceTimer != null) {
             sizeMaintenanceTimer.shutdownNow();
         }
+        MBeanServerFactory.getMBeanServer().unregisterMBean(statistics.getObjectName());
     }
 
-    private ExecutorService createTimer() {
-        ScheduledExecutorService newTimer = null;
+    /**
+     * Gets the statistics for the connection pool.
+     *
+     * @return the statistics.
+     */
+    public ConnectionPoolStatistics getStatistics() {
+        return statistics;
+    }
+
+    /**
+     * Synchronously prune idle connections and ensure the minimum pool size.
+     */
+    public void doMaintenance() {
+        if (maintenanceTask != null) {
+            maintenanceTask.run();
+        }
+    }
+
+    private Runnable createMaintenanceTask() {
+        Runnable newMaintenanceTask = null;
         if (shouldPrune() || shouldEnsureMinSize()) {
-            newTimer = Executors.newSingleThreadScheduledExecutor();
-            newTimer.scheduleAtFixedRate(new Runnable() {
+            newMaintenanceTask = new Runnable() {
                 @Override
-                public void run() {
+                public synchronized void run() {
                     if (shouldPrune()) {
                         pool.prune();
                     }
@@ -114,10 +127,20 @@ class DefaultConnectionProvider implements ConnectionProvider {
                         pool.ensureMinSize(settings.getMinSize());
                     }
                 }
-            }, 0, settings.getMaintenanceFrequency(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
+            };
         }
+        return newMaintenanceTask;
+    }
 
-        return newTimer;
+    private ExecutorService createTimer() {
+        if (maintenanceTask == null) {
+            return null;
+        }
+        else {
+            ScheduledExecutorService newTimer = Executors.newSingleThreadScheduledExecutor();
+            newTimer.scheduleAtFixedRate(maintenanceTask, 0, settings.getMaintenanceFrequency(MILLISECONDS), MILLISECONDS);
+            return newTimer;
+        }
     }
 
     private boolean shouldEnsureMinSize() {
@@ -125,14 +148,14 @@ class DefaultConnectionProvider implements ConnectionProvider {
     }
 
     private boolean shouldPrune() {
-        return settings.getMaxConnectionIdleTime(TimeUnit.MILLISECONDS) > 0 || settings.getMaxConnectionLifeTime(TimeUnit.MILLISECONDS) > 0;
+        return settings.getMaxConnectionIdleTime(MILLISECONDS) > 0 || settings.getMaxConnectionLifeTime(MILLISECONDS) > 0;
     }
 
     private boolean shouldPrune(final UsageTrackingConnection connection) {
         final long curTime = System.currentTimeMillis();
         return generation.get() > connection.getGeneration()
-                || expired(connection.getOpenedAt(), curTime, settings.getMaxConnectionLifeTime(TimeUnit.MILLISECONDS))
-                || expired(connection.getLastUsedAt(), curTime, settings.getMaxConnectionIdleTime(TimeUnit.MILLISECONDS));
+                || expired(connection.getOpenedAt(), curTime, settings.getMaxConnectionLifeTime(MILLISECONDS))
+                || expired(connection.getLastUsedAt(), curTime, settings.getMaxConnectionIdleTime(MILLISECONDS));
     }
 
     private boolean expired(final long startTime, final long curTime, final long maxTime) {
@@ -197,6 +220,29 @@ class DefaultConnectionProvider implements ConnectionProvider {
                 incrementGenerationOnSocketException(e);
                 throw e;
             }
+        }
+    }
+
+    private class UsageTrackingConnectionItemFactory implements ConcurrentPool.ItemFactory<UsageTrackingConnection> {
+        private final ConnectionFactory connectionFactory;
+
+        public UsageTrackingConnectionItemFactory(final ConnectionFactory connectionFactory) {
+            this.connectionFactory = connectionFactory;
+        }
+
+        @Override
+        public UsageTrackingConnection create() {
+            return new UsageTrackingConnection(connectionFactory.create(serverAddress), generation.get());
+        }
+
+        @Override
+        public void close(final UsageTrackingConnection connection) {
+            connection.close();
+        }
+
+        @Override
+        public boolean shouldPrune(final UsageTrackingConnection usageTrackingConnection) {
+            return DefaultConnectionProvider.this.shouldPrune(usageTrackingConnection);
         }
     }
 }

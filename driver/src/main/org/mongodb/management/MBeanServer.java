@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package org.mongodb.util.management;
+package org.mongodb.management;
 
 /**
  * This class is NOT part of the public API.  It may change at any time without notification.
  */
 public interface MBeanServer {
-    boolean isRegistered(String mBeanName) throws JMException;
+    void unregisterMBean(String mBeanName);
 
-    void unregisterMBean(String mBeanName) throws JMException;
-
-    void registerMBean(Object mBean, String mBeanName) throws JMException;
+    void registerMBean(Object mBean, String mBeanName);
 }
