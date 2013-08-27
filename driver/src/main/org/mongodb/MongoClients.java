@@ -18,14 +18,11 @@ package org.mongodb;
 
 
 import org.mongodb.annotations.ThreadSafe;
-import org.mongodb.connection.AsyncConnectionSettings;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.connection.ClusterConnectionMode;
 import org.mongodb.connection.ClusterSettings;
 import org.mongodb.connection.ConnectionFactory;
 import org.mongodb.connection.ServerAddress;
-import org.mongodb.connection.impl.ConnectionProviderSettings;
-import org.mongodb.connection.impl.ConnectionSettings;
 import org.mongodb.connection.impl.DefaultAsyncConnectionFactory;
 import org.mongodb.connection.impl.DefaultAsyncConnectionProviderFactory;
 import org.mongodb.connection.impl.DefaultClusterFactory;
@@ -33,7 +30,6 @@ import org.mongodb.connection.impl.DefaultClusterableServerFactory;
 import org.mongodb.connection.impl.DefaultConnectionFactory;
 import org.mongodb.connection.impl.DefaultConnectionProviderFactory;
 import org.mongodb.connection.impl.PowerOfTwoBufferPool;
-import org.mongodb.connection.impl.ServerSettings;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -57,10 +53,13 @@ public final class MongoClients {
     }
 
     public static MongoClient create(final ServerAddress serverAddress, final List<MongoCredential> credentialList,
-                                      final MongoClientOptions options) {
+                                     final MongoClientOptions options) {
         return new MongoClientImpl(options, new DefaultClusterFactory().create(
-                ClusterSettings.builder().mode(ClusterConnectionMode.Single).hosts(Arrays.asList(serverAddress))
-                        .requiredReplicaSetName(options.getRequiredReplicaSetName()).build(),
+                ClusterSettings.builder()
+                               .mode(ClusterConnectionMode.Single)
+                               .hosts(Arrays.asList(serverAddress))
+                               .requiredReplicaSetName(options.getRequiredReplicaSetName())
+                               .build(),
                 getClusterableServerFactory(credentialList, options)));
     }
 
@@ -70,7 +69,10 @@ public final class MongoClients {
 
     public static MongoClient create(final List<ServerAddress> seedList, final MongoClientOptions options) {
         return new MongoClientImpl(options, new DefaultClusterFactory().create(
-                ClusterSettings.builder().hosts(seedList).requiredReplicaSetName(options.getRequiredReplicaSetName()).build(),
+                ClusterSettings.builder()
+                               .hosts(seedList)
+                               .requiredReplicaSetName(options.getRequiredReplicaSetName())
+                               .build(),
                 getClusterableServerFactory(Collections.<MongoCredential>emptyList(), options)));
     }
 
@@ -82,19 +84,21 @@ public final class MongoClients {
         if (mongoURI.getHosts().size() == 1) {
             return new MongoClientImpl(options, new DefaultClusterFactory().create(
                     ClusterSettings.builder()
-                            .mode(ClusterConnectionMode.Single)
-                            .hosts(Arrays.asList(new ServerAddress(mongoURI.getHosts().get(0))))
-                            .requiredReplicaSetName(options.getRequiredReplicaSetName())
-                            .build(),
+                                   .mode(ClusterConnectionMode.Single)
+                                   .hosts(Arrays.asList(new ServerAddress(mongoURI.getHosts().get(0))))
+                                   .requiredReplicaSetName(options.getRequiredReplicaSetName())
+                                   .build(),
                     getClusterableServerFactory(mongoURI.getCredentialList(), options)));
-        }
-        else {
-            final List<ServerAddress> seedList = new ArrayList<ServerAddress>();
-            for (final String cur : mongoURI.getHosts()) {
+        } else {
+            List<ServerAddress> seedList = new ArrayList<ServerAddress>();
+            for (String cur : mongoURI.getHosts()) {
                 seedList.add(new ServerAddress(cur));
             }
             return new MongoClientImpl(options, new DefaultClusterFactory().create(
-                    ClusterSettings.builder().hosts(seedList).requiredReplicaSetName(options.getRequiredReplicaSetName()).build(),
+                    ClusterSettings.builder()
+                                   .hosts(seedList)
+                                   .requiredReplicaSetName(options.getRequiredReplicaSetName())
+                                   .build(),
                     getClusterableServerFactory(mongoURI.getCredentialList(), options)));
         }
     }
@@ -103,22 +107,18 @@ public final class MongoClients {
     }
 
     private static DefaultClusterableServerFactory getClusterableServerFactory(final List<MongoCredential> credentialList,
-                                                                               AsyncConnectionSettings asyncConnectionSettings = AsyncConnectionSettings.builder()
-    .poolSize(options.getAsyncPoolSize())
-                                        .maxPoolSize(options.getAsyncMaxPoolSize())
-                                                                                  .keepAliveTime(options.getAsyncKeepAliveTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
-                                                                                                                                                                            .build();
                                                                                final MongoClientOptions options) {
         final BufferProvider bufferProvider = new PowerOfTwoBufferPool();
 
         final ConnectionFactory connectionFactory = new DefaultConnectionFactory(options.getConnectionSettings(), options.getSslSettings(),
-                                                                           bufferProvider, credentialList);
+                                                                                 bufferProvider, credentialList);
 
-        DefaultAsyncConnectionProviderFactory asyncConnectionProviderFactory =
-        options.isAsyncEnabled()
-        ? new DefaultAsyncConnectionProviderFactory(connectionProviderSettings,
-                                                    new DefaultAsyncConnectionFactory(asyncConnectionSettings, sslSettings, bufferProvider, credentialList))
-        : null;
+        final DefaultAsyncConnectionProviderFactory asyncConnectionProviderFactory =
+                options.isAsyncEnabled()
+                        ? new DefaultAsyncConnectionProviderFactory(options.getConnectionProviderSettings(),
+                        new DefaultAsyncConnectionFactory(options.getAsyncConnectionSettings(), options.getSslSettings(),
+                                                          bufferProvider, credentialList))
+                        : null;
         return new DefaultClusterableServerFactory(options.getServerSettings(),
                                                    new DefaultConnectionProviderFactory(options.getConnectionProviderSettings(),
                                                                                         connectionFactory),

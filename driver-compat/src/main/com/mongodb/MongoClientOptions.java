@@ -17,9 +17,9 @@
 package com.mongodb;
 
 import org.mongodb.annotations.Immutable;
-import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
-import org.mongodb.connection.impl.DefaultConnectionSettings;
-import org.mongodb.connection.impl.DefaultServerSettings;
+import org.mongodb.connection.impl.ConnectionProviderSettings;
+import org.mongodb.connection.impl.ConnectionSettings;
+import org.mongodb.connection.impl.ServerSettings;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
@@ -43,10 +43,10 @@ public class MongoClientOptions {
     private final DBEncoderFactory dbEncoderFactory;
     private final SocketFactory socketFactory;
     private final boolean cursorFinalizerEnabled;
-    private final DefaultConnectionProviderSettings connectionProviderSettings;
-    private final DefaultConnectionSettings connectionSettings;
-    private final DefaultServerSettings serverSettings;
-    private final DefaultConnectionSettings heartbeatConnectionSettings;
+    private final ConnectionProviderSettings connectionProviderSettings;
+    private final ConnectionSettings connectionSettings;
+    private final ServerSettings serverSettings;
+    private final ConnectionSettings heartbeatConnectionSettings;
 
     MongoClientOptions(final org.mongodb.MongoClientOptions proxied) {
         this(proxied, DefaultDBDecoder.FACTORY, DefaultDBEncoder.FACTORY,
@@ -69,31 +69,29 @@ public class MongoClientOptions {
         this.cursorFinalizerEnabled = cursorFinalizerEnabled;
 
         final int maxWaitQueueSize = proxied.getMaxConnectionPoolSize() * proxied.getThreadsAllowedToBlockForConnectionMultiplier();
-        connectionProviderSettings = DefaultConnectionProviderSettings.builder()
-                                                                      .minSize(proxied.getMinConnectionPoolSize())
-                                                                      .maxSize(proxied.getMaxConnectionPoolSize())
-                                                                      .maxWaitQueueSize(maxWaitQueueSize)
-                                                                      .maxWaitTime(proxied.getMaxWaitTime(), MILLISECONDS)
-                                                                      .maxConnectionIdleTime(proxied.getMaxConnectionIdleTime(),
-                                                                                             MILLISECONDS)
-                                                                      .maxConnectionLifeTime(proxied.getMaxConnectionLifeTime(),
-                                                                                             MILLISECONDS)
-                                                                      .build();
-
-        connectionSettings = DefaultConnectionSettings.builder()
-                                                      .connectTimeoutMS(proxied.getConnectTimeout())
-                                                      .readTimeoutMS(proxied.getSocketTimeout())
-                                                      .keepAlive(proxied.isSocketKeepAlive())
-                                                      .build();
-        heartbeatConnectionSettings = DefaultConnectionSettings.builder()
-                                                               .connectTimeoutMS(proxied.getHeartbeatConnectTimeout())
-                                                               .readTimeoutMS(proxied.getHeartbeatSocketTimeout())
-                                                               .keepAlive(proxied.isSocketKeepAlive())
+        connectionProviderSettings = ConnectionProviderSettings.builder()
+                                                               .minSize(proxied.getMinConnectionPoolSize())
+                                                               .maxSize(proxied.getMaxConnectionPoolSize())
+                                                               .maxWaitQueueSize(maxWaitQueueSize)
+                                                               .maxWaitTime(proxied.getMaxWaitTime(), MILLISECONDS)
+                                                               .maxConnectionIdleTime(proxied.getMaxConnectionIdleTime(), MILLISECONDS)
+                                                               .maxConnectionLifeTime(proxied.getMaxConnectionLifeTime(), MILLISECONDS)
                                                                .build();
-        serverSettings = DefaultServerSettings.builder()
-                                              .heartbeatFrequency(proxied.getHeartbeatFrequency(), MILLISECONDS)
-                                              .connectRetryFrequency(proxied.getHeartbeatConnectRetryFrequency(), MILLISECONDS)
-                                              .build();
+
+        connectionSettings = ConnectionSettings.builder()
+                                               .connectTimeoutMS(proxied.getConnectTimeout())
+                                               .readTimeoutMS(proxied.getSocketTimeout())
+                                               .keepAlive(proxied.isSocketKeepAlive())
+                                               .build();
+        heartbeatConnectionSettings = ConnectionSettings.builder()
+                                                        .connectTimeoutMS(proxied.getHeartbeatConnectTimeout())
+                                                        .readTimeoutMS(proxied.getHeartbeatSocketTimeout())
+                                                        .keepAlive(proxied.isSocketKeepAlive())
+                                                        .build();
+        serverSettings = ServerSettings.builder()
+                                       .heartbeatFrequency(proxied.getHeartbeatFrequency(), MILLISECONDS)
+                                       .connectRetryFrequency(proxied.getHeartbeatConnectRetryFrequency(), MILLISECONDS)
+                                       .build();
     }
 
     /**
@@ -407,19 +405,19 @@ public class MongoClientOptions {
     }
 
 
-    DefaultConnectionProviderSettings getConnectionProviderSettings() {
+    ConnectionProviderSettings getConnectionProviderSettings() {
         return connectionProviderSettings;
     }
 
-    DefaultConnectionSettings getConnectionSettings() {
+    ConnectionSettings getConnectionSettings() {
         return connectionSettings;
     }
 
-    DefaultServerSettings getServerSettings() {
+    ServerSettings getServerSettings() {
         return serverSettings;
     }
 
-    DefaultConnectionSettings getHeartbeatConnectionSettings() {
+    ConnectionSettings getHeartbeatConnectionSettings() {
         return heartbeatConnectionSettings;
     }
 

@@ -18,7 +18,6 @@ package org.mongodb.operation;
 
 import org.mongodb.CommandResult;
 import org.mongodb.Document;
-import org.mongodb.command.Command;
 import org.mongodb.command.MongoCommandFailureException;
 import org.mongodb.connection.Connection;
 import org.mongodb.connection.PooledByteBufferOutputBuffer;
@@ -31,9 +30,8 @@ import org.mongodb.operation.protocol.RequestMessage;
 // TODO: these should move somewhere else.
 public final class OperationHelpers {
 
-    public static CommandResult createCommandResult(final Document command, final ReplyMessage<Document> replyMessage,
-                                                    final Connection connection) {
-        final CommandResult commandResult = new CommandResult(command, connection.getServerAddress(),
+    public static CommandResult createCommandResult(final ReplyMessage<Document> replyMessage, final Connection connection) {
+        final CommandResult commandResult = new CommandResult(connection.getServerAddress(),
                 replyMessage.getDocuments().get(0), replyMessage.getElapsedNanoseconds());
         if (!commandResult.isOk()) {
             throw new MongoCommandFailureException(commandResult);

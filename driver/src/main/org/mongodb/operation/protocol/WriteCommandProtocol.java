@@ -84,7 +84,7 @@ public abstract class WriteCommandProtocol implements Protocol<CommandResult> {
             RequestMessage nextMessage = sendMessage(message);
             commandResult = receiveMessage(message);
             try {
-               commandResult = parseWriteCommandResult(commandResult);
+                commandResult = parseWriteCommandResult(commandResult);
             } catch (MongoException e) {
                 lastException = e;
                 if (!writeConcern.getContinueOnErrorForInsert()) {
@@ -119,7 +119,7 @@ public abstract class WriteCommandProtocol implements Protocol<CommandResult> {
 
     private CommandResult receiveMessage(final RequestMessage message) {
         final ResponseBuffers responseBuffers = connection.receiveMessage(
-                getResponseSettings(serverDescription, message.getId()));
+                                                                         getResponseSettings(serverDescription, message.getId()));
         try {
             ReplyMessage<Document> replyMessage = new ReplyMessage<Document>(responseBuffers, new DocumentCodec(), message.getId());
             return createCommandResult(replyMessage, connection);

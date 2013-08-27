@@ -30,17 +30,11 @@ import org.mongodb.connection.ClusterSettings;
 import org.mongodb.connection.ClusterableServerFactory;
 import org.mongodb.connection.ConnectionFactory;
 import org.mongodb.connection.ServerDescription;
-import org.mongodb.connection.impl.ConnectionProviderSettings;
-import org.mongodb.connection.impl.ConnectionSettings;
 import org.mongodb.connection.impl.DefaultClusterFactory;
 import org.mongodb.connection.impl.DefaultClusterableServerFactory;
 import org.mongodb.connection.impl.DefaultConnectionFactory;
 import org.mongodb.connection.impl.DefaultConnectionProviderFactory;
-import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
-import org.mongodb.connection.impl.DefaultConnectionSettings;
-import org.mongodb.connection.impl.DefaultServerSettings;
 import org.mongodb.connection.impl.PowerOfTwoBufferPool;
-import org.mongodb.connection.impl.ServerSettings;
 import org.mongodb.session.ClusterSession;
 import org.mongodb.session.PinnedSession;
 import org.mongodb.session.Session;
@@ -117,7 +111,7 @@ public class Mongo {
      */
     @Deprecated
     public Mongo(final String host, @SuppressWarnings("deprecation") final MongoOptions options)
-            throws UnknownHostException {
+    throws UnknownHostException {
         this(new ServerAddress(host), options.toClientOptions());
     }
 
@@ -271,28 +265,28 @@ public class Mongo {
 
     Mongo(final ServerAddress serverAddress, final List<MongoCredential> credentialsList, final MongoClientOptions options) {
         this(
-                createCluster(serverAddress, credentialsList, options),
-                options,
-                credentialsList
-        );
+            createCluster(serverAddress, credentialsList, options),
+            options,
+            credentialsList
+            );
     }
 
     Mongo(final List<ServerAddress> seedList, final List<MongoCredential> credentialsList, final MongoClientOptions options) {
         this(
-                createCluster(seedList, credentialsList, options),
-                options,
-                credentialsList
-        );
+            createCluster(seedList, credentialsList, options),
+            options,
+            credentialsList
+            );
     }
 
     Mongo(final MongoClientURI mongoURI) throws UnknownHostException {
         this(
-                createCluster(mongoURI),
-                mongoURI.getOptions(),
-                mongoURI.getCredentials() != null
-                        ? Arrays.asList(mongoURI.getCredentials())
-                        : Collections.<MongoCredential>emptyList()
-        );
+            createCluster(mongoURI),
+            mongoURI.getOptions(),
+            mongoURI.getCredentials() != null
+            ? Arrays.asList(mongoURI.getCredentials())
+            : Collections.<MongoCredential>emptyList()
+            );
     }
 
     Mongo(final Cluster cluster, final MongoClientOptions options, final List<MongoCredential> credentialsList) {
@@ -300,11 +294,11 @@ public class Mongo {
         this.documentCodec = new DocumentCodec(PrimitiveCodecs.createDefault());
         this.options = options;
         this.readPreference = options.getReadPreference() != null
-                ? options.getReadPreference()
-                : ReadPreference.primary();
+                              ? options.getReadPreference()
+                              : ReadPreference.primary();
         this.writeConcern = options.getWriteConcern() != null
-                ? options.getWriteConcern()
-                : WriteConcern.UNACKNOWLEDGED;
+                            ? options.getWriteConcern()
+                            : WriteConcern.UNACKNOWLEDGED;
         this.optionHolder = new Bytes.OptionHolder(null);
         this.credentialsList = Collections.unmodifiableList(credentialsList);
     }
@@ -427,7 +421,7 @@ public class Mongo {
      */
     public ReplicaSetStatus getReplicaSetStatus() {
         return getClusterDescription().getType() == ReplicaSet && getClusterDescription().getConnectionMode() == Multiple
-                ? new ReplicaSetStatus(cluster) : null; // this is intended behavior in 2.x
+               ? new ReplicaSetStatus(cluster) : null; // this is intended behavior in 2.x
     }
 
 
@@ -597,9 +591,9 @@ public class Mongo {
     @Override
     public String toString() {
         return "Mongo{" +
-                "VERSION='" + VERSION + '\'' +
-                ", options=" + getOptions() +
-                '}';
+               "VERSION='" + VERSION + '\'' +
+               ", options=" + getOptions() +
+               '}';
     }
 
     /**
@@ -626,8 +620,8 @@ public class Mongo {
 
     private static MongoClientOptions createLegacyOptions() {
         return MongoClientOptions.builder()
-                .legacyDefaults()
-                .build();
+                                 .legacyDefaults()
+                                 .build();
     }
 
     private static List<org.mongodb.MongoCredential> createNewCredentialList(final List<MongoCredential> credentialsList) {
@@ -644,48 +638,41 @@ public class Mongo {
     private static Cluster createCluster(final MongoClientURI mongoURI) throws UnknownHostException {
 
         final List<MongoCredential> credentialList = mongoURI.getCredentials() != null
-                ? Arrays.asList(mongoURI.getCredentials())
-                : null;
+                                                     ? Arrays.asList(mongoURI.getCredentials())
+                                                     : null;
 
         if (mongoURI.getHosts().size() == 1) {
-            return createCluster(
-                    new ServerAddress(mongoURI.getHosts().get(0)),
-                    credentialList,
-                    mongoURI.getOptions()
-            );
-        }
-        else {
+            return createCluster(new ServerAddress(mongoURI.getHosts().get(0)),
+                                credentialList,
+                                mongoURI.getOptions());
+        } else {
             final List<ServerAddress> seedList = new ArrayList<ServerAddress>(mongoURI.getHosts().size());
             for (final String host : mongoURI.getHosts()) {
                 seedList.add(new ServerAddress(host));
             }
-            return createCluster(
-                    seedList,
-                    credentialList,
-                    mongoURI.getOptions()
-            );
+            return createCluster(seedList, credentialList, mongoURI.getOptions());
         }
     }
 
     private static Cluster createCluster(final List<ServerAddress> seedList,
                                          final List<MongoCredential> credentialsList, final MongoClientOptions options) {
         return new DefaultClusterFactory().create(
-                ClusterSettings.builder().hosts(createNewSeedList(seedList))
-                        .requiredReplicaSetName(options.getRequiredReplicaSetName())
-                        .build(),
-                createClusterableServerFactory(credentialsList, options));
+                                                 ClusterSettings.builder().hosts(createNewSeedList(seedList))
+                                                                .requiredReplicaSetName(options.getRequiredReplicaSetName())
+                                                                .build(),
+                                                 createClusterableServerFactory(credentialsList, options));
     }
 
     private static Cluster createCluster(final ServerAddress serverAddress, final List<MongoCredential> credentialsList,
                                          final MongoClientOptions options) {
         return new DefaultClusterFactory().create(
-                ClusterSettings.builder()
-                        .mode(getSingleServerClusterMode(options.toNew()))
-                        .hosts(Arrays.asList(serverAddress.toNew()))
-                        .requiredReplicaSetName(options.getRequiredReplicaSetName())
-                        .build(),
-                createClusterableServerFactory(credentialsList, options)
-        );
+                                                 ClusterSettings.builder()
+                                                                .mode(getSingleServerClusterMode(options.toNew()))
+                                                                .hosts(Arrays.asList(serverAddress.toNew()))
+                                                                .requiredReplicaSetName(options.getRequiredReplicaSetName())
+                                                                .build(),
+                                                 createClusterableServerFactory(credentialsList, options)
+                                                 );
     }
 
     private static ClusterableServerFactory createClusterableServerFactory(final List<MongoCredential> credentialList,

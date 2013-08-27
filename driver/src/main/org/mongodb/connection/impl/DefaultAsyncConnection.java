@@ -18,14 +18,6 @@
 package org.mongodb.connection.impl;
 
 
-import java.io.IOException;
-import java.net.StandardSocketOptions;
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
-import java.util.Iterator;
-import java.util.List;
-
 import org.bson.ByteBuf;
 import org.bson.io.BasicInputBuffer;
 import org.mongodb.MongoException;
@@ -39,6 +31,14 @@ import org.mongodb.connection.ResponseBuffers;
 import org.mongodb.connection.ResponseSettings;
 import org.mongodb.connection.ServerAddress;
 import org.mongodb.connection.SingleResultCallback;
+
+import java.io.IOException;
+import java.net.StandardSocketOptions;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
+import java.util.Iterator;
+import java.util.List;
 
 import static org.mongodb.assertions.Assertions.isTrue;
 import static org.mongodb.connection.ReplyHeader.REPLY_HEADER_LENGTH;

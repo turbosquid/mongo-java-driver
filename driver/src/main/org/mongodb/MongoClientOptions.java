@@ -16,16 +16,13 @@
 
 package org.mongodb;
 
-
 import org.mongodb.annotations.Immutable;
 import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.connection.SSLSettings;
-import org.mongodb.connection.impl.DefaultConnectionProviderSettings;
-import org.mongodb.connection.impl.DefaultConnectionSettings;
-import org.mongodb.connection.impl.DefaultServerSettings;
 import org.mongodb.connection.AsyncConnectionSettings;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import org.mongodb.connection.SSLSettings;
+import org.mongodb.connection.impl.ConnectionProviderSettings;
+import org.mongodb.connection.impl.ConnectionSettings;
+import org.mongodb.connection.impl.ServerSettings;
 
 import java.util.concurrent.TimeUnit;
 
@@ -71,10 +68,11 @@ public final class MongoClientOptions {
     private final int asyncMaxPoolSize;
     private final long asyncKeepAliveTime;
     private final String requiredReplicaSetName;
-    private final DefaultConnectionSettings connectionSettings;
-    private final DefaultConnectionSettings heartbeatConnectionSettings;
-    private final DefaultConnectionProviderSettings connectionProviderSettings;
-    private final DefaultServerSettings serverSettings;
+    private final ConnectionSettings connectionSettings;
+    private final ConnectionSettings heartbeatConnectionSettings;
+    private final AsyncConnectionSettings asyncConnectionSettings;
+    private final ConnectionProviderSettings connectionProviderSettings;
+    private final ServerSettings serverSettings;
     private final SSLSettings sslSettings;
 
     /**
@@ -86,9 +84,12 @@ public final class MongoClientOptions {
         return new Builder();
     }
 
+    public AsyncConnectionSettings getAsyncConnectionSettings() {
+        return asyncConnectionSettings;
+    }
+
     /**
-     * A builder for MongoClientOptions so that MongoClientOptions can be immutable, and to support easier construction
-     * through chaining.
+     * A builder for MongoClientOptions so that MongoClientOptions can be immutable, and to support easier construction through chaining.
      *
      * @since 3.0.0
      */
@@ -180,8 +181,8 @@ public final class MongoClientOptions {
          * @see MongoClientOptions#getThreadsAllowedToBlockForConnectionMultiplier()
          */
         public Builder threadsAllowedToBlockForConnectionMultiplier(
-                final int
-                        aThreadsAllowedToBlockForConnectionMultiplier) {
+                                                                   final int
+                                                                   aThreadsAllowedToBlockForConnectionMultiplier) {
             if (aThreadsAllowedToBlockForConnectionMultiplier < 1) {
                 throw new IllegalArgumentException("Minimum value is 1");
             }
@@ -351,9 +352,8 @@ public final class MongoClientOptions {
         }
 
         /**
-         * Sets whether to use SSL.  Currently this has rather large ramifications.  For one, async will not be
-         * available.  For two, the driver will use Socket instances instead of SocketChannel instances,
-         * which won't be quite as efficient.
+         * Sets whether to use SSL.  Currently this has rather large ramifications.  For one, async will not be available.  For two, the
+         * driver will use Socket instances instead of SocketChannel instances, which won't be quite as efficient.
          *
          * @return {@code this}
          * @see org.mongodb.MongoClientOptions#isSSLEnabled()
@@ -378,9 +378,9 @@ public final class MongoClientOptions {
             this.asyncEnabled = aAsyncEnabled;
             return this;
         }
-        
+
         /**
-         *  Sets the pool size for async connections
+         * Sets the pool size for async connections
          *
          * @return {@code this}
          * @see org.mongodb.MongoClientOptions#getAsyncPoolSize()
@@ -391,7 +391,7 @@ public final class MongoClientOptions {
         }
 
         /**
-         *  Sets the max pool size for async connections
+         * Sets the max pool size for async connections
          *
          * @return {@code this}
          * @see org.mongodb.MongoClientOptions#getAsyncMaxPoolSize()
@@ -402,10 +402,10 @@ public final class MongoClientOptions {
         }
 
         /**
-         *  Sets the keep alive time for async threads in the pool
+         * Sets the keep alive time for async threads in the pool
          *
          * @return {@code this}
-         * @see MongoClientOptions#getAsyncKeepAliveTime(TimeUnit) 
+         * @see MongoClientOptions#getAsyncKeepAliveTime(TimeUnit)
          */
         public Builder asyncKeepAliveTime(final long time, final TimeUnit unit) {
             this.asyncKeepAliveTime = MILLISECONDS.convert(time, unit);
@@ -413,9 +413,8 @@ public final class MongoClientOptions {
         }
 
         /**
-         * Sets whether JMX beans registered by the driver should always be MBeans, regardless of whether the VM is
-         * Java 6 or greater. If false, the driver will use MXBeans if the VM is Java 6 or greater, and use MBeans if
-         * the VM is Java 5.
+         * Sets whether JMX beans registered by the driver should always be MBeans, regardless of whether the VM is Java 6 or greater. If
+         * false, the driver will use MXBeans if the VM is Java 6 or greater, and use MBeans if the VM is Java 5.
          *
          * @param aAlwaysUseMBeans true if driver should always use MBeans, regardless of VM version
          * @return this
@@ -427,8 +426,8 @@ public final class MongoClientOptions {
         }
 
         /**
-         * Sets the heartbeat frequency. This is the frequency that the driver will attempt to determine the current state of each server
-         * in the cluster.
+         * Sets the heartbeat frequency. This is the frequency that the driver will attempt to determine the current state of each server in
+         * the cluster.
          *
          * @param aHeartbeatFrequency the heartbeat frequency for the cluster, in milliseconds
          * @return {@code this}
@@ -490,18 +489,18 @@ public final class MongoClientOptions {
             }
             this.heartbeatSocketTimeout = aSocketTimeout;
             return this;
-         }
- 
-         /**
-          * Sets the required replica set name for the cluster.
-          *
-          * @param aRequiredReplicaSetName the required replica set name for the replica set.
-          * @return this
-          * @see MongoClientOptions#getRequiredReplicaSetName()
-          */
-         public Builder requiredReplicaSetName(final String aRequiredReplicaSetName) {
-             this.requiredReplicaSetName = aRequiredReplicaSetName;
-             return this;
+        }
+
+        /**
+         * Sets the required replica set name for the cluster.
+         *
+         * @param aRequiredReplicaSetName the required replica set name for the replica set.
+         * @return this
+         * @see MongoClientOptions#getRequiredReplicaSetName()
+         */
+        public Builder requiredReplicaSetName(final String aRequiredReplicaSetName) {
+            this.requiredReplicaSetName = aRequiredReplicaSetName;
+            return this;
         }
 
         /**
@@ -526,8 +525,8 @@ public final class MongoClientOptions {
     }
 
     /**
-     * The minimum number of connections per server for this MongoClient instance. Those connections will be kept
-     * in a pool when idle, and the pool will ensure over time that it contains at least this minimum number.
+     * The minimum number of connections per server for this MongoClient instance. Those connections will be kept in a pool when idle, and
+     * the pool will ensure over time that it contains at least this minimum number.
      * <p/>
      * Default is 0.
      *
@@ -538,9 +537,8 @@ public final class MongoClientOptions {
     }
 
     /**
-     * The maximum number of connections allowed per host for this MongoClient instance. Those connections will be kept
-     * in a pool when idle. Once the pool is exhausted, any operation requiring a connection will block waiting for an
-     * available connection.
+     * The maximum number of connections allowed per host for this MongoClient instance. Those connections will be kept in a pool when idle.
+     * Once the pool is exhausted, any operation requiring a connection will block waiting for an available connection.
      * <p/>
      * Default is 100.
      *
@@ -552,10 +550,9 @@ public final class MongoClientOptions {
     }
 
     /**
-     * this multiplier, multiplied with the maxConnectionPoolSize setting, gives the maximum number of threads that may be
-     * waiting for a connection to become available from the pool. All further threads will get an exception right away.
-     * For example if maxConnectionPoolSize is 10 and threadsAllowedToBlockForConnectionMultiplier is 5, then up to 50
-     * threads can wait for a connection.
+     * this multiplier, multiplied with the maxConnectionPoolSize setting, gives the maximum number of threads that may be waiting for a
+     * connection to become available from the pool. All further threads will get an exception right away. For example if
+     * maxConnectionPoolSize is 10 and threadsAllowedToBlockForConnectionMultiplier is 5, then up to 50 threads can wait for a connection.
      * <p/>
      * Default is 5.
      *
@@ -597,8 +594,8 @@ public final class MongoClientOptions {
     }
 
     /**
-     * The connection timeout in milliseconds.  A value of 0 means no timeout. It is used solely when establishing a new
-     * connection {@link java.net.Socket#connect(java.net.SocketAddress, int) }
+     * The connection timeout in milliseconds.  A value of 0 means no timeout. It is used solely when establishing a new connection {@link
+     * java.net.Socket#connect(java.net.SocketAddress, int) }
      * <p/>
      * Default is 10,000.
      *
@@ -609,8 +606,7 @@ public final class MongoClientOptions {
     }
 
     /**
-     * The socket timeout in milliseconds. It is used for I/O socket read and write operations {@link
-     * java.net.Socket#setSoTimeout(int)}
+     * The socket timeout in milliseconds. It is used for I/O socket read and write operations {@link java.net.Socket#setSoTimeout(int)}
      * <p/>
      * Default is 0 and means no timeout.
      *
@@ -633,16 +629,15 @@ public final class MongoClientOptions {
     }
 
     /**
-     * If true, the driver will keep trying to connect to the same server in case that the socket cannot be established.
-     * There is maximum amount of time to keep retrying, which is 15s by default. This can be useful to avoid some
-     * exceptions being thrown when a server is down temporarily by blocking the operations. It also can be useful to
-     * smooth the transition to a new master (so that a new master is elected within the retry time). Note that when
-     * using this flag: - for a replica set, the driver will trying to connect to the old master for that time, instead
-     * of failing over to the new one right away - this does not prevent exception from being thrown in read/write
-     * operations on the socket, which must be handled by application
+     * If true, the driver will keep trying to connect to the same server in case that the socket cannot be established. There is maximum
+     * amount of time to keep retrying, which is 15s by default. This can be useful to avoid some exceptions being thrown when a server is
+     * down temporarily by blocking the operations. It also can be useful to smooth the transition to a new master (so that a new master is
+     * elected within the retry time). Note that when using this flag: - for a replica set, the driver will trying to connect to the old
+     * master for that time, instead of failing over to the new one right away - this does not prevent exception from being thrown in
+     * read/write operations on the socket, which must be handled by application
      * <p/>
-     * Even if this flag is false, the driver already has mechanisms to automatically recreate broken connections and
-     * retry the read operations. Default is false.
+     * Even if this flag is false, the driver already has mechanisms to automatically recreate broken connections and retry the read
+     * operations. Default is false.
      *
      * @return whether socket connect is retried
      */
@@ -651,8 +646,8 @@ public final class MongoClientOptions {
     }
 
     /**
-     * The maximum amount of time in MS to spend retrying to open connection to the same server. Default is 0, which
-     * means to use the default 15s if autoConnectRetry is on.
+     * The maximum amount of time in MS to spend retrying to open connection to the same server. Default is 0, which means to use the
+     * default 15s if autoConnectRetry is on.
      *
      * @return the maximum socket connect retry time.
      */
@@ -703,28 +698,24 @@ public final class MongoClientOptions {
     }
 
     /**
-     * Whether to enable asynchronous operations.  The default is true if the platform version supports it
-     * (currently Java 7 and above), and false otherwise/
+     * Whether to enable asynchronous operations.  The default is true if the platform version supports it (currently Java 7 and above), and
+     * false otherwise/
      */
     public boolean isAsyncEnabled() {
         return asyncEnabled;
     }
 
     /**
-     * Gets whether JMX beans registered by the driver should always be MBeans, regardless of whether the VM is
-     * Java 6 or greater. If false, the driver will use MXBeans if the VM is Java 6 or greater, and use MBeans if
-     * the VM is Java 5.
-     * <p>
-     * Default is false.
-     * </p>
+     * Gets whether JMX beans registered by the driver should always be MBeans, regardless of whether the VM is Java 6 or greater. If false,
+     * the driver will use MXBeans if the VM is Java 6 or greater, and use MBeans if the VM is Java 5. <p> Default is false. </p>
      */
     public boolean isAlwaysUseMBeans() {
         return alwaysUseMBeans;
     }
 
     /**
-     * Gets the heartbeat frequency. This is the frequency that the driver will attempt to determine the current state of each server
-     * in the cluster. The default value is 5000 milliseconds.
+     * Gets the heartbeat frequency. This is the frequency that the driver will attempt to determine the current state of each server in the
+     * cluster. The default value is 5000 milliseconds.
      *
      * @return the heartbeat frequency, in milliseconds
      * @since 3.0
@@ -734,8 +725,8 @@ public final class MongoClientOptions {
     }
 
     /**
-     * Gets the heartbeat frequency. This is the frequency that the driver will attempt to determine the current state of each server
-     * in the cluster, after a previous failed attempt. The default value is 10 milliseconds.
+     * Gets the heartbeat frequency. This is the frequency that the driver will attempt to determine the current state of each server in the
+     * cluster, after a previous failed attempt. The default value is 10 milliseconds.
      *
      * @return the heartbeat frequency, in milliseconds
      * @since 3.0
@@ -768,10 +759,10 @@ public final class MongoClientOptions {
      * Gets the connection-specific settings wrapped in a settings object.   This settings object uses the values for connectTimeout,
      * socketTimeout and socketKeepAlive.
      *
-     * @see DefaultConnectionSettings
-     * @return a DefaultConnectionSettings object populated with the connection settings from this MongoClientOptions instance.
+     * @return a ConnectionSettings object populated with the connection settings from this MongoClientOptions instance.
+     * @see ConnectionSettings
      */
-    DefaultConnectionSettings getConnectionSettings() {
+    ConnectionSettings getConnectionSettings() {
         return connectionSettings;
     }
 
@@ -779,23 +770,23 @@ public final class MongoClientOptions {
      * Gets the connection settings for the heartbeat thread (the background task that checks the state of the cluster) wrapped in a
      * settings object. This settings object uses the values for heartbeatConnectTimeout, heartbeatSocketTimeout and socketKeepAlive.
      *
-     * @see DefaultConnectionSettings
-     * @return a DefaultConnectionSettings object populated with the heartbeat connection settings from this MongoClientOptions instance.
+     * @return a ConnectionSettings object populated with the heartbeat connection settings from this MongoClientOptions instance.
+     * @see ConnectionSettings
      */
-    DefaultConnectionSettings getHeartbeatConnectionSettings() {
+    ConnectionSettings getHeartbeatConnectionSettings() {
         return heartbeatConnectionSettings;
     }
 
     /**
-     * Gets the settings for the connection provider in a settings object.  This settings object wraps the values for
-     * minConnectionPoolSize, maxConnectionPoolSize, maxWaitTime, maxConnectionIdleTime and maxConnectionLifeTime,
-     * and uses maxConnectionPoolSize and threadsAllowedToBlockForConnectionMultiplier to calculate maxWaitQueueSize.
+     * Gets the settings for the connection provider in a settings object.  This settings object wraps the values for minConnectionPoolSize,
+     * maxConnectionPoolSize, maxWaitTime, maxConnectionIdleTime and maxConnectionLifeTime, and uses maxConnectionPoolSize and
+     * threadsAllowedToBlockForConnectionMultiplier to calculate maxWaitQueueSize.
      *
-     * @see DefaultConnectionProviderSettings
-     * @return a DefaultConnectionProviderSettings populated with the settings from this options instance that relate to the connection
-     * provider.
+     * @return a ConnectionProviderSettings populated with the settings from this options instance that relate to the connection
+     *         provider.
+     * @see ConnectionProviderSettings
      */
-    DefaultConnectionProviderSettings getConnectionProviderSettings() {
+    ConnectionProviderSettings getConnectionProviderSettings() {
         return connectionProviderSettings;
     }
 
@@ -803,18 +794,18 @@ public final class MongoClientOptions {
      * Gets the server-specific settings wrapped in a settings object.  This settings object uses the heartbeatFrequency and
      * heartbeatConnectRetryFrequency values from this MongoClientOptions instance.
      *
-     * @see DefaultServerSettings
-     * @return a DefaultServerSettings object populated with settings from this MongoClientOptions instance
+     * @return a ServerSettings object populated with settings from this MongoClientOptions instance
+     * @see ServerSettings
      */
-    DefaultServerSettings getServerSettings() {
+    ServerSettings getServerSettings() {
         return serverSettings;
     }
 
     /**
      * Gets an SSLSettings instance populated with the SSLEnabled value from this MongoClientOptions instance.
      *
-     * @see SSLSettings
      * @return an SSLSettings wrapping the SSL settings from this MongoClientOptions.
+     * @see SSLSettings
      */
     SSLSettings getSslSettings() {
         return sslSettings;
@@ -822,24 +813,17 @@ public final class MongoClientOptions {
 
     /**
      * Gets the required replica set name.  With this option set, the MongoClient instance will
+     * <p/>
+     * <p> 1. Connect in replica set mode, and discover all members of the set based on the given servers </p> <p> 2. Make sure that the set
+     * name reported by all members matches the required set name. </p> <p> 3. Refuse to service any requests if any member of the seed list
+     * is not part of a replica set with the required name.j </p>
      *
-     * <p>
-     * 1. Connect in replica set mode, and discover all members of the set based on the given servers
-     * </p>
-     * <p>
-     * 2. Make sure that the set name reported by all members matches the required set name.
-     * </p>
-     * <p>
-     * 3. Refuse to service any requests if any member of the seed list is not part of a replica set with the required name.j
-     * </p>
-     *
-     * @return the required replica set name
-     * since 3.0
+     * @return the required replica set name since 3.0
      */
     public String getRequiredReplicaSetName() {
         return requiredReplicaSetName;
     }
-    
+
     public long getAsyncKeepAliveTime(final TimeUnit unit) {
         return unit.convert(asyncKeepAliveTime, TimeUnit.MILLISECONDS);
     }
@@ -855,33 +839,33 @@ public final class MongoClientOptions {
     @Override
     public String toString() {
         return "MongoClientOptions {"
-                + "description='" + description + '\''
-                + ", minConnectionPoolSize=" + minConnectionPoolSize
-                + ", maxConnectionPoolSize=" + maxConnectionPoolSize
-                + ", threadsAllowedToBlockForConnectionMultiplier=" + threadsAllowedToBlockForConnectionMultiplier
-                + ", maxWaitTime=" + maxWaitTime
-                + ", maxConnectionIdleTime=" + maxConnectionIdleTime
-                + ", maxConnectionLifeTime=" + maxConnectionLifeTime
-                + ", connectTimeout=" + connectTimeout
-                + ", socketTimeout=" + socketTimeout
-                + ", socketKeepAlive=" + socketKeepAlive
-                + ", autoConnectRetry=" + autoConnectRetry
-                + ", maxAutoConnectRetryTime=" + maxAutoConnectRetryTime
-                + ", readPreference=" + readPreference
-                + ", writeConcern=" + writeConcern
-                + ", primitiveCodecs=" + primitiveCodecs
-                + ", SSLEnabled=" + SSLEnabled
-                + ", asyncEnabled=" + asyncEnabled
-                + ", alwaysUseMBeans=" + alwaysUseMBeans
-                + ", heartbeatFrequency=" + heartbeatFrequency
-                + ", heartbeatConnectRetryFrequency=" + heartbeatConnectRetryFrequency
-                + ", heartbeatConnectTimeout=" + heartbeatConnectTimeout
-                + ", heartbeatSocketTimeout=" + heartbeatSocketTimeout
-                + ", asyncPoolSize=" + asyncPoolSize
-                + ", asyncMaxPoolSize=" + asyncMaxPoolSize
-                + ", asyncKeepAliveTime=" + asyncKeepAliveTime
-                + ", requiredReplicaSetName=" + requiredReplicaSetName
-                + '}';
+               + "description='" + description + '\''
+               + ", minConnectionPoolSize=" + minConnectionPoolSize
+               + ", maxConnectionPoolSize=" + maxConnectionPoolSize
+               + ", threadsAllowedToBlockForConnectionMultiplier=" + threadsAllowedToBlockForConnectionMultiplier
+               + ", maxWaitTime=" + maxWaitTime
+               + ", maxConnectionIdleTime=" + maxConnectionIdleTime
+               + ", maxConnectionLifeTime=" + maxConnectionLifeTime
+               + ", connectTimeout=" + connectTimeout
+               + ", socketTimeout=" + socketTimeout
+               + ", socketKeepAlive=" + socketKeepAlive
+               + ", autoConnectRetry=" + autoConnectRetry
+               + ", maxAutoConnectRetryTime=" + maxAutoConnectRetryTime
+               + ", readPreference=" + readPreference
+               + ", writeConcern=" + writeConcern
+               + ", primitiveCodecs=" + primitiveCodecs
+               + ", SSLEnabled=" + SSLEnabled
+               + ", asyncEnabled=" + asyncEnabled
+               + ", alwaysUseMBeans=" + alwaysUseMBeans
+               + ", heartbeatFrequency=" + heartbeatFrequency
+               + ", heartbeatConnectRetryFrequency=" + heartbeatConnectRetryFrequency
+               + ", heartbeatConnectTimeout=" + heartbeatConnectTimeout
+               + ", heartbeatSocketTimeout=" + heartbeatSocketTimeout
+               + ", asyncPoolSize=" + asyncPoolSize
+               + ", asyncMaxPoolSize=" + asyncMaxPoolSize
+               + ", asyncKeepAliveTime=" + asyncKeepAliveTime
+               + ", requiredReplicaSetName=" + requiredReplicaSetName
+               + '}';
     }
 
     private MongoClientOptions(final Builder builder) {
@@ -912,30 +896,38 @@ public final class MongoClientOptions {
         requiredReplicaSetName = builder.requiredReplicaSetName;
         asyncKeepAliveTime = builder.asyncKeepAliveTime;
 
-        connectionSettings = DefaultConnectionSettings.builder()
-                                                      .connectTimeoutMS(connectTimeout)
-                                                      .readTimeoutMS(socketTimeout)
-                                                      .keepAlive(socketKeepAlive)
-                                                      .build();
-        heartbeatConnectionSettings = DefaultConnectionSettings.builder()
-                                                               .connectTimeoutMS(heartbeatConnectTimeout)
-                                                               .readTimeoutMS(heartbeatSocketTimeout)
-                                                               .keepAlive(socketKeepAlive)
+        connectionSettings = ConnectionSettings.builder()
+                                               .connectTimeoutMS(connectTimeout)
+                                               .readTimeoutMS(socketTimeout)
+                                               .keepAlive(socketKeepAlive)
+                                               .build();
+
+        heartbeatConnectionSettings = ConnectionSettings.builder()
+                                                        .connectTimeoutMS(heartbeatConnectTimeout)
+                                                        .readTimeoutMS(heartbeatSocketTimeout)
+                                                        .keepAlive(socketKeepAlive)
+                                                        .build();
+
+        asyncConnectionSettings = AsyncConnectionSettings.builder()
+                                                         .poolSize(asyncPoolSize)
+                                                         .maxPoolSize(asyncMaxPoolSize)
+                                                         .keepAliveTime(MILLISECONDS.convert(asyncKeepAliveTime, MILLISECONDS),
+                                                                        MILLISECONDS)
+                                                         .build();
+        connectionProviderSettings = ConnectionProviderSettings.builder()
+                                                               .minSize(minConnectionPoolSize)
+                                                               .maxSize(maxConnectionPoolSize)
+                                                               .maxWaitQueueSize(maxConnectionPoolSize
+                                                                                 * threadsAllowedToBlockForConnectionMultiplier)
+                                                               .maxWaitTime(maxWaitTime, MILLISECONDS)
+                                                               .maxConnectionIdleTime(maxConnectionIdleTime, MILLISECONDS)
+                                                               .maxConnectionLifeTime(maxConnectionLifeTime, MILLISECONDS)
                                                                .build();
 
-        connectionProviderSettings = DefaultConnectionProviderSettings.builder()
-                                                                      .minSize(minConnectionPoolSize)
-                                                                      .maxSize(maxConnectionPoolSize)
-                                                                      .maxWaitQueueSize(maxConnectionPoolSize
-                                                                                        * threadsAllowedToBlockForConnectionMultiplier)
-                                                                      .maxWaitTime(maxWaitTime, MILLISECONDS)
-                                                                      .maxConnectionIdleTime(maxConnectionIdleTime, MILLISECONDS)
-                                                                      .maxConnectionLifeTime(maxConnectionLifeTime, MILLISECONDS)
-                                                                      .build();
-        serverSettings = DefaultServerSettings.builder()
-                                              .heartbeatFrequency(heartbeatFrequency, MILLISECONDS)
-                                              .connectRetryFrequency(heartbeatConnectRetryFrequency, MILLISECONDS)
-                                              .build();
+        serverSettings = ServerSettings.builder()
+                                       .heartbeatFrequency(heartbeatFrequency, MILLISECONDS)
+                                       .connectRetryFrequency(heartbeatConnectRetryFrequency, MILLISECONDS)
+                                       .build();
         sslSettings = SSLSettings.builder().enabled(SSLEnabled).build();
 
     }

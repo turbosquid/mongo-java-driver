@@ -1,11 +1,6 @@
 package org.mongodb.connection.impl;
 
 
-import java.io.IOException;
-import java.nio.channels.CompletionHandler;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-
 import org.bson.ByteBuf;
 import org.mongodb.MongoInternalException;
 import org.mongodb.connection.BufferProvider;
@@ -13,6 +8,11 @@ import org.mongodb.connection.MongoSocketOpenException;
 import org.mongodb.connection.MongoSocketReadException;
 import org.mongodb.connection.ServerAddress;
 import org.mongodb.connection.SingleResultCallback;
+
+import java.io.IOException;
+import java.nio.channels.CompletionHandler;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 
 class DefaultSSLAsyncConnection extends DefaultAsyncConnection {

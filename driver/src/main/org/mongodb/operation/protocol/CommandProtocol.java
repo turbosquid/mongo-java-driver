@@ -17,7 +17,9 @@
 package org.mongodb.operation.protocol;
 
 import org.mongodb.CommandResult;
+import org.mongodb.Decoder;
 import org.mongodb.Document;
+import org.mongodb.Encoder;
 import org.mongodb.MongoNamespace;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.connection.Connection;
@@ -35,8 +37,6 @@ public class CommandProtocol implements Protocol<CommandResult> {
     private final Decoder<Document> commandEncoder;
     private final Encoder<Document> commandResultDecoder;
     private final BufferProvider bufferProvider;
-    private final Encoder<Document> encoder;
-    private final Decoder<Document> decoder;
     private final ServerDescription serverDescription;
     private final Connection connection;
     private final boolean closeConnection;
@@ -82,7 +82,7 @@ public class CommandProtocol implements Protocol<CommandResult> {
         final ResponseBuffers responseBuffers = connection.receiveMessage(getResponseSettings(serverDescription, messageId));
         try {
             final ReplyMessage<Document> replyMessage = new ReplyMessage<Document>(responseBuffers, commandEncoder, messageId);
-            return createCommandResult(command, replyMessage, connection);
+            return createCommandResult(replyMessage, connection);
         } finally {
             responseBuffers.close();
         }

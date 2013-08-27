@@ -40,7 +40,7 @@ abstract class CommandResultBaseCallback extends ResponseCallback {
             else {
                 ReplyMessage<Document> replyMessage = new ReplyMessage<Document>(responseBuffers, decoder, getRequestId());
                 callCallback(new CommandResult(getConnection().getServerAddress(), replyMessage.getDocuments().get(0),
-                        replyMessage.getElapsedNanoseconds()), null);
+                                               replyMessage.getElapsedNanoseconds()), null);
             }
         } finally {
             if (responseBuffers != null) {

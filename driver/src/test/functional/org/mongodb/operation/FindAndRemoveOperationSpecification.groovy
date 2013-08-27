@@ -5,6 +5,7 @@ import org.mongodb.FunctionalSpecification
 import org.mongodb.MongoClientOptions
 import org.mongodb.codecs.DocumentCodec
 import org.mongodb.connection.Cluster
+import org.mongodb.connection.ClusterSettings
 import org.mongodb.connection.ClusterableServerFactory
 import org.mongodb.connection.ConnectionFactory
 import org.mongodb.connection.ServerAddress
@@ -18,6 +19,7 @@ import org.mongodb.session.Session
 import static java.util.concurrent.Executors.newScheduledThreadPool
 import static org.mongodb.Fixture.getBufferProvider
 import static org.mongodb.Fixture.getSSLSettings
+import static org.mongodb.connection.ClusterConnectionMode.Single
 
 class FindAndRemoveOperationSpecification extends FunctionalSpecification {
     private final DocumentCodec documentDecoder = new DocumentCodec()
@@ -30,7 +32,11 @@ class FindAndRemoveOperationSpecification extends FunctionalSpecification {
             options.serverSettings, new DefaultConnectionProviderFactory(options.connectionProviderSettings, connectionFactory),
             null, connectionFactory, newScheduledThreadPool(3), getBufferProvider())
 
-    private final Cluster cluster = new DefaultClusterFactory().create(new ServerAddress(), clusterableServerFactory)
+    private final ClusterSettings clusterSettings = ClusterSettings.builder()
+                                                                    .mode(Single)
+                                                                    .hosts([new ServerAddress()])
+                                                                    .build()
+    private final Cluster cluster = new DefaultClusterFactory().create(clusterSettings, clusterableServerFactory)
     private final Session session = new ClusterSession(cluster)
 
     def 'should remove single document'() {
