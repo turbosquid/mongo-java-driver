@@ -398,9 +398,8 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                          .sortBy(findOp.getOrder())
                                                                          .upsert(upsert);
 
-            return new FindAndUpdateOperation<T>(client.getBufferProvider(), client.getSession(),
-                                                 false, getNamespace(), findAndUpdate,
-                                                 getCodec()).execute();
+            return new FindAndUpdateOperation<T>(getNamespace(), findAndUpdate, getCodec(), client.getBufferProvider(), client.getSession(),
+                                                 false).execute();
         }
 
         public T replaceOneAndGet(final T replacement, final Get beforeOrAfter) {
@@ -409,9 +408,8 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                                                   .select(findOp.getFields())
                                                                                                   .sortBy(findOp.getOrder())
                                                                                                   .upsert(upsert);
-            return new FindAndReplaceOperation<T>(client.getBufferProvider(), client.getSession(),
-                                                  false, getNamespace(), findAndReplace,
-                                                  getCodec(), getCodec()).execute();
+            return new FindAndReplaceOperation<T>(getNamespace(), findAndReplace, getCodec(), getCodec(), client.getBufferProvider(),
+                                                  client.getSession(), false).execute();
         }
 
         @Override
@@ -420,9 +418,8 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
                                                                                   .select(findOp.getFields())
                                                                                   .sortBy(findOp.getOrder());
 
-            return new FindAndRemoveOperation<T>(client.getBufferProvider(), client.getSession(),
-                                                 false, getNamespace(), findAndRemove,
-                                                 getCodec()).execute();
+            return new FindAndRemoveOperation<T>(getNamespace(), findAndRemove, getCodec(), client.getBufferProvider(), client.getSession(),
+                                                 false).execute();
         }
 
         @Override

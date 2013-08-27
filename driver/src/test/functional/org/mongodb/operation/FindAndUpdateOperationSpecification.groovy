@@ -75,9 +75,9 @@ class FindAndUpdateOperationSpecification extends FunctionalSpecification {
                 .updateWith(new Document('$inc', new Document('numberOfJobs', 1)))
                 .returnNew(true);
 
-        FindAndUpdateOperation<Worker> operation = new FindAndUpdateOperation<Worker>(getBufferProvider(), session, false,
-                                                                                      workerCollection.namespace, findAndUpdate,
-                                                                                      new WorkerCodec())
+        FindAndUpdateOperation<Worker> operation = new FindAndUpdateOperation<Worker>(workerCollection.namespace, findAndUpdate,
+                                                                                      new WorkerCodec(), getBufferProvider(), session,
+                                                                                      false)
         Worker returnedValue = operation.execute()
 
         then:

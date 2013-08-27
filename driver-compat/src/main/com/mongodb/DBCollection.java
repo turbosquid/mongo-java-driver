@@ -1379,11 +1379,8 @@ public class DBCollection {
             final FindAndRemove<DBObject> findAndRemove = new FindAndRemove<DBObject>(getName()).where(toNullableDocument(query))
                                                                                        .sortBy(toNullableDocument(sort))
                                                                                        .returnNew(returnNew);
-            operation = new FindAndRemoveOperation<DBObject>(getBufferPool(),
-                                                             getSession(),
-                                                             false, getNamespace(),
-                                                             findAndRemove,
-                                                             resultDecoder);
+            operation = new FindAndRemoveOperation<DBObject>(getNamespace(), findAndRemove, resultDecoder, getBufferPool(),
+                                                             getSession(), false);
         } else {
             if (update == null) {
                 throw new IllegalArgumentException("Update document can't be null");
@@ -1397,11 +1394,8 @@ public class DBCollection {
                                                               .select(toFieldSelectorDocument(fields))
                                                               .updateWith(toUpdateOperationsDocument(update))
                                                               .upsert(upsert);
-                operation = new FindAndUpdateOperation<DBObject>(getBufferPool(),
-                                                                 getSession(),
-                                                                 false, getNamespace(),
-                                                                 findAndUpdate,
-                                                                 resultDecoder);
+                operation = new FindAndUpdateOperation<DBObject>(getNamespace(), findAndUpdate, resultDecoder, getBufferPool(),
+                                                                 getSession(), false);
             } else {
                 final FindAndReplace<DBObject> findAndReplace = new FindAndReplace<DBObject>(getName(), update)
                                                                 .where(toNullableDocument(query))
@@ -1409,11 +1403,8 @@ public class DBCollection {
                                                                 .select(toFieldSelectorDocument(fields))
                                                                 .returnNew(returnNew)
                                                                 .upsert(upsert);
-                operation = new FindAndReplaceOperation<DBObject>(getBufferPool(),
-                                                                  getSession(),
-                                                                  false, getNamespace(),
-                                                                  findAndReplace,
-                                                                  resultDecoder, objectCodec);
+                operation = new FindAndReplaceOperation<DBObject>(getNamespace(), findAndReplace, resultDecoder, objectCodec,
+                                                                  getBufferPool(), getSession(), false);
             }
         }
 

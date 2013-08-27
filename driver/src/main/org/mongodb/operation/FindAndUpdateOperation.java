@@ -33,8 +33,8 @@ public class FindAndUpdateOperation<T> extends BaseOperation<T> {
     private final CommandResultWithPayloadDecoder<T> resultDecoder;
     private final DocumentCodec commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
 
-    public FindAndUpdateOperation(final BufferProvider bufferProvider, final Session session, final boolean closeSession,
-                                  final MongoNamespace namespace, final FindAndUpdate<T> findAndUpdate, final Decoder<T> resultDecoder) {
+    public FindAndUpdateOperation(final MongoNamespace namespace, final FindAndUpdate<T> findAndUpdate, final Decoder<T> resultDecoder,
+                                  final BufferProvider bufferProvider, final Session session, final boolean closeSession) {
         super(bufferProvider, session, closeSession);
         this.namespace = namespace;
         this.findAndUpdate = findAndUpdate;

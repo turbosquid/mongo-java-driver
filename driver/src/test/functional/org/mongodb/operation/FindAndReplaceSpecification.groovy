@@ -75,9 +75,9 @@ class FindAndReplaceSpecification extends FunctionalSpecification {
         FindAndReplace findAndReplace = new FindAndReplace<Worker>(getCollectionName(), jordan).where(new Document('name', 'Pete'))
                 .returnNew(false);
 
-        FindAndReplaceOperation<Worker> operation = new FindAndReplaceOperation<Worker>(getBufferProvider(), session, false,
-                                                                                        workerCollection.namespace, findAndReplace,
-                                                                                        new WorkerCodec(), new WorkerCodec())
+        FindAndReplaceOperation<Worker> operation = new FindAndReplaceOperation<Worker>(workerCollection.namespace, findAndReplace,
+                                                                                        new WorkerCodec(), new WorkerCodec(),
+                                                                                        getBufferProvider(), session, false)
         Worker returnedValue = operation.execute()
 
         then:
