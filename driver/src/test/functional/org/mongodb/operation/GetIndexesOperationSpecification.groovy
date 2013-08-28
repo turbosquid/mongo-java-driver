@@ -120,7 +120,7 @@ class GetIndexesOperationSpecification extends FunctionalSpecification {
             //read start of 'key' document
             reader.readStartDocument()
             //find the name of the field in the key document, this is the field name
-            String keyName = reader.readName()
+            String indexField = reader.readName()
             //read and ignore value for key (this value is index type)
             reader.readInt32()
             //read end of key document
@@ -132,7 +132,8 @@ class GetIndexesOperationSpecification extends FunctionalSpecification {
 
             CustomIndex index = new CustomIndex()
             index.indexName = indexName;
-            index.indexField = keyName;
+            index.indexField = indexField;
+            index
         }
     }
 }
