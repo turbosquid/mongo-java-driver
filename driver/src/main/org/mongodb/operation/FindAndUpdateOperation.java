@@ -22,18 +22,18 @@ import org.mongodb.Document;
 import org.mongodb.MongoNamespace;
 import org.mongodb.codecs.DocumentCodec;
 import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.codecs.validators.FindAndUpdateValidator;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.operation.protocol.CommandProtocol;
 import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
+import static java.lang.String.format;
+
 public class FindAndUpdateOperation<T> extends BaseOperation<T> {
     private final MongoNamespace namespace;
     private final FindAndUpdate<T> findAndUpdate;
     private final CommandResultWithPayloadDecoder<T> resultDecoder;
-    private final FindAndUpdateValidator findAndUpdateValidator = new FindAndUpdateValidator();
     private final DocumentCodec commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
 
     public FindAndUpdateOperation(final MongoNamespace namespace, final FindAndUpdate<T> findAndUpdate, final Decoder<T> resultDecoder,
@@ -47,7 +47,7 @@ public class FindAndUpdateOperation<T> extends BaseOperation<T> {
     @SuppressWarnings("unchecked")
     @Override
     public T execute() {
-        findAndUpdateValidator.validate((Document) findAndUpdate.toDocument().get("update"));
+        validateUpdateDocumentToEnsureItHasUpdateOperators((Document) findAndUpdate.toDocument().get("update"));
         final ServerConnectionProvider provider = getServerConnectionProvider();
         final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndUpdate.toDocument(),
                                                                 commandEncoder, resultDecoder, getBufferProvider(),
@@ -59,4 +59,13 @@ public class FindAndUpdateOperation<T> extends BaseOperation<T> {
         return getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(false, new PrimaryServerSelector()));
     }
 
+    private void validateUpdateDocumentToEnsureItHasUpdateOperators(final Document value) {
+        for (String field : value.keySet()) {
+            if (field.startsWith("$")) {
+                return;
+            }
+        }
+        throw new IllegalArgumentException(format("Find and update requires an update operator (beginning with '$') in the update "
+                                                  + "Document: %s", value));
+    }
 }
