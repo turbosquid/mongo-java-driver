@@ -16,43 +16,42 @@
 
 package com.mongodb
 
-import spock.lang.Ignore
-
 class DBCollectionFunctionalSpecification extends FunctionalSpecification {
-
-    //TODO: test fixed but I think the functionality needs to be changed to get this test to work the way it used to
+    private idOfExistingDocument
 
     def setupSpec() {
         Map.metaClass.bitwiseNegate = { new BasicDBObject(delegate) }
     }
 
     def setup() {
-        collection.insert(new BasicDBObject('a', new BasicDBObject()).append('b', new BasicDBObject()));
+        def existingDocument = ~['a': ~[:],
+                                 'b': ~[:]]
+        collection.insert(existingDocument);
+        idOfExistingDocument = existingDocument.get('_id')
         collection.setObjectClass(BasicDBObject)
     }
 
     def 'should use top-level class for findAndModify'() {
         given:
         collection.setObjectClass(ClassA)
-        def originalValue = ~['a': 'value']
-        collection.insert(originalValue);
 
         when:
-        DBObject document = collection.findAndModify(originalValue, new BasicDBObject('c', 1).append('_id', originalValue.get('_id')))
+        DBObject document = collection.findAndModify(null, ~['_id': idOfExistingDocument,
+                                                             'c'  : 1])
 
         then:
         document instanceof ClassA
 
     }
 
-    @Ignore('functionality has changed, needs fixing.')
     def 'should use internal classes for findAndModify'() {
         given:
         collection.setInternalClass('a', ClassA);
         collection.setInternalClass('b', ClassB);
 
         when:
-        DBObject document = collection.findAndModify(new BasicDBObject(), new BasicDBObject('c', 1))
+        DBObject document = collection.findAndModify(null, ~['_id': idOfExistingDocument,
+                                                             'c'  : 1])
 
         then:
         document.get('a') instanceof ClassA
@@ -62,10 +61,10 @@ class DBCollectionFunctionalSpecification extends FunctionalSpecification {
     def 'should support index options'() {
         given:
         def options = ~[
-                'sparse': true,
-                'background': true,
+                'sparse'            : true,
+                'background'        : true,
                 'expireAfterSeconds': 42,
-                'somethingOdd': 'jeff'
+                'somethingOdd'      : 'jeff'
         ]
 
         when:
@@ -87,11 +86,10 @@ class DBCollectionFunctionalSpecification extends FunctionalSpecification {
         DBDecoderFactory factory = Mock()
         factory.create() >> decoder
         collection.setDBDecoderFactory(factory)
-        def originalValue = ~['z': 'value']
-        collection.insert(originalValue);
 
         when:
-        collection.findAndModify(originalValue, new BasicDBObject('c', 1).append('_id', originalValue.get('_id')))
+        collection.findAndModify(null, ~['_id': idOfExistingDocument,
+                                         'c'  : 1])
 
         then:
         1 * decoder.decode(_ as byte[], collection)
