@@ -20,7 +20,6 @@ import org.bson.BSONWriter;
 import org.mongodb.Document;
 import org.mongodb.Encoder;
 import org.mongodb.codecs.Codecs;
-import org.mongodb.codecs.validators.Validator;
 
 import java.util.Map;
 
@@ -30,13 +29,10 @@ class CommandWithPayloadEncoder<T> implements Encoder<Document> {
 
     private final Encoder<T> payloadEncoder;
     private final String fieldContainingPayload;
-    private final Validator<T> payloadValidator;
 
-    CommandWithPayloadEncoder(final String fieldContainingPayload, final Encoder<T> payloadEncoder,
-                              final Validator<T> payloadValidator) {
+    CommandWithPayloadEncoder(final String fieldContainingPayload, final Encoder<T> payloadEncoder) {
         this.payloadEncoder = payloadEncoder;
         this.fieldContainingPayload = fieldContainingPayload;
-        this.payloadValidator = payloadValidator;
     }
 
     //we need to cast the payload to (T) to encode it
@@ -50,9 +46,7 @@ class CommandWithPayloadEncoder<T> implements Encoder<Document> {
 
             bsonWriter.writeName(fieldName);
             if (fieldContainingPayload.equals(fieldName)) {
-                final T payload = (T) entry.getValue();
-                payloadValidator.validate(payload);
-                payloadEncoder.encode(bsonWriter, payload);
+                payloadEncoder.encode(bsonWriter, (T) entry.getValue());
             } else {
                 codecs.encode(bsonWriter, entry.getValue());
             }

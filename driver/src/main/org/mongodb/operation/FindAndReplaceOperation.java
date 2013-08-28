@@ -39,7 +39,7 @@ public class FindAndReplaceOperation<T> extends BaseOperation<T> {
         this.namespace = namespace;
         this.findAndReplace = findAndReplace;
         resultDecoder = new CommandResultWithPayloadDecoder<T>(payloadDecoder);
-        commandEncoder = new CommandWithPayloadEncoder<T>("update", payloadEncoder, new FindAndReplaceValidator<T>());
+        commandEncoder = new CommandWithPayloadEncoder<T>("update", payloadEncoder);
     }
 
     @SuppressWarnings("unchecked")

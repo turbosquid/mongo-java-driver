@@ -18,9 +18,11 @@ package org.mongodb.operation;
 
 import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
+import org.mongodb.Document;
 import org.mongodb.MongoNamespace;
 import org.mongodb.codecs.DocumentCodec;
 import org.mongodb.codecs.PrimitiveCodecs;
+import org.mongodb.codecs.validators.FindAndUpdateValidator;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.operation.protocol.CommandProtocol;
 import org.mongodb.session.PrimaryServerSelector;
@@ -31,6 +33,7 @@ public class FindAndUpdateOperation<T> extends BaseOperation<T> {
     private final MongoNamespace namespace;
     private final FindAndUpdate<T> findAndUpdate;
     private final CommandResultWithPayloadDecoder<T> resultDecoder;
+    private final FindAndUpdateValidator findAndUpdateValidator = new FindAndUpdateValidator();
     private final DocumentCodec commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
 
     public FindAndUpdateOperation(final MongoNamespace namespace, final FindAndUpdate<T> findAndUpdate, final Decoder<T> resultDecoder,
@@ -44,6 +47,7 @@ public class FindAndUpdateOperation<T> extends BaseOperation<T> {
     @SuppressWarnings("unchecked")
     @Override
     public T execute() {
+        findAndUpdateValidator.validate((Document) findAndUpdate.toDocument().get("update"));
         final ServerConnectionProvider provider = getServerConnectionProvider();
         final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndUpdate.toDocument(),
                                                                 commandEncoder, resultDecoder, getBufferProvider(),

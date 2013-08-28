@@ -95,7 +95,6 @@ public class FindAndUpdateAcceptanceTest extends DatabaseTestCase {
         assertNull("Document retrieved from getOneAndUpdate should be null", document);
     }
 
-
     @Test
     public void shouldInsertDocumentWhenFilterDoesNotMatchAnyDocumentsAndUpsertSelected() {
         final Document originalDocument = new Document(KEY, VALUE_TO_CARE_ABOUT).append("someNumber", 11);
@@ -116,16 +115,14 @@ public class FindAndUpdateAcceptanceTest extends DatabaseTestCase {
                    document.get(KEY).toString(), equalTo(newValueThatDoesNotMatchAnythingInDatabase));
     }
 
-//    @Test(expected = IllegalArgumentException.class)
-//    public void shouldThrowAnExceptionIfReplacementContainsUpdateOperators() {
-//        final Document documentInserted = new Document(KEY, VALUE_TO_CARE_ABOUT);
-//        collection.insert(documentInserted);
-//
-//        final Document updateOperation = new Document("someNumber", 1);
-//        collection.find()
-//                  .getOneAndUpdate(updateOperation);
-//
-//    }
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowAnExceptionIfReplacementContainsUpdateOperators() {
+        final Document documentInserted = new Document(KEY, VALUE_TO_CARE_ABOUT);
+        collection.insert(documentInserted);
+
+        collection.find()
+                  .getOneAndUpdate(new Document("someNumber", 1));
+    }
 
     //TODO: should not be able to change the ID of a document
 
