@@ -16,19 +16,13 @@
 
 package org.mongodb.operation;
 
-import org.mongodb.ConvertibleToDocument;
 import org.mongodb.Document;
 
-import static org.mongodb.operation.DocumentHelper.putIfNotNull;
-import static org.mongodb.operation.DocumentHelper.putIfTrue;
-
-public class FindAndReplace<T> extends FindAndModify implements ConvertibleToDocument {
+public class FindAndReplace<T> extends FindAndModify {
     private final T replacement;
-    private final String collectionName;
 
-    public FindAndReplace(final String collectionName, final T replacement) {
+    public FindAndReplace(final T replacement) {
         this.replacement = replacement;
-        this.collectionName = collectionName;
     }
 
     @Override
@@ -61,17 +55,7 @@ public class FindAndReplace<T> extends FindAndModify implements ConvertibleToDoc
         return this;
     }
 
-    @Override
-    public Document toDocument() {
-        final Document command = new Document("findandmodify", collectionName);
-        putIfNotNull(command, "query", getFilter());
-        putIfNotNull(command, "fields", getSelector());
-        putIfNotNull(command, "sort", getSortCriteria());
-        putIfTrue(command, "new", isReturnNew());
-        putIfTrue(command, "upsert", isUpsert());
-
-        command.put("update", replacement);
-        return command;
+    public T getReplacement() {
+        return replacement;
     }
-
 }

@@ -1373,7 +1373,7 @@ public class DBCollection {
 
         final Operation<DBObject> operation;
         if (remove) {
-            final FindAndRemove<DBObject> findAndRemove = new FindAndRemove<DBObject>(getName()).where(toNullableDocument(query))
+            final FindAndRemove<DBObject> findAndRemove = new FindAndRemove<DBObject>().where(toNullableDocument(query))
                                                                                        .sortBy(toNullableDocument(sort))
                                                                                        .returnNew(returnNew);
             operation = new FindAndRemoveOperation<DBObject>(getNamespace(), findAndRemove, resultDecoder, getBufferPool(),
@@ -1384,7 +1384,7 @@ public class DBCollection {
             }
             if (!update.keySet().isEmpty() && update.keySet().iterator().next().charAt(0) == '$') {
 
-                final FindAndUpdate<DBObject> findAndUpdate = new FindAndUpdate<DBObject>(getName())
+                final FindAndUpdate<DBObject> findAndUpdate = new FindAndUpdate<DBObject>()
                                                               .where(toNullableDocument(query))
                                                               .sortBy(toNullableDocument(sort))
                                                               .returnNew(returnNew)
@@ -1394,7 +1394,7 @@ public class DBCollection {
                 operation = new FindAndUpdateOperation<DBObject>(getNamespace(), findAndUpdate, resultDecoder, getBufferPool(),
                                                                  getSession(), false);
             } else {
-                final FindAndReplace<DBObject> findAndReplace = new FindAndReplace<DBObject>(getName(), update)
+                final FindAndReplace<DBObject> findAndReplace = new FindAndReplace<DBObject>(update)
                                                                 .where(toNullableDocument(query))
                                                                 .sortBy(toNullableDocument(sort))
                                                                 .select(toFieldSelectorDocument(fields))

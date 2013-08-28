@@ -72,7 +72,7 @@ class FindAndReplaceSpecification extends FunctionalSpecification {
         workerCollection.insert(sam);
 
         when:
-        FindAndReplace findAndReplace = new FindAndReplace<Worker>(getCollectionName(), jordan).where(new Document('name', 'Pete'))
+        FindAndReplace findAndReplace = new FindAndReplace<Worker>(jordan).where(new Document('name', 'Pete'))
                 .returnNew(false);
 
         FindAndReplaceOperation<Worker> operation = new FindAndReplaceOperation<Worker>(workerCollection.namespace, findAndReplace,

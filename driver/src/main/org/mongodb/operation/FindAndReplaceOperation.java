@@ -18,6 +18,7 @@ package org.mongodb.operation;
 
 import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
+import org.mongodb.Document;
 import org.mongodb.Encoder;
 import org.mongodb.MongoNamespace;
 import org.mongodb.connection.BufferProvider;
@@ -25,6 +26,9 @@ import org.mongodb.operation.protocol.CommandProtocol;
 import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
+
+import static org.mongodb.operation.DocumentHelper.putIfNotNull;
+import static org.mongodb.operation.DocumentHelper.putIfTrue;
 
 public class FindAndReplaceOperation<T> extends BaseOperation<T> {
     private final MongoNamespace namespace;
@@ -46,10 +50,22 @@ public class FindAndReplaceOperation<T> extends BaseOperation<T> {
     @Override
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
-        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndReplace.toDocument(),
+        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), createFindAndReplaceDocument(),
                                                                 commandEncoder, resultDecoder, getBufferProvider(),
                                                                 provider.getServerDescription(), provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");
+    }
+
+    private Document createFindAndReplaceDocument() {
+        final Document command = new Document("findandmodify", namespace.getCollectionName());
+        putIfNotNull(command, "query", findAndReplace.getFilter());
+        putIfNotNull(command, "fields", findAndReplace.getSelector());
+        putIfNotNull(command, "sort", findAndReplace.getSortCriteria());
+        putIfTrue(command, "new", findAndReplace.isReturnNew());
+        putIfTrue(command, "upsert", findAndReplace.isUpsert());
+
+        command.put("update", findAndReplace.getReplacement());
+        return command;
     }
 
     private ServerConnectionProvider getServerConnectionProvider() {

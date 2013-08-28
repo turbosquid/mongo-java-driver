@@ -18,6 +18,7 @@ package org.mongodb.operation;
 
 import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
+import org.mongodb.Document;
 import org.mongodb.MongoNamespace;
 import org.mongodb.codecs.DocumentCodec;
 import org.mongodb.codecs.PrimitiveCodecs;
@@ -26,6 +27,8 @@ import org.mongodb.operation.protocol.CommandProtocol;
 import org.mongodb.session.PrimaryServerSelector;
 import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
+
+import static org.mongodb.operation.DocumentHelper.putIfNotNull;
 
 public class FindAndRemoveOperation<T> extends BaseOperation<T> {
     private final MongoNamespace namespace;
@@ -45,10 +48,19 @@ public class FindAndRemoveOperation<T> extends BaseOperation<T> {
     @Override
     public T execute() {
         final ServerConnectionProvider provider = getServerConnectionProvider();
-        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndRemove.toDocument(),
+        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), getFindAndRemoveDocument(),
                                                                 commandEncoder, resultDecoder, getBufferProvider(),
                                                                 provider.getServerDescription(), provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");
+    }
+
+    private Document getFindAndRemoveDocument() {
+        final Document command = new Document("findandmodify", namespace.getCollectionName());
+        putIfNotNull(command, "query", findAndRemove.getFilter());
+        putIfNotNull(command, "fields", findAndRemove.getSelector());
+        putIfNotNull(command, "sort", findAndRemove.getSortCriteria());
+        command.put("remove", true);
+        return command;
     }
 
     private ServerConnectionProvider getServerConnectionProvider() {

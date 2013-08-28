@@ -16,18 +16,12 @@
 
 package org.mongodb.operation;
 
-import org.mongodb.ConvertibleToDocument;
 import org.mongodb.Document;
 
-import static org.mongodb.operation.DocumentHelper.putIfNotNull;
-import static org.mongodb.operation.DocumentHelper.putIfTrue;
-
-public class FindAndUpdate<T> extends FindAndModify implements ConvertibleToDocument {
+public class FindAndUpdate<T> extends FindAndModify {
     private Document updateOperations;
-    private final String collectionName;
 
-    public FindAndUpdate(final String collectionName) {
-        this.collectionName = collectionName;
+    public FindAndUpdate() {
     }
 
     public FindAndUpdate<T> updateWith(final Document anUpdateOperations) {
@@ -65,16 +59,7 @@ public class FindAndUpdate<T> extends FindAndModify implements ConvertibleToDocu
         return this;
     }
 
-    @Override
-    public Document toDocument() {
-        final Document command = new Document("findandmodify", collectionName);
-        putIfNotNull(command, "query", getFilter());
-        putIfNotNull(command, "fields", getSelector());
-        putIfNotNull(command, "sort", getSortCriteria());
-        putIfTrue(command, "new", isReturnNew());
-        putIfTrue(command, "upsert", isUpsert());
-
-        command.put("update", updateOperations);
-        return command;
+    public Document getUpdateOperations() {
+        return updateOperations;
     }
 }

@@ -16,17 +16,9 @@
 
 package org.mongodb.operation;
 
-import org.mongodb.ConvertibleToDocument;
 import org.mongodb.Document;
 
-import static org.mongodb.operation.DocumentHelper.putIfNotNull;
-
-public class FindAndRemove<T> extends FindAndModify implements ConvertibleToDocument {
-    private final String collectionName;
-
-    public FindAndRemove(final String collectionName) {
-        this.collectionName = collectionName;
-    }
+public class FindAndRemove<T> extends FindAndModify {
 
     @Override
     public FindAndRemove<T> where(final Document filter) {
@@ -57,13 +49,4 @@ public class FindAndRemove<T> extends FindAndModify implements ConvertibleToDocu
         throw new UnsupportedOperationException("Can't upsert a remove");
     }
 
-    @Override
-    public Document toDocument() {
-        final Document command = new Document("findandmodify", collectionName);
-        putIfNotNull(command, "query", getFilter());
-        putIfNotNull(command, "fields", getSelector());
-        putIfNotNull(command, "sort", getSortCriteria());
-        command.put("remove", true);
-        return command;
-    }
 }

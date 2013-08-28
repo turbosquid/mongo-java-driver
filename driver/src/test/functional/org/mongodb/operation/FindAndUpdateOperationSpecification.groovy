@@ -71,9 +71,9 @@ class FindAndUpdateOperationSpecification extends FunctionalSpecification {
         workerCollection.insert(sam);
 
         when:
-        FindAndUpdate findAndUpdate = new FindAndUpdate<Worker>(getCollectionName()).where(new Document('name', 'Pete'))
-                .updateWith(new Document('$inc', new Document('numberOfJobs', 1)))
-                .returnNew(true);
+        FindAndUpdate findAndUpdate = new FindAndUpdate<Worker>().where(new Document('name', 'Pete'))
+                                                                 .updateWith(new Document('$inc', new Document('numberOfJobs', 1)))
+                                                                 .returnNew(true);
 
         FindAndUpdateOperation<Worker> operation = new FindAndUpdateOperation<Worker>(workerCollection.namespace, findAndUpdate,
                                                                                       new WorkerCodec(), getBufferProvider(), session,

@@ -29,6 +29,8 @@ import org.mongodb.session.ServerConnectionProviderOptions;
 import org.mongodb.session.Session;
 
 import static java.lang.String.format;
+import static org.mongodb.operation.DocumentHelper.putIfNotNull;
+import static org.mongodb.operation.DocumentHelper.putIfTrue;
 
 public class FindAndUpdateOperation<T> extends BaseOperation<T> {
     private final MongoNamespace namespace;
@@ -47,16 +49,12 @@ public class FindAndUpdateOperation<T> extends BaseOperation<T> {
     @SuppressWarnings("unchecked")
     @Override
     public T execute() {
-        validateUpdateDocumentToEnsureItHasUpdateOperators((Document) findAndUpdate.toDocument().get("update"));
-        final ServerConnectionProvider provider = getServerConnectionProvider();
-        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), findAndUpdate.toDocument(),
+        validateUpdateDocumentToEnsureItHasUpdateOperators(findAndUpdate.getUpdateOperations());
+        final ServerConnectionProvider provider = createServerConnectionProvider();
+        final CommandResult commandResult = new CommandProtocol(namespace.getDatabaseName(), createFindAndUpdateDocument(),
                                                                 commandEncoder, resultDecoder, getBufferProvider(),
                                                                 provider.getServerDescription(), provider.getConnection(), true).execute();
         return (T) commandResult.getResponse().get("value");
-    }
-
-    private ServerConnectionProvider getServerConnectionProvider() {
-        return getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(false, new PrimaryServerSelector()));
     }
 
     private void validateUpdateDocumentToEnsureItHasUpdateOperators(final Document value) {
@@ -67,5 +65,21 @@ public class FindAndUpdateOperation<T> extends BaseOperation<T> {
         }
         throw new IllegalArgumentException(format("Find and update requires an update operator (beginning with '$') in the update "
                                                   + "Document: %s", value));
+    }
+
+    private Document createFindAndUpdateDocument() {
+        final Document command = new Document("findandmodify", namespace.getCollectionName());
+        putIfNotNull(command, "query", findAndUpdate.getFilter());
+        putIfNotNull(command, "fields", findAndUpdate.getSelector());
+        putIfNotNull(command, "sort", findAndUpdate.getSortCriteria());
+        putIfTrue(command, "new", findAndUpdate.isReturnNew());
+        putIfTrue(command, "upsert", findAndUpdate.isUpsert());
+
+        command.put("update", findAndUpdate.getUpdateOperations());
+        return command;
+    }
+
+    private ServerConnectionProvider createServerConnectionProvider() {
+        return getSession().createServerConnectionProvider(new ServerConnectionProviderOptions(false, new PrimaryServerSelector()));
     }
 }
