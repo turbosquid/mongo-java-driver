@@ -141,6 +141,7 @@ public class DBCollection {
     private DBObjectFactory objectFactory;
 
     private final Codec<Document> documentCodec;
+    private final Codec<Document> commandCodec = new org.mongodb.codecs.DocumentCodec();
     private CompoundDBObjectCodec objectCodec;
 
 
@@ -894,7 +895,7 @@ public class DBCollection {
         final RenameCollectionOptions renameCollectionOptions = new RenameCollectionOptions(getName(), newName, dropTarget);
         final RenameCollection renameCommand = new RenameCollection(renameCollectionOptions, getDB().getName());
         try {
-            new CommandOperation("admin", renameCommand.toDocument(), renameCommand.getReadPreference(), getDocumentCodec(),
+            new CommandOperation("admin", renameCommand.toDocument(), renameCommand.getReadPreference(), commandCodec, commandCodec,
                                  getDB().getClusterDescription(), getBufferPool(), getSession(), false).execute();
             return getDB().getCollection(newName);
         } catch (org.mongodb.MongoException e) {
@@ -1104,8 +1105,8 @@ public class DBCollection {
         Command newStyleCommand = command.toNew();
         try {
             executionResult = new CommandOperation(getDB().getName(), newStyleCommand.toDocument(), newStyleCommand.getReadPreference(),
-                                                   mapReduceCodec, getDB().getClusterDescription(), getBufferPool(), getSession(), false)
-                              .execute();
+                                                   mapReduceCodec, commandCodec, getDB().getClusterDescription(), getBufferPool(),
+                                                   getSession(), false).execute();
         } catch (org.mongodb.MongoException e) {
             throw mapException(e);
         }

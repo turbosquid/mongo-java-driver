@@ -16,6 +16,8 @@
 
 package org.mongodb;
 
+import org.mongodb.codecs.DocumentCodec;
+import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.command.RenameCollectionOptions;
 import org.mongodb.operation.CommandOperation;
 import org.mongodb.operation.Find;
@@ -36,27 +38,26 @@ class DatabaseAdministrationImpl implements DatabaseAdministration {
     private static final Find FIND_ALL = new Find().readPreference(ReadPreference.primary());
 
     private final String databaseName;
-    private final Codec<Document> documentCodec;
+    private final Codec<Document> commandCodec = new DocumentCodec();
     private final MongoClientImpl client;
 
-    public DatabaseAdministrationImpl(final String databaseName, final MongoClientImpl client, final Codec<Document> documentCodec) {
+    public DatabaseAdministrationImpl(final String databaseName, final MongoClientImpl client) {
         this.databaseName = databaseName;
         this.client = client;
-        this.documentCodec = documentCodec;
     }
 
     @Override
     public void drop() {
         //TODO: should inspect the CommandResult to make sure it went OK
-        new CommandOperation(databaseName, DROP_DATABASE, null, documentCodec, client.getCluster().getDescription(),
-                client.getBufferProvider(), client.getSession(), false).execute();
+        new CommandOperation(databaseName, DROP_DATABASE, null, commandCodec, commandCodec, client.getCluster().getDescription(),
+                             client.getBufferProvider(), client.getSession(), false).execute();
     }
 
     @Override
     public Set<String> getCollectionNames() {
         final MongoNamespace namespacesCollection = new MongoNamespace(databaseName, "system.namespaces");
-        final MongoCursor<Document> cursor = new QueryOperation<Document>(namespacesCollection, FIND_ALL, documentCodec,
-                documentCodec, client.getBufferProvider(), client.getSession(), false).execute();
+        final MongoCursor<Document> cursor = new QueryOperation<Document>(namespacesCollection, FIND_ALL, commandCodec, commandCodec,
+                                                                          client.getBufferProvider(), client.getSession(), false).execute();
 
         final HashSet<String> collections = new HashSet<String>();
         final int lengthOfDatabaseName = databaseName.length();
@@ -77,9 +78,9 @@ class DatabaseAdministrationImpl implements DatabaseAdministration {
 
     @Override
     public void createCollection(final CreateCollectionOptions createCollectionOptions) {
-        final CommandResult commandResult = new CommandOperation(databaseName, createCollectionOptions.asDocument(), null, documentCodec,
-                                                                 client.getCluster().getDescription(), client.getBufferProvider(),
-                                                                 client.getSession(), false).execute();
+        final CommandResult commandResult = new CommandOperation(databaseName, createCollectionOptions.asDocument(), null, commandCodec,
+                                                                 commandCodec, client.getCluster().getDescription(),
+                                                                 client.getBufferProvider(), client.getSession(), false).execute();
         ErrorHandling.handleErrors(commandResult);
     }
 
@@ -91,8 +92,9 @@ class DatabaseAdministrationImpl implements DatabaseAdministration {
     @Override
     public void renameCollection(final RenameCollectionOptions renameCollectionOptions) {
         final CommandResult commandResult = new CommandOperation("admin", renameCollectionOptions.toDocument(databaseName), null,
-                                                                 documentCodec, client.getCluster().getDescription(),
-                                                                 client.getBufferProvider(), client.getSession(), false).execute();
+                                                                 commandCodec, new DocumentCodec(PrimitiveCodecs.createDefault()),
+                                                                 client.getCluster().getDescription(), client.getBufferProvider(),
+                                                                 client.getSession(), false).execute();
         ErrorHandling.handleErrors(commandResult);
     }
 

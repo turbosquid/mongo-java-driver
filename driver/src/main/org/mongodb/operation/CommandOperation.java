@@ -21,8 +21,6 @@ import org.mongodb.Decoder;
 import org.mongodb.Document;
 import org.mongodb.Encoder;
 import org.mongodb.ReadPreference;
-import org.mongodb.codecs.DocumentCodec;
-import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.connection.ClusterDescription;
 import org.mongodb.connection.ServerSelector;
@@ -34,7 +32,7 @@ import static org.mongodb.operation.CommandReadPreferenceHelper.getCommandReadPr
 import static org.mongodb.operation.CommandReadPreferenceHelper.isQuery;
 
 public class CommandOperation extends BaseOperation<CommandResult> {
-    private final Encoder<Document> commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
+    private final Encoder<Document> commandEncoder;
     private final Decoder<Document> commandDecoder;
     private final String database;
     private final ClusterDescription clusterDescription;
@@ -42,11 +40,13 @@ public class CommandOperation extends BaseOperation<CommandResult> {
     private final ReadPreference readPreference;
 
     public CommandOperation(final String database, final Document command, final ReadPreference readPreference,
-                            final Decoder<Document> commandDecoder, final ClusterDescription clusterDescription,
-                            final BufferProvider bufferProvider, final Session session, final boolean closeSession) {
+                            final Decoder<Document> commandDecoder, final Encoder<Document> commandEncoder,
+                            final ClusterDescription clusterDescription, final BufferProvider bufferProvider, final Session session,
+                            final boolean closeSession) {
         super(bufferProvider, session, closeSession);
         this.database = database;
         this.clusterDescription = clusterDescription;
+        this.commandEncoder = commandEncoder;
         this.commandDecoder = commandDecoder;
         this.commandDocument = command;
         this.readPreference = readPreference;

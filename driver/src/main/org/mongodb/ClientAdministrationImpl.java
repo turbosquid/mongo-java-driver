@@ -17,7 +17,6 @@
 package org.mongodb;
 
 import org.mongodb.codecs.DocumentCodec;
-import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.operation.CommandOperation;
 
@@ -36,19 +35,18 @@ class ClientAdministrationImpl implements ClientAdministration {
     private static final Document PING_COMMAND = new Document("ping", 1);
     private static final Document LIST_DATABASES = new Document("listDatabases", 1);
 
-    private final DocumentCodec documentCodec;
+    private final Codec<Document> commandCodec = new DocumentCodec();
     private final MongoClientImpl client;
 
-    ClientAdministrationImpl(final MongoClientImpl client, final PrimitiveCodecs primitiveCodecs) {
+    ClientAdministrationImpl(final MongoClientImpl client) {
         this.client = client;
-        documentCodec = new DocumentCodec(primitiveCodecs);
     }
 
     //TODO: it's not clear from the documentation what the return type should be
     //http://docs.mongodb.org/manual/reference/command/ping/
     @Override
     public double ping() {
-        final CommandResult pingResult = new CommandOperation(ADMIN_DATABASE, PING_COMMAND, null, documentCodec,
+        final CommandResult pingResult = new CommandOperation(ADMIN_DATABASE, PING_COMMAND, null, commandCodec, commandCodec,
                                                               client.getCluster().getDescription(), getBufferPool(), client.getSession(),
                                                               false).execute();
 
@@ -57,7 +55,7 @@ class ClientAdministrationImpl implements ClientAdministration {
 
     @Override
     public Set<String> getDatabaseNames() {
-        final CommandOperation operation = new CommandOperation(ADMIN_DATABASE, LIST_DATABASES, null, documentCodec,
+        final CommandOperation operation = new CommandOperation(ADMIN_DATABASE, LIST_DATABASES, null, commandCodec, commandCodec,
                                                                 client.getCluster().getDescription(), getBufferPool(), client.getSession(),
                                                                 false);
         final CommandResult listDatabasesResult = operation.execute();
