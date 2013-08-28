@@ -25,7 +25,10 @@ import org.mongodb.Encoder;
 import org.mongodb.MongoNamespace;
 import org.mongodb.WriteConcern;
 
-public abstract class BaseWriteCommandMessage extends BaseQueryMessage {
+import static org.mongodb.MongoNamespace.COMMAND_COLLECTION_NAME;
+import static org.mongodb.operation.protocol.RequestMessage.OpCode.OP_QUERY;
+
+public abstract class BaseWriteCommandMessage extends RequestMessage {
     // Server allows command document to exceed max document size by 16K, so that it can comfortably fit a stored document inside it
     private static final int HEADROOM = 16 * 1024;
 
@@ -35,7 +38,7 @@ public abstract class BaseWriteCommandMessage extends BaseQueryMessage {
 
     public BaseWriteCommandMessage(final MongoNamespace writeNamespace, final WriteConcern writeConcern,
                                    final Encoder<Document> commandEncoder, final MessageSettings settings) {
-        super(new MongoNamespace(writeNamespace.getDatabaseName(), MongoNamespace.COMMAND_COLLECTION_NAME).getFullName(), settings);
+        super(new MongoNamespace(writeNamespace.getDatabaseName(), COMMAND_COLLECTION_NAME).getFullName(), OP_QUERY, settings);
 
         this.writeNamespace = writeNamespace;
         this.writeConcern = writeConcern;
@@ -58,16 +61,12 @@ public abstract class BaseWriteCommandMessage extends BaseQueryMessage {
     protected BaseWriteCommandMessage encodeMessageBody(final OutputBuffer buffer, final int messageStartPosition) {
         BaseWriteCommandMessage nextMessage = null;
 
-        buffer.writeInt(0);
-        buffer.writeCString(getCollectionName());
-
-        buffer.writeInt(0);
-        buffer.writeInt(-1);
-
+        writeCommandHeader(buffer);
 
         int commandStartPosition = buffer.getPosition();
         final BSONBinaryWriter writer = new BSONBinaryWriter(new BSONWriterSettings(),
-                new BSONBinaryWriterSettings(getSettings().getMaxDocumentSize() + HEADROOM), buffer, false);
+                                                             new BSONBinaryWriterSettings(getSettings().getMaxDocumentSize() + HEADROOM),
+                                                             buffer, false);
         try {
             writer.writeStartDocument();
             writeCommandPrologue(writer);
@@ -77,6 +76,14 @@ public abstract class BaseWriteCommandMessage extends BaseQueryMessage {
             writer.close();
         }
         return nextMessage;
+    }
+
+    private void writeCommandHeader(final OutputBuffer buffer) {
+        buffer.writeInt(0);
+        buffer.writeCString(getCollectionName());
+
+        buffer.writeInt(0);
+        buffer.writeInt(-1);
     }
 
     protected abstract String getCommandName();
