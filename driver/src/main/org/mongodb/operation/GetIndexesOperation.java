@@ -2,10 +2,11 @@ package org.mongodb.operation;
 
 import org.mongodb.Decoder;
 import org.mongodb.Document;
+import org.mongodb.Encoder;
 import org.mongodb.MongoCursor;
 import org.mongodb.MongoNamespace;
+import org.mongodb.MongoQueryCursor;
 import org.mongodb.codecs.DocumentCodec;
-import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.session.Session;
 
@@ -16,9 +17,7 @@ import static org.mongodb.ReadPreference.primary;
 import static org.mongodb.assertions.Assertions.notNull;
 
 public class GetIndexesOperation<T> extends BaseOperation<List<T>> {
-    private static final String NAMESPACE_KEY_NAME = "ns";
-
-    private final DocumentCodec simpleDocumentCodec = new DocumentCodec(PrimitiveCodecs.createDefault());
+    private final Encoder<Document> simpleDocumentEncoder = new DocumentCodec();
     private final MongoNamespace indexesNamespace;
     private final Find queryForCollectionNamespace;
     private final Decoder<T> resultDecoder;
@@ -28,17 +27,15 @@ public class GetIndexesOperation<T> extends BaseOperation<List<T>> {
         super(bufferProvider, session, false);
         this.resultDecoder = notNull("resultDecoder", resultDecoder);
         notNull("collectionNamespace", collectionNamespace);
-        indexesNamespace = new MongoNamespace(collectionNamespace.getDatabaseName(), "system.indexes");
-        queryForCollectionNamespace = new Find(new Document(NAMESPACE_KEY_NAME, collectionNamespace.getFullName()))
-                                      .readPreference(primary());
+        this.indexesNamespace = new MongoNamespace(collectionNamespace.getDatabaseName(), "system.indexes");
+        this.queryForCollectionNamespace = new Find(new Document("ns", collectionNamespace.getFullName())).readPreference(primary());
     }
 
     @Override
     public List<T> execute() {
         final List<T> retVal = new ArrayList<T>();
-        final MongoCursor<T> cursor = new QueryOperation<T>(indexesNamespace, queryForCollectionNamespace,
-                                                                          simpleDocumentCodec, resultDecoder, getBufferProvider(),
-                                                                          getSession(), isCloseSession()).execute();
+        final MongoCursor<T> cursor = new MongoQueryCursor<T>(indexesNamespace, queryForCollectionNamespace, simpleDocumentEncoder,
+                                                              resultDecoder, getBufferProvider(), getSession(), isCloseSession());
         while (cursor.hasNext()) {
             retVal.add(cursor.next());
         }
