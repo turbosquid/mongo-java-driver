@@ -18,8 +18,6 @@ package org.mongodb;
 
 import org.mongodb.codecs.DocumentCodec;
 import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.command.CollStats;
-import org.mongodb.command.Drop;
 import org.mongodb.command.DropIndex;
 import org.mongodb.command.MongoCommandFailureException;
 import org.mongodb.operation.GetIndexesOperation;
@@ -45,8 +43,8 @@ class CollectionAdministrationImpl implements CollectionAdministration {
     private final MongoNamespace indexesNamespace;
     private final MongoNamespace collectionNamespace;
 
-    private final CollStats collStatsCommand;
-    private final Drop dropCollectionCommand;
+    private final Document collStatsCommand;
+    private final Document dropCollectionCommand;
 
     CollectionAdministrationImpl(final MongoClientImpl client,
                                  final PrimitiveCodecs primitiveCodecs,
@@ -57,8 +55,8 @@ class CollectionAdministrationImpl implements CollectionAdministration {
         this.documentCodec = new DocumentCodec(primitiveCodecs);
         indexesNamespace = new MongoNamespace(database.getName(), "system.indexes");
         this.collectionNamespace = collectionNamespace;
-        collStatsCommand = new CollStats(collectionNamespace.getCollectionName());
-        dropCollectionCommand = new Drop(collectionNamespace.getCollectionName());
+        collStatsCommand = new Document("collStats", collectionNamespace.getCollectionName());
+        dropCollectionCommand = new Document("drop", collectionNamespace.getCollectionName());
     }
 
     @Override
@@ -80,7 +78,7 @@ class CollectionAdministrationImpl implements CollectionAdministration {
 
     @Override
     public boolean isCapped() {
-        final CommandResult commandResult = database.executeCommand(collStatsCommand);
+        final CommandResult commandResult = database.executeCommand(collStatsCommand, null);
         ErrorHandling.handleErrors(commandResult);
 
         return FieldHelpers.asBoolean(commandResult.getResponse().get("capped"));
@@ -88,7 +86,7 @@ class CollectionAdministrationImpl implements CollectionAdministration {
 
     @Override
     public Document getStatistics() {
-        final CommandResult commandResult = database.executeCommand(collStatsCommand);
+        final CommandResult commandResult = database.executeCommand(collStatsCommand, null);
         ErrorHandling.handleErrors(commandResult);
 
         return commandResult.getResponse();
@@ -97,7 +95,7 @@ class CollectionAdministrationImpl implements CollectionAdministration {
     @Override
     public void drop() {
         try {
-            database.executeCommand(dropCollectionCommand);
+            database.executeCommand(dropCollectionCommand, null);
         } catch (MongoCommandFailureException e) {
             if (!e.getCommandResult().getErrorMessage().equals("ns not found")) {
                 throw e;
@@ -108,7 +106,7 @@ class CollectionAdministrationImpl implements CollectionAdministration {
     @Override
     public void dropIndex(final Index index) {
         final DropIndex dropIndex = new DropIndex(collectionNamespace.getCollectionName(), index.getName());
-        final CommandResult commandResult = database.executeCommand(dropIndex);
+        final CommandResult commandResult = database.executeCommand(dropIndex.toDocument(), dropIndex.getReadPreference());
 
         ErrorHandling.handleErrors(commandResult);
         //TODO: currently doesn't deal with errors
@@ -117,7 +115,7 @@ class CollectionAdministrationImpl implements CollectionAdministration {
     @Override
     public void dropIndexes() {
         final DropIndex dropIndex = new DropIndex(collectionNamespace.getCollectionName(), "*");
-        final CommandResult commandResult = database.executeCommand(dropIndex);
+        final CommandResult commandResult = database.executeCommand(dropIndex.toDocument(), dropIndex.getReadPreference());
 
         ErrorHandling.handleErrors(commandResult);
         //TODO: currently doesn't deal with errors

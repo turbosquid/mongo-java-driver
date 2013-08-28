@@ -38,12 +38,10 @@ import org.mongodb.annotations.ThreadSafe;
 import org.mongodb.codecs.ObjectIdGenerator;
 import org.mongodb.codecs.PrimitiveCodecs;
 import org.mongodb.command.AggregateCommand;
-import org.mongodb.command.CollStats;
 import org.mongodb.command.Command;
 import org.mongodb.command.CountOperation;
 import org.mongodb.command.Distinct;
 import org.mongodb.command.DistinctCommandResult;
-import org.mongodb.command.Drop;
 import org.mongodb.command.DropIndex;
 import org.mongodb.command.GroupCommandResult;
 import org.mongodb.command.MapReduceCommandResult;
@@ -896,8 +894,8 @@ public class DBCollection {
         final RenameCollectionOptions renameCollectionOptions = new RenameCollectionOptions(getName(), newName, dropTarget);
         final RenameCollection renameCommand = new RenameCollection(renameCollectionOptions, getDB().getName());
         try {
-            new CommandOperation("admin", renameCommand, getDocumentCodec(), getDB().getClusterDescription(), getBufferPool(),
-                    getSession(), false).execute();
+            new CommandOperation("admin", renameCommand.toDocument(), renameCommand.getReadPreference(), getDocumentCodec(),
+                                 getDB().getClusterDescription(), getBufferPool(), getSession(), false).execute();
             return getDB().getCollection(newName);
         } catch (org.mongodb.MongoException e) {
             throw mapException(e);
@@ -1105,11 +1103,9 @@ public class DBCollection {
 
         Command newStyleCommand = command.toNew();
         try {
-            executionResult = new CommandOperation(getDB().getName(),
-                    newStyleCommand,
-                    mapReduceCodec,
-                    getDB().getClusterDescription(),
-                    getBufferPool(), getSession(), false).execute();
+            executionResult = new CommandOperation(getDB().getName(), newStyleCommand.toDocument(), newStyleCommand.getReadPreference(),
+                                                   mapReduceCodec, getDB().getClusterDescription(), getBufferPool(), getSession(), false)
+                              .execute();
         } catch (org.mongodb.MongoException e) {
             throw mapException(e);
         }
@@ -1493,7 +1489,8 @@ public class DBCollection {
      */
     public void drop() {
         try {
-            getDB().executeCommand(new Drop(getName()));
+            final String collectionName = getName();
+            getDB().executeCommand(new Command(new Document("drop", collectionName)));
         } catch (CommandFailureException ex) {
             if (!"ns not found".equals(ex.getCommandResult().getErrorMessage())) {
                 throw ex;
@@ -1567,7 +1564,7 @@ public class DBCollection {
     }
 
     public CommandResult getStats() {
-        final org.mongodb.CommandResult commandResult = getDB().executeCommand(new CollStats(getName()));
+        final org.mongodb.CommandResult commandResult = getDB().executeCommand(new Command(new Document("collStats", getName())));
         return new CommandResult(commandResult);
     }
 

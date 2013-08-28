@@ -437,8 +437,9 @@ public class DB {
     org.mongodb.CommandResult executeCommand(final Command command) {
         command.readPreferenceIfAbsent(getReadPreference().toNew());
         try {
-            return new CommandOperation(getName(), command, documentCodec, getClusterDescription(), getBufferPool(),
-                    getSession(), false).execute();
+            return new CommandOperation(getName(), command.toDocument(), command.getReadPreference(), documentCodec,
+                                        getClusterDescription(), getBufferPool(),
+                                        getSession(), false).execute();
         } catch (org.mongodb.MongoException e) {
             throw mapException(e);
         }
@@ -447,8 +448,8 @@ public class DB {
     org.mongodb.CommandResult executeCommandAndReturnCommandResultIfCommandFailureException(final Command mongoCommand) {
         mongoCommand.readPreferenceIfAbsent(getReadPreference().toNew());
         try {
-            return new CommandOperation(getName(), mongoCommand, documentCodec, getClusterDescription(), getBufferPool(), getSession(),
-                    false).execute();
+            return new CommandOperation(getName(), mongoCommand.toDocument(), mongoCommand.getReadPreference(),
+                                        documentCodec, getClusterDescription(), getBufferPool(), getSession(), false).execute();
         } catch (MongoCommandFailureException ex) {
             return ex.getCommandResult();
         } catch (org.mongodb.MongoException ex) {

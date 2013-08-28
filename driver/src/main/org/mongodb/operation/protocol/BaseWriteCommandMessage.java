@@ -23,9 +23,7 @@ import org.bson.io.OutputBuffer;
 import org.mongodb.Document;
 import org.mongodb.Encoder;
 import org.mongodb.MongoNamespace;
-import org.mongodb.ReadPreference;
 import org.mongodb.WriteConcern;
-import org.mongodb.command.Command;
 
 public abstract class BaseWriteCommandMessage extends BaseQueryMessage {
     // Server allows command document to exceed max document size by 16K, so that it can comfortably fit a stored document inside it
@@ -59,7 +57,14 @@ public abstract class BaseWriteCommandMessage extends BaseQueryMessage {
     @Override
     protected BaseWriteCommandMessage encodeMessageBody(final OutputBuffer buffer, final int messageStartPosition) {
         BaseWriteCommandMessage nextMessage = null;
-        writeQueryPrologue(createCommand(), buffer);
+
+        buffer.writeInt(0);
+        buffer.writeCString(getCollectionName());
+
+        buffer.writeInt(0);
+        buffer.writeInt(-1);
+
+
         int commandStartPosition = buffer.getPosition();
         final BSONBinaryWriter writer = new BSONBinaryWriter(new BSONWriterSettings(),
                 new BSONBinaryWriterSettings(getSettings().getMaxDocumentSize() + HEADROOM), buffer, false);
@@ -95,8 +100,4 @@ public abstract class BaseWriteCommandMessage extends BaseQueryMessage {
         }
     }
 
-    private Command createCommand() {
-        return new Command(new Document(getCommandName(), getWriteNamespace().getCollectionName()))
-                .readPreference(ReadPreference.primary());
-    }
 }

@@ -18,7 +18,6 @@ package org.mongodb;
 
 import org.mongodb.codecs.CollectibleDocumentCodec;
 import org.mongodb.codecs.ObjectIdGenerator;
-import org.mongodb.command.Command;
 import org.mongodb.operation.CommandOperation;
 
 class MongoDatabaseImpl implements MongoDatabase {
@@ -75,9 +74,9 @@ class MongoDatabaseImpl implements MongoDatabase {
     }
 
     @Override
-    public CommandResult executeCommand(final Command commandOperation) {
-        commandOperation.readPreferenceIfAbsent(options.getReadPreference());
-        return new CommandOperation(getName(), commandOperation, documentCodec, client.getCluster().getDescription(),
+    public CommandResult executeCommand(final Document command, final ReadPreference requestedReadPreference) {
+        ReadPreference readPreference = requestedReadPreference == null ? options.getReadPreference() : requestedReadPreference;
+        return new CommandOperation(getName(), command, readPreference, documentCodec, client.getCluster().getDescription(),
                 client.getBufferProvider(), client.getSession(), false).execute();
     }
 

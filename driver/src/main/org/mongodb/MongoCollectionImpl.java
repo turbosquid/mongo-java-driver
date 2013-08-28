@@ -18,7 +18,6 @@ package org.mongodb;
 
 import org.mongodb.async.AsyncBlock;
 import org.mongodb.async.MongoAsyncQueryCursor;
-import org.mongodb.command.AggregateCommand;
 import org.mongodb.command.AsyncCountOperation;
 import org.mongodb.command.CountOperation;
 import org.mongodb.command.MapReduceCommand;
@@ -247,7 +246,9 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
 
         @Override
         public MongoIterable<T> mapReduce(final String map, final String reduce) {
-            final CommandResult commandResult = getDatabase().executeCommand(new MapReduceCommand(findOp, getName(), map, reduce));
+            final MapReduceCommand commandOperation = new MapReduceCommand(findOp, getName(), map, reduce);
+            final CommandResult commandResult = getDatabase().executeCommand(commandOperation.toDocument(),
+                                                                             commandOperation.getReadPreference());
             return new SingleShotCommandIterable<T>(commandResult);
         }
 
@@ -590,7 +591,8 @@ class MongoCollectionImpl<T> implements MongoCollection<T> {
         @Override
         @SuppressWarnings("unchecked")
         public MongoCursor<T> iterator() {
-            final CommandResult commandResult = getDatabase().executeCommand(new AggregateCommand(getNamespace(), pipeline));
+            final Document document = new Document("aggregate", getNamespace().getCollectionName()).append("pipeline", pipeline);
+            final CommandResult commandResult = getDatabase().executeCommand(document, null);
             return new SingleShotCursor<T>((Iterable<T>) commandResult.getResponse().get("result"));
         }
 

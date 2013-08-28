@@ -16,9 +16,6 @@
 
 package org.mongodb;
 
-import org.mongodb.command.Create;
-import org.mongodb.command.DropDatabase;
-import org.mongodb.command.RenameCollection;
 import org.mongodb.command.RenameCollectionOptions;
 import org.mongodb.operation.CommandOperation;
 import org.mongodb.operation.Find;
@@ -35,7 +32,7 @@ import static org.mongodb.connection.impl.NativeAuthenticationHelper.createAuthe
  * commonly used by clients of the driver.
  */
 class DatabaseAdministrationImpl implements DatabaseAdministration {
-    private static final DropDatabase DROP_DATABASE = new DropDatabase();
+    private static final Document DROP_DATABASE = new Document("dropDatabase", 1);
     private static final Find FIND_ALL = new Find().readPreference(ReadPreference.primary());
 
     private final String databaseName;
@@ -51,7 +48,7 @@ class DatabaseAdministrationImpl implements DatabaseAdministration {
     @Override
     public void drop() {
         //TODO: should inspect the CommandResult to make sure it went OK
-        new CommandOperation(databaseName, DROP_DATABASE, documentCodec, client.getCluster().getDescription(),
+        new CommandOperation(databaseName, DROP_DATABASE, null, documentCodec, client.getCluster().getDescription(),
                 client.getBufferProvider(), client.getSession(), false).execute();
     }
 
@@ -80,8 +77,9 @@ class DatabaseAdministrationImpl implements DatabaseAdministration {
 
     @Override
     public void createCollection(final CreateCollectionOptions createCollectionOptions) {
-        final CommandResult commandResult = new CommandOperation(databaseName, new Create(createCollectionOptions), documentCodec,
-                        client.getCluster().getDescription(), client.getBufferProvider(), client.getSession(), false).execute();
+        final CommandResult commandResult = new CommandOperation(databaseName, createCollectionOptions.asDocument(), null, documentCodec,
+                                                                 client.getCluster().getDescription(), client.getBufferProvider(),
+                                                                 client.getSession(), false).execute();
         ErrorHandling.handleErrors(commandResult);
     }
 
@@ -92,9 +90,9 @@ class DatabaseAdministrationImpl implements DatabaseAdministration {
 
     @Override
     public void renameCollection(final RenameCollectionOptions renameCollectionOptions) {
-        final RenameCollection rename = new RenameCollection(renameCollectionOptions, databaseName);
-        final CommandResult commandResult = new CommandOperation("admin", rename, documentCodec, client.getCluster().getDescription(),
-                client.getBufferProvider(), client.getSession(), false).execute();
+        final CommandResult commandResult = new CommandOperation("admin", renameCollectionOptions.toDocument(databaseName), null,
+                                                                 documentCodec, client.getCluster().getDescription(),
+                                                                 client.getBufferProvider(), client.getSession(), false).execute();
         ErrorHandling.handleErrors(commandResult);
     }
 

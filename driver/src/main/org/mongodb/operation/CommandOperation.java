@@ -20,9 +20,9 @@ import org.mongodb.CommandResult;
 import org.mongodb.Decoder;
 import org.mongodb.Document;
 import org.mongodb.Encoder;
+import org.mongodb.ReadPreference;
 import org.mongodb.codecs.DocumentCodec;
 import org.mongodb.codecs.PrimitiveCodecs;
-import org.mongodb.command.Command;
 import org.mongodb.connection.BufferProvider;
 import org.mongodb.connection.ClusterDescription;
 import org.mongodb.connection.ServerSelector;
@@ -34,29 +34,31 @@ import static org.mongodb.operation.CommandReadPreferenceHelper.getCommandReadPr
 import static org.mongodb.operation.CommandReadPreferenceHelper.isQuery;
 
 public class CommandOperation extends BaseOperation<CommandResult> {
-    private final Command command;
     private final Encoder<Document> commandEncoder = new DocumentCodec(PrimitiveCodecs.createDefault());
     private final Decoder<Document> commandDecoder;
     private final String database;
     private final ClusterDescription clusterDescription;
+    private final Document commandDocument;
+    private final ReadPreference readPreference;
 
-    public CommandOperation(final String database, final Command command, final Decoder<Document> commandDecoder,
-                            final ClusterDescription clusterDescription, final BufferProvider bufferProvider,
-                            final Session session, final boolean closeSession) {
+    public CommandOperation(final String database, final Document command, final ReadPreference readPreference,
+                            final Decoder<Document> commandDecoder, final ClusterDescription clusterDescription,
+                            final BufferProvider bufferProvider, final Session session, final boolean closeSession) {
         super(bufferProvider, session, closeSession);
         this.database = database;
         this.clusterDescription = clusterDescription;
-        this.command = command;
         this.commandDecoder = commandDecoder;
+        this.commandDocument = command;
+        this.readPreference = readPreference;
     }
 
     @Override
     public CommandResult execute() {
         try {
-            final ServerConnectionProviderOptions options = new ServerConnectionProviderOptions(isQuery(command.toDocument()),
+            final ServerConnectionProviderOptions options = new ServerConnectionProviderOptions(isQuery(commandDocument),
                                                                                                 getServerSelector());
             final ServerConnectionProvider provider = getSession().createServerConnectionProvider(options);
-            return new CommandProtocol(database, command.toDocument(), commandEncoder, commandDecoder, getBufferProvider(),
+            return new CommandProtocol(database, commandDocument, commandEncoder, commandDecoder, getBufferProvider(),
                                        provider.getServerDescription(), provider.getConnection(), true).execute();
         } finally {
             if (isCloseSession()) {
@@ -66,6 +68,6 @@ public class CommandOperation extends BaseOperation<CommandResult> {
     }
 
     private ServerSelector getServerSelector() {
-        return new ReadPreferenceServerSelector(getCommandReadPreference(command, clusterDescription));
+        return new ReadPreferenceServerSelector(getCommandReadPreference(commandDocument, readPreference, clusterDescription));
     }
 }

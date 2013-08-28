@@ -18,7 +18,6 @@ package org.mongodb.operation;
 
 import org.mongodb.Document;
 import org.mongodb.ReadPreference;
-import org.mongodb.command.Command;
 import org.mongodb.connection.ClusterDescription;
 import org.mongodb.connection.ClusterType;
 
@@ -60,21 +59,23 @@ public final class CommandReadPreferenceHelper {
     /**
      * Returns the recommended read preference for the given command when run against a cluster with the given description.
      *
-     * @param command            the command
+     * @param commandDocument the Document describing the command to run
+     * @param readPreference the ReadPreference requested for the command
      * @param clusterDescription the cluster description
      * @return the recommended read preference for the given command when run against a cluster with the given description
      */
-    public static ReadPreference getCommandReadPreference(final Command command, final ClusterDescription clusterDescription) {
+    public static ReadPreference getCommandReadPreference(final Document commandDocument, final ReadPreference readPreference,
+                                                          final ClusterDescription clusterDescription) {
         if (clusterDescription.getConnectionMode() == Single || clusterDescription.getType() != ClusterType.ReplicaSet) {
-            return command.getReadPreference();
+            return readPreference;
         }
 
-        final boolean primaryRequired = isPrimaryRequired(command.toDocument());
+        final boolean primaryRequired = isPrimaryRequired(commandDocument);
 
         if (primaryRequired) {
             return ReadPreference.primary();
         } else {
-            return command.getReadPreference();
+            return readPreference;
         }
     }
 
