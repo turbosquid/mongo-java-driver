@@ -57,7 +57,7 @@ public class MongoOptions {
         description = options.getDescription();
         cursorFinalizerEnabled = options.isCursorFinalizerEnabled();
         writeConcern = options.getWriteConcern();
-        slaveOk = false; // default to false, as readPreference field will be responsible
+        slaveOk = true;
         alwaysUseMBeans = options.isAlwaysUseMBeans();
     }
 
